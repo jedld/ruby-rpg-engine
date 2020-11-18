@@ -1,11 +1,11 @@
 {
-  "class" : "Goblin",
+  "kind" : "Goblin",
   "description" : "Goblins are small, black-hearted humanoids that lair in despoiled dungeons and other dismal settings. Individually weak, they gather in large numbers to torment other creatures.",
   "size" : "small",
   "race" : ["humanoid", "goblinoid"],
   "alignment" : "neutral_evil",
   "default_ac" : 15,
-  "hp" : 7,
+  "max_hp" : 7,
   "hp_die" : "2d6",
   "speed": "30",
   "passive_perception" : 9,
@@ -36,8 +36,7 @@
       "targets": 1,
       "attack": 4,
       "damage": 5,
-      "damage_die" : "1d6",
-      "damage_mod" : 2,
+      "damage_die" : "1d6+2",
       "damage_type": "slashing"
     },
     {

@@ -18,6 +18,10 @@ require 'active_support'
 require 'active_support/core_ext'
 require 'pry-byebug'
 
+$LOAD_PATH << File.join(File.dirname(__FILE__), '..')
+
+require 'lib/session'
+
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest

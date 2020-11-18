@@ -1,0 +1,18 @@
+vicious_rapier:
+  name: Vicious Rapier
+  type: melee_attack
+  proficiency_type:
+    - martial
+  subtype: weapon
+  reach: 5
+  damage: 1d8
+  modifiers:
+  damage_type: piercing
+  properties:
+    - finesse
+  cost: 10
+  weight: 10
+  bonus:
+    additional:
+      die: 2d6
+      restriction: nat20_attack

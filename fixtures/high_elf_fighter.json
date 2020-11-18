@@ -13,12 +13,19 @@
     "wis" : 12,
     "cha" : 11
   },
+  "class_features" : [
+    "dueling"
+  ],
   "skills": [
      "acrobatics",
      "arcana",
      "athletics",
      "history",
      "perception"
+  ],
+  "weapon_proficiencies": [
+    "martial",
+    "simple"
   ],
   "languages" : [
     "abyssal",

@@ -23,6 +23,7 @@ GEM
     pry-byebug (3.9.0)
       byebug (~> 11.0)
       pry (~> 0.13.0)
+    random_name_generator (1.2.1)
     rspec (3.10.0)
       rspec-core (~> 3.10.0)
       rspec-expectations (~> 3.10.0)
@@ -69,9 +70,10 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   pry-byebug
+  random_name_generator
   rspec
   tty-prompt
   tty-table
 
 BUNDLED WITH
-   2.1.4
+   1.16.2

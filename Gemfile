@@ -5,6 +5,7 @@ gem "tty-table"
 gem "tty-prompt"
 gem "pry-byebug"
 gem "activesupport"
+gem "random_name_generator"
 
 group :test do
   gem "rspec"

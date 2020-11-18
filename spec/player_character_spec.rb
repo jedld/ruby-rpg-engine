@@ -3,9 +3,7 @@ require 'player_character'
 RSpec.describe PlayerCharacter do
   context "fighter" do
     before do
-      fighter_prop = JSON.parse(File.read(File.join('fixtures', 'high_elf_fighter.json'))).deep_symbolize_keys!
-      class_prop = JSON.parse(File.read(File.join('char_classes', "#{fighter_prop[:class]}.json"))).deep_symbolize_keys!
-      @fighter = PlayerCharacter.new(fighter_prop, class_prop)
+      @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.json'))
     end
 
     it "creates a player character" do
@@ -37,7 +35,7 @@ RSpec.describe PlayerCharacter do
     end
 
     specify "#available_actions" do
-      expect(@fighter.available_actions.map(&:to_s)).to eq ["Attack", "Move", "Dash"]
+      expect(@fighter.available_actions.map(&:to_s)).to eq ["Attack", "Move", "Dash", "Dodge", "Help", "Ready"]
     end
 
     specify "#to_h" do

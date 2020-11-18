@@ -1,24 +1,14 @@
 class PlayerCharacter
-  class Action
-    def initialize(source, action_type)
-      @source = source
-      @action_type = action_type
-    end
-
-    def to_s
-      @action_type.to_s.humanize
-    end
-  end
-
   attr_accessor :hp, :statuses
 
-  def initialize(properties, class_properties)
+  def initialize(properties)
     @properties = properties.deep_symbolize_keys!
     @ability_scores = @properties[:ability]
-    @class_properties = class_properties
+    @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), '..','char_classes', "#{@properties[:class]}.json"))).deep_symbolize_keys!
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', 'races', "#{@properties[:race]}.yml")).deep_symbolize_keys!
     @statuses = []
+
     setup_attributes
     reset_turn!
   end
@@ -121,7 +111,7 @@ class PlayerCharacter
   end
 
   def available_actions
-    [:attack, :move, :dash].map { |type|
+    [:attack, :move, :dash, :dodge, :help, :ready].map { |type|
       Action.new(self, type)
     }
   end
@@ -131,6 +121,44 @@ class PlayerCharacter
     @bonus_action = 1
     @reaction = 1
     @movement = speed
+  end
+
+  def attack_roll_mod(weapon)
+    modifier = attack_ability_mod(weapon)
+    if proficient_with_weapon?(weapon)
+      modifier += proficiency_bonus
+    end
+
+    modifier
+  end
+
+  def attack_ability_mod(weapon)
+    modifier = 0
+
+    if weapon[:type] == 'melee_attack'
+      if weapon[:properties].include?('finesse') # if finese automatically use the largest mod
+        modifier += [str_mod, dex_mod].max
+      else
+        modifier += str_mod
+      end
+    end
+
+    modifier
+  end
+
+  def proficient_with_weapon?(weapon)
+    @properties[:weapon_proficiencies].detect do |prof|
+      weapon[:proficiency_type].include?(prof)
+    end
+  end
+
+  def has_class_feature?(feature)
+    @properties[:class_features].include?(feature)
+  end
+
+  def self.load(path)
+    fighter_prop = JSON.parse(File.read(path)).deep_symbolize_keys!
+    @fighter = PlayerCharacter.new(fighter_prop)
   end
 
   private
