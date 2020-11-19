@@ -1,5 +1,6 @@
 class PlayerCharacter
-  attr_accessor :hp, :statuses, :other_counters
+  include Entity
+  attr_accessor :hp, :statuses, :other_counters, :resistances
 
   def initialize(properties)
     @properties = properties.deep_symbolize_keys!
@@ -7,8 +8,8 @@ class PlayerCharacter
     @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), '..','char_classes', "#{@properties[:class]}.json"))).deep_symbolize_keys!
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', 'races', "#{@properties[:race]}.yml")).deep_symbolize_keys!
-    @statuses = []
-
+    @statuses = Set.new
+    @resistances = []
     setup_attributes
     reset_turn!
   end
@@ -31,22 +32,6 @@ class PlayerCharacter
 
   def c_class
     @properties[:class]
-  end
-
-  def str_mod
-    modifier_table(@ability_scores.fetch(:str))
-  end
-
-  def wis_mod
-    modifier_table(@ability_scores.fetch(:wis))
-  end
-
-  def int_mod
-    modifier_table(@ability_scores.fetch(:int))
-  end
-
-  def dex_mod
-    modifier_table(@ability_scores.fetch(:dex))
   end
 
   def passive_perception
@@ -110,17 +95,20 @@ class PlayerCharacter
     }
   end
 
-  def available_actions
-    [:attack, :move, :dash, :dodge, :help, :ready].map { |type|
-      Action.new(self, type)
-    }
-  end
+  def available_actions(session)
+    [:attack, :move, :dash, :dodge, :help, :ready, :end].map { |type|
+      if (type == :attack)
+        # check all equipped and create attack for each
+        @properties[:equipped].each do |item|
+          weapon_detail = session.load_weapon(item)
+          next if weapon_detail.nil?
 
-  def reset_turn!
-    @action = 1
-    @bonus_action = 1
-    @reaction = 1
-    @movement = speed
+          Action.new(self, :attack, with: weapon_detail)
+        end
+      else
+        Action.new(self, type)
+      end
+    }.flatten
   end
 
   def attack_roll_mod(weapon)
@@ -161,6 +149,10 @@ class PlayerCharacter
     @fighter = PlayerCharacter.new(fighter_prop)
   end
 
+  def npc?
+    false
+  end
+
   private
 
   def setup_attributes
@@ -178,30 +170,5 @@ class PlayerCharacter
     shield = equipped_meta.detect { |e| e[:type] == 'shield' }
 
     (armor.nil? ? 10 : armor[:ac]) + (shield.nil? ? 0 : shield[:bonus_ac])
-  end
-
-  def modifier_table(value)
-    mod_table = [ [1, 1, -5],
-      [2, 3, -4],
-      [4, 5, -3],
-      [6, 7, -2],
-      [8, 9, -1],
-      [10, 11, 0],
-      [12, 13, 1],
-      [14, 15, 2],
-      [16, 17, 3],
-      [18, 19, 4],
-      [20, 21, 5],
-      [22, 23, 6],
-      [24, 25, 7],
-      [26, 27, 8],
-      [28, 29, 9],
-      [30, 30, 10]
-    ]
-
-    mod_table.each do |row|
-      low, high, mod = row
-      return mod if value.between?(low, high)
-    end
   end
 end

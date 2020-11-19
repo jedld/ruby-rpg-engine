@@ -7,12 +7,33 @@ RSpec.describe Battle do
       @npc = Npc.new(:goblin)
       @battle.add(@fighter)
       @battle.add(@npc)
+      EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name} died." })
+      EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
+      EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
       srand(7000)
     end
 
     specify "attack" do
-      expect(@battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier').to_json).to eq("{\"attack_roll\":{\"rolls\":[2],\"modifier\":8},\"target_ac\":15,\"hit?\":false,\"damage\":null}")
-      expect(@battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier').to_json).to eq("{\"attack_roll\":{\"rolls\":[14],\"modifier\":8},\"target_ac\":15,\"hit?\":true,\"damage\":{\"rolls\":[8],\"modifier\":7}}")
+      @battle.start
+      srand(7000)
+      action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
+      expect(action.result).to eq([{
+        type: :miss,
+        attack_roll: DieRoll.new([2], 8),
+        target: @npc}]
+      )
+      action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
+      expect(action.result).to eq([
+        type: :damage,
+        attack_roll: DieRoll.new([14], 8),
+        hit?: true,
+        damage: DieRoll.new([8], 7),
+        target_ac: 15,
+        target: @npc
+      ])
+      @battle.commit(action)
+      expect(@npc.hp).to eq(0)
+      expect(@npc.dead?).to be
     end
   end
 end

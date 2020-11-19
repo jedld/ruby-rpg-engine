@@ -1,13 +1,32 @@
 class Action
-  attr_reader :action_type
+  attr_reader :action_type, :result
 
-  def initialize(source, action_type)
+  def initialize(source, action_type, opts = {})
     @source = source
     @action_type = action_type
+    @result = []
+    @opts = {}
   end
 
   def to_s
     @action_type.to_s.humanize
+  end
+
+  def label
+    if @action_type == :attack
+     "#{@action_type.to_s.humanize} with #{opts[:with][:name]}"
+    else
+      action_type.to_s.humanize
+    end
+  end
+
+  def apply!
+    @result.each do |item|
+      case(item[:type])
+      when :damage
+        item[:target].take_damage!(item)
+      end
+    end
   end
 
   def resolve(session, opts = {})
@@ -42,12 +61,24 @@ class Action
         damage = DieRoll.roll(damage_modifier, crit: attack_roll.nat_20?)
       end
 
-      {
-        attack_roll: attack_roll,
-        target_ac: target.armor_class,
-        hit?: hit,
-        damage: damage
-      }
+      if hit
+        @result = [{
+          target: target,
+          type: :damage,
+          attack_roll: attack_roll,
+          target_ac: target.armor_class,
+          hit?: hit,
+          damage: damage
+        }]
+      else
+        @result = [{
+          target: target,
+          type: :miss,
+          attack_roll: attack_roll
+        }]
+      end
+
+      self
     else
       raise "invalid action type #{action_type}"
     end

@@ -1,11 +1,16 @@
 require 'random_name_generator'
 
 class Npc
-  attr_accessor :hp, :statuses
+  include Entity
+
+  attr_accessor :hp, :statuses, :resistances
 
   def initialize(type, opt = {})
     @properties = JSON.parse(File.read(File.join('npcs', "#{type}.json"))).deep_symbolize_keys!
+    @ability_scores = @properties[:ability]
     @opt = opt
+    @resistances = []
+    @statuses = Set.new
     rng = RandomNameGenerator.new(RandomNameGenerator::GOBLIN)
     @name = opt.fetch(:name, rng.compose(1))
     setup_attributes
@@ -17,6 +22,10 @@ class Npc
 
   def kind
     @properties[:kind]
+  end
+
+  def npc?
+    true
   end
 
   def armor_class

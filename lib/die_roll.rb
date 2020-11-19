@@ -1,4 +1,6 @@
 class DieRoll
+  attr_reader :rolls, :modifier
+
   def initialize(rolls, modifier)
     @rolls = rolls
     @modifier = modifier
@@ -17,12 +19,18 @@ class DieRoll
   end
 
   def to_s
-    "(#{@rolls[0].join(' + ')}) + #{@modifier}"
+    "(#{@rolls.join(' + ')}) + #{@modifier}"
   end
 
   def self.numeric?(c)
     return true if c =~ /\A\d+\Z/
     true if Float(c) rescue false
+  end
+
+  def ==(other_object)
+    return true if other_object.rolls == @rolls && other_object.modifier == @modifier
+
+    false
   end
 
   def self.roll(roll_str, crit: false)

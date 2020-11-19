@@ -1,5 +1,3 @@
-require 'die_roll'
-
 RSpec.describe DieRoll do
   before do
     srand(1000)

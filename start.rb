@@ -8,25 +8,40 @@ require 'active_support/core_ext'
 
 $LOAD_PATH << File.dirname(__FILE__)
 
-require "lib/player_character"
-require "lib/npc"
-require "lib/battlemap"
 require "lib/session"
 
 
 @prompt = TTY::Prompt.new
 @session = Session.new
 
+# event handlers
+EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name} died." })
+EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
+EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
+
+
 def start_battle(chosen_character, chosen_enemy)
   puts "Battle has started between #{chosen_character.name} and #{chosen_enemy.name}"
 
-  battle_map = BattleMap.new
+  battle_map = Battle.new(@session)
   battle_map.add(chosen_character)
   battle_map.add(chosen_enemy)
   battle_map.start
-
-  @prompt.select("#{chosen_character.name} will") do |menu|
-
+  puts "Combat Order:"
+  battle_map.combat_order.each_with_index do |entity, index|
+    puts "#{index + 1}. #{entity.name}"
+  end
+  battle_map.while_active do |entity|
+    if entity.npc?
+      puts "#{entity.name} just stands there."
+    else
+      puts "#{entity.name}'s turn"
+      @prompt.select("#{entity.name} will") do |menu|
+        entity.available_actions.each do |action|
+          menu.choice action.label
+        end
+      end
+    end
   end
 end
 

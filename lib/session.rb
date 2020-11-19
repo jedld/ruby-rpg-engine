@@ -1,5 +1,11 @@
+require 'lib/die_roll'
+require 'lib/concerns/entity'
 require 'lib/action'
 require 'lib/battle'
+require 'lib/event_manager'
+require "lib/player_character"
+require "lib/npc"
+
 
 class Session
   def load_characters
