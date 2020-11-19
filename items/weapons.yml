@@ -16,3 +16,20 @@ vicious_rapier:
     additional:
       die: 2d6
       restriction: nat20_attack
+longbow:
+  name: Longbow
+  type: ranged_attack
+  proficiency_type:
+    - martial
+  subtype: weapon
+  range: 150,
+  range_max: 600
+  damage: 1d8
+  modifiers:
+  damage_type: piercing
+  properties:
+    - heavy
+    - ammunition
+    - ranged
+  cost: 50
+  weight: 2

@@ -4,7 +4,7 @@
   "class" : "fighter",
   "level" : 1,
   "hit_die" : "inherit",
-  "max_hp" : "auto",
+  "max_hp" : 67,
   "ability" : {
     "str" : 12,
     "dex" : 20,
@@ -13,12 +13,19 @@
     "wis" : 12,
     "cha" : 11
   },
+  "class_features" : [
+    "dueling"
+  ],
   "skills": [
      "acrobatics",
      "arcana",
      "athletics",
      "history",
      "perception"
+  ],
+  "weapon_proficiencies": [
+    "martial",
+    "simple"
   ],
   "languages" : [
     "abyssal",
@@ -30,6 +37,8 @@
   "equipped" : [
     "vicious_rapier",
     "longbow",
-    "shield"
+    "shield",
+    "studded_leather",
+    "shield_of_the_hidden_lord"
   ]
 }

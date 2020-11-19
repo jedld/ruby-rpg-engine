@@ -1,6 +1,7 @@
 require 'lib/die_roll'
 require 'lib/concerns/entity'
 require 'lib/action'
+require 'lib/attack_action'
 require 'lib/battle'
 require 'lib/event_manager'
 require "lib/player_character"
@@ -18,8 +19,8 @@ class Session
   end
 
   def load_npcs
-    @npcs ||= %w[goblin].map do |kind|
-      Npc.new(kind)
+    @npcs ||= %w[goblin ogre].map do |kind|
+      Npc.new(kind, rand_life: true)
     end
   end
 

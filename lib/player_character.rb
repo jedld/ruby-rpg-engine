@@ -99,20 +99,24 @@ class PlayerCharacter
     [:attack, :move, :dash, :dodge, :help, :ready, :end].map { |type|
       if (type == :attack)
         # check all equipped and create attack for each
-        @properties[:equipped].each do |item|
+        @properties[:equipped].map do |item|
           weapon_detail = session.load_weapon(item)
           next if weapon_detail.nil?
+          next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
 
-          Action.new(self, :attack, with: weapon_detail)
-        end
+          action = AttackAction.new(session, self, :attack)
+          action.using = item
+          action
+        end.compact
       else
-        Action.new(self, type)
+        Action.new(session, self, type)
       end
     }.flatten
   end
 
   def attack_roll_mod(weapon)
     modifier = attack_ability_mod(weapon)
+
     if proficient_with_weapon?(weapon)
       modifier += proficiency_bonus
     end
@@ -123,25 +127,28 @@ class PlayerCharacter
   def attack_ability_mod(weapon)
     modifier = 0
 
-    if weapon[:type] == 'melee_attack'
+    case(weapon[:type])
+    when 'melee_attack'
       if weapon[:properties].include?('finesse') # if finese automatically use the largest mod
         modifier += [str_mod, dex_mod].max
       else
         modifier += str_mod
       end
+    when 'ranged_attack'
+      modifier += dex_mod
     end
 
     modifier
   end
 
   def proficient_with_weapon?(weapon)
-    @properties[:weapon_proficiencies].detect do |prof|
-      weapon[:proficiency_type].include?(prof)
+    @properties[:weapon_proficiencies]&.detect do |prof|
+      weapon[:proficiency_type]&.include?(prof)
     end
   end
 
   def has_class_feature?(feature)
-    @properties[:class_features].include?(feature)
+    @properties[:class_features]&.include?(feature)
   end
 
   def self.load(path)

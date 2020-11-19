@@ -5,8 +5,8 @@ RSpec.describe Battle do
       @battle = Battle.new(session)
       @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.json'))
       @npc = Npc.new(:goblin)
-      @battle.add(@fighter)
-      @battle.add(@npc)
+      @battle.add(@fighter, :a)
+      @battle.add(@npc, :b)
       EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name} died." })
       EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
       EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
@@ -18,6 +18,7 @@ RSpec.describe Battle do
       srand(7000)
       action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
       expect(action.result).to eq([{
+        source: @fighter,
         type: :miss,
         attack_roll: DieRoll.new([2], 8),
         target: @npc}]
@@ -25,9 +26,11 @@ RSpec.describe Battle do
       action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
       expect(action.result).to eq([
         type: :damage,
+        source: @fighter,
         attack_roll: DieRoll.new([14], 8),
         hit?: true,
         damage: DieRoll.new([8], 7),
+        damage_type: 'piercing',
         target_ac: 15,
         target: @npc
       ])

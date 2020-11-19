@@ -4,21 +4,41 @@ class Battle
   def initialize(session)
     @session = session
     @entities = {}
+    @groups = {}
     @battle_log = []
     @combat_order = []
     @current_turn_index = 0
     @round = 0
   end
 
-  def add(entity)
-    @entities[entity] = {}
+  def add(entity, group)
+    @entities[entity] = { group: group }
+    @groups[group] ||=  Set.new
+    @groups[group].add(entity)
   end
 
   def action(source, action_type, opts = {})
-    action = source.available_actions.detect { |act| act.action_type == action_type }
+    action = source.available_actions(@session).detect { |act| act.action_type == action_type }
     return action.resolve(@session, opts) if action
 
     nil
+  end
+
+  def action!(action)
+    action.resolve(@session)
+  end
+
+  # Targets that make sense for a given action
+  def valid_targets_for(entity, action)
+    entity_group = @entities[entity][:group]
+
+    @entities.map do |k, prop|
+      next if k == entity && action.action_type == :attack
+      next if prop[:group] == entity_group
+      next if entity.dead?
+
+      k
+    end.compact
   end
 
   def start
@@ -50,11 +70,12 @@ class Battle
         @round += 1
       end
 
-    end while(!all_dead?)
+    end while(!battle_ends?)
   end
 
-  def all_dead?
-    @combat_order.reject { |a| a.dead? || a.unconcious? }.empty?
+  def battle_ends?
+    live_groups = @combat_order.reject { |a| a.dead? || a.unconcious? }.map { |e| @entities[e][:group] }.uniq
+    live_groups.size <= 1
   end
 
   def commit(action)

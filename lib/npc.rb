@@ -11,8 +11,13 @@ class Npc
     @opt = opt
     @resistances = []
     @statuses = Set.new
-    rng = RandomNameGenerator.new(RandomNameGenerator::GOBLIN)
-    @name = opt.fetch(:name, rng.compose(1))
+    name = case(type)
+    when 'goblin'
+      RandomNameGenerator.new(RandomNameGenerator::GOBLIN).compose(1)
+    when 'ogre'
+      ['Guzar', 'Irth', 'Grukurg', 'Zoduk'].sample(1).first
+    end
+    @name = opt.fetch(:name, name)
     setup_attributes
   end
 
@@ -46,6 +51,6 @@ class Npc
   private
 
   def setup_attributes
-    @hp = @opt[:rand_life] ? DieRoll.roll(@properties[:hp_die]).flatten.sum : @properties[:max_hp]
+    @hp = @opt[:rand_life] ? DieRoll.roll(@properties[:hp_die]).result : @properties[:max_hp]
   end
 end

@@ -1,13 +1,14 @@
 module Entity
   def take_damage!(damage_params)
     dmg = damage_params[:damage].result
+    EventManager.received_event({source: self, event: :damage, value: dmg})
     dmg = (dmg.to_f/2.to_f).floor if resistant_to?(damage_params[:damage_type])
     @hp -= dmg
 
     if (@hp < 0 && @hp.abs >= @properties[:max_hp])
       dead!
     elsif @hp <= 0
-      unconsious!
+      unconcious!
     end
 
     @hp = 0 if @hp <= 0

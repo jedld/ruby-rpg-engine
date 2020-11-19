@@ -1,6 +1,8 @@
 require 'player_character'
 
 RSpec.describe PlayerCharacter do
+  let(:session) { Session.new }
+
   context "fighter" do
     before do
       @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.json'))
@@ -35,7 +37,7 @@ RSpec.describe PlayerCharacter do
     end
 
     specify "#available_actions" do
-      expect(@fighter.available_actions.map(&:to_s)).to eq ["Attack", "Move", "Dash", "Dodge", "Help", "Ready"]
+      expect(@fighter.available_actions(session).map(&:to_s)).to eq ["Attack", "Attack", "Move", "Dash", "Dodge", "Help", "Ready", "End"]
     end
 
     specify "#to_h" do
