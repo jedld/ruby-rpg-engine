@@ -25,7 +25,7 @@ class DieRoll
     true if Float(c) rescue false
   end
 
-  def self.roll(roll_str)
+  def self.roll(roll_str, crit: false)
     state = :initial
     number_of_die = 1
     die_sides = 20
@@ -63,6 +63,10 @@ class DieRoll
     end
     number_of_die = die_count_str.blank? ? 1 : die_count_str.to_i
     die_sides = die_type_str.to_i
+
+    if crit
+      number_of_die *= 2
+    end
 
     rolls = number_of_die.times.map do
       (1..die_sides).to_a.sample

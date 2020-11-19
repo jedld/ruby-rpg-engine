@@ -32,13 +32,14 @@ class Action
             end
 
       damage = nil
+
       if hit
         damage_mod = @source.attack_ability_mod(weapon)
-        if @source.has_class_feature?('dueling')
-          damage_mod += 2
-        end
+
+        damage_mod += 2 if @source.has_class_feature?('dueling')
+
         damage_modifier = "#{weapon[:damage]}+#{damage_mod}"
-        damage = DieRoll.roll(damage_modifier)
+        damage = DieRoll.roll(damage_modifier, crit: attack_roll.nat_20?)
       end
 
       {

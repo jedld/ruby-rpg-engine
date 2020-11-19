@@ -1,5 +1,5 @@
 class PlayerCharacter
-  attr_accessor :hp, :statuses
+  attr_accessor :hp, :statuses, :other_counters
 
   def initialize(properties)
     @properties = properties.deep_symbolize_keys!
