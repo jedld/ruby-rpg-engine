@@ -19,7 +19,7 @@ class AttackAction < Action
         EventManager.received_event({ source: item[:source], attack_roll: item[:attack_roll], target: item[:target], event: :attacked, damage_type: item[:damage_type], value: item[:damage].result })
         item[:target].take_damage!(item)
       when :miss
-        EventManager.received_event({ source: item[:source], target: item[:target], event: :miss })
+        EventManager.received_event({ attack_roll: item[:attack_roll], source: item[:source], target: item[:target], event: :miss })
       end
     end
   end

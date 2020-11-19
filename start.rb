@@ -10,7 +10,6 @@ $LOAD_PATH << File.dirname(__FILE__)
 
 require "lib/session"
 
-
 @prompt = TTY::Prompt.new
 @session = Session.new
 
@@ -18,7 +17,7 @@ require "lib/session"
 EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name} died." })
 EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
 EventManager.register_event_listener([:attacked], ->(event) { puts "#{event[:source].name} attacked #{event[:target].name} to Hit: #{event[:attack_roll].to_s} for #{event[:value]} #{event[:damage_type]} damage." })
-EventManager.register_event_listener([:miss], ->(event) { puts "roll #{event[:attack_roll].to_s} ... #{event[:source].name} missed his attack on #{event[:target].name}" })
+EventManager.register_event_listener([:miss], ->(event) { puts "rolled #{event[:attack_roll].to_s} ... #{event[:source].name} missed his attack on #{event[:target].name}" })
 EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
 
 
