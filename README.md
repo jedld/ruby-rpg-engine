@@ -10,5 +10,8 @@ For now only a simple battle sim is supported:
 To start
 ---------
 
+
+```bash
 bundle
 ruby start.rb
+```
