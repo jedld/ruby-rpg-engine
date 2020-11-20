@@ -41,7 +41,7 @@ class Battle
     @entities.map do |k, prop|
       next if k == entity && action.action_type == :attack
       next if prop[:group] == entity_group
-      next if entity.dead?
+      next if k.dead?
 
       k
     end.compact

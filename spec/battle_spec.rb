@@ -21,7 +21,7 @@ RSpec.describe Battle do
         attack_name: 'Vicious Rapier',
         source: @fighter,
         type: :miss,
-        attack_roll: DieRoll.new([2], 8),
+        attack_roll: DieRoll.new([2], 8, 20),
         target: @npc}]
       )
       action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
@@ -29,9 +29,9 @@ RSpec.describe Battle do
         attack_name: "Vicious Rapier",
         type: :damage,
         source: @fighter,
-        attack_roll: DieRoll.new([10], 8),
+        attack_roll: DieRoll.new([10], 8, 20),
         hit?: true,
-        damage: DieRoll.new([2], 7),
+        damage: DieRoll.new([2], 7, 8),
         damage_type: 'piercing',
         target_ac: 15,
         target: @npc

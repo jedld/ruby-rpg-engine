@@ -5,7 +5,6 @@ require 'json'
 require 'pry-byebug'
 require 'active_support'
 require 'active_support/core_ext'
-require 'colorize'
 
 $LOAD_PATH << File.dirname(__FILE__)
 

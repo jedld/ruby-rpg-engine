@@ -1,3 +1,4 @@
+require 'colorize'
 require 'lib/die_roll'
 require 'lib/concerns/entity'
 require 'lib/action'

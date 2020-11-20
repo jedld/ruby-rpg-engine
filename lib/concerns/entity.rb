@@ -28,7 +28,7 @@ module Entity
   end
 
   def unconcious?
-    @statuses.include?(:unconsious)
+    !dead? && @statuses.include?(:unconsious)
   end
 
   def concious?

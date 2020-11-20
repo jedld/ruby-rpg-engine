@@ -1,9 +1,10 @@
 class DieRoll
-  attr_reader :rolls, :modifier
+  attr_reader :rolls, :modifier, :die_sides
 
-  def initialize(rolls, modifier)
+  def initialize(rolls, modifier, die_sides = 20)
     @rolls = rolls
     @modifier = modifier
+    @die_sides = die_sides
   end
 
   def nat_20?
@@ -19,7 +20,17 @@ class DieRoll
   end
 
   def to_s
-    "(#{@rolls.join(' + ')}) + #{@modifier}"
+    rolls = @rolls.map do |r|
+      if r == 1
+        r.to_s.colorize(:red)
+      elsif r == @die_sides
+        r.to_s.colorize(:green)
+      else
+        r.to_s
+      end
+    end # colorize
+
+    "(#{rolls.join(' + ')}) + #{@modifier}"
   end
 
   def self.numeric?(c)
@@ -28,7 +39,7 @@ class DieRoll
   end
 
   def ==(other_object)
-    return true if other_object.rolls == @rolls && other_object.modifier == @modifier
+    return true if other_object.rolls == @rolls && other_object.modifier == @modifier && other_object.die_sides == @die_sides
 
     false
   end
@@ -80,6 +91,6 @@ class DieRoll
       (1..die_sides).to_a.sample
     end
 
-    DieRoll.new(rolls, modifier_str.blank? ? 0 : "#{modifier_op}#{modifier_str}".to_i)
+    DieRoll.new(rolls, modifier_str.blank? ? 0 : "#{modifier_op}#{modifier_str}".to_i, die_sides)
   end
 end
