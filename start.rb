@@ -14,12 +14,7 @@ require "lib/session"
 @session = Session.new
 
 # event handlers
-EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name} died." })
-EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
-EventManager.register_event_listener([:attacked], ->(event) { puts "#{event[:source].name} attacked #{event[:target].name} to Hit: #{event[:attack_roll].to_s} for #{event[:value]} #{event[:damage_type]} damage." })
-EventManager.register_event_listener([:miss], ->(event) { puts "rolled #{event[:attack_roll].to_s} ... #{event[:source].name} missed his attack on #{event[:target].name}" })
-EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
-
+EventManager.standard_cli
 
 def start_battle(chosen_character, chosen_enemy)
   puts "Battle has started between #{chosen_character.name} and #{chosen_enemy.name}"
@@ -35,17 +30,24 @@ def start_battle(chosen_character, chosen_enemy)
   end
 
   battle_map.while_active do |entity|
+    puts "#{entity.name}'s turn"
+    puts ""
     if entity.npc?
-      puts "#{entity.name} just stands there."
+      controller = AiController::Standard.new
+      action = controller.move_for(entity, battle_map)
+      battle_map.action!(action)
+      battle_map.commit(action)
     else
-      puts "#{entity.name}'s turn"
+      puts "#{entity.hp}/#{entity.max_hp}"
       action = @prompt.select("#{entity.name} will") do |menu|
         entity.available_actions(@session).each do |action|
           menu.choice action.label, action
         end
       end
-      if action.action_type == :attack
-        target = @prompt.select("#{entity.name} will attack") do |menu|
+
+      case action.action_type
+      when :attack
+        target = @prompt.select("#{entity.name} targets") do |menu|
           battle_map.valid_targets_for(entity, action).each do |target|
             menu.choice target.name, target
           end

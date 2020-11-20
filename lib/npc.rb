@@ -41,11 +41,19 @@ class Npc
     @properties[:speed]
   end
 
-  def reset_turn!
-    @action = 1
-    @bonus_action = 1
-    @reaction = 1
-    @movement = speed
+  def available_actions(session, battle = nil)
+    [:attack, :end].map { |type|
+      if (type == :attack)
+        # check all equipped and create attack for each
+        @properties[:actions].map do |npc_action|
+          action = AttackAction.new(session, self, :attack)
+          action.npc_action = npc_action
+          action
+        end.compact
+      else
+        Action.new(session, self, type)
+      end
+    }.flatten
   end
 
   private

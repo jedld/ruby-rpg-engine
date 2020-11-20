@@ -11,11 +11,14 @@ class PlayerCharacter
     @statuses = Set.new
     @resistances = []
     setup_attributes
-    reset_turn!
   end
 
   def name
     @properties[:name]
+  end
+
+  def max_hp
+    @properties[:max_hp]
   end
 
   def armor_class
@@ -95,7 +98,7 @@ class PlayerCharacter
     }
   end
 
-  def available_actions(session)
+  def available_actions(session, battle = nil)
     [:attack, :move, :dash, :dodge, :help, :ready, :end].map { |type|
       if (type == :attack)
         # check all equipped and create attack for each

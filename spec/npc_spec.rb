@@ -1,6 +1,10 @@
 require 'npc'
 
 RSpec.describe Npc do
+  let(:session) do
+    Session.new
+  end
+
   context "goblen npc" do
     before do
       @npc = Npc.new(:goblin, name: 'Spark')
@@ -16,6 +20,10 @@ RSpec.describe Npc do
 
     specify "#armor_class" do
       expect(@npc.armor_class).to eq 15
+    end
+
+    specify "#available_actions" do
+      expect(@npc.available_actions(session).size).to eq 3
     end
   end
 end

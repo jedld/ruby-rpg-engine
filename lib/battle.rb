@@ -12,9 +12,15 @@ class Battle
   end
 
   def add(entity, group)
+    raise "entity cannot be nil" if entity.nil?
+
     @entities[entity] = { group: group }
     @groups[group] ||=  Set.new
     @groups[group].add(entity)
+  end
+
+  def entity_state_for(entity)
+    @entities[entity]
   end
 
   def action(source, action_type, opts = {})
@@ -56,11 +62,12 @@ class Battle
     @combat_order[@current_turn_index]
   end
 
-  def while_active(&block)
+  def while_active(max_rounds = nil, &block)
     begin
       EventManager.received_event({source: self, event: :start_of_round, target: current_turn})
       next if current_turn.dead? || current_turn.unconcious?
-      current_turn.reset_turn!
+
+      current_turn.reset_turn!(self)
 
       block.call(current_turn)
 
@@ -68,6 +75,8 @@ class Battle
       if @current_turn_index >= @combat_order.length
         @current_turn_index = 0
         @round += 1
+
+        return if !max_rounds.nil? && @round > max_rounds
       end
 
     end while(!battle_ends?)

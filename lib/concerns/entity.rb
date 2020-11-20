@@ -31,6 +31,10 @@ module Entity
     @statuses.include?(:unconsious)
   end
 
+  def concious?
+    !dead? && !unconcious?
+  end
+
   def unconcious!
     EventManager.received_event({source: self, event: :unconsious})
     @statuses.add(:unconsious)
@@ -43,11 +47,14 @@ module Entity
     value
   end
 
-  def reset_turn!
-    @action = 1
-    @bonus_action = 1
-    @reaction = 1
-    @movement = speed
+  def reset_turn!(battle)
+    entity_state = battle.entity_state_for(self)
+    entity_state.merge!({
+      action: 1,
+      bonus_action: 1,
+      reaction: 1,
+      movement: speed
+    })
   end
 
 

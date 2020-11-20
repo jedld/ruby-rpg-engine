@@ -6,6 +6,7 @@ require 'lib/battle'
 require 'lib/event_manager'
 require "lib/player_character"
 require "lib/npc"
+require "lib/ai_controller/standard"
 
 
 class Session
