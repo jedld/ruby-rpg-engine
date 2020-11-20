@@ -5,6 +5,7 @@ require 'json'
 require 'pry-byebug'
 require 'active_support'
 require 'active_support/core_ext'
+require 'colorize'
 
 $LOAD_PATH << File.dirname(__FILE__)
 
@@ -17,7 +18,7 @@ require "lib/session"
 EventManager.standard_cli
 
 def start_battle(chosen_character, chosen_enemies)
-  puts "Battle has started between #{chosen_character.name} and #{chosen_enemies.map(&:name).join(',')}"
+  puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(',')}"
 
   battle_map = Battle.new(@session)
   battle_map.add(chosen_character, :a)

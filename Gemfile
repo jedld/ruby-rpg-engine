@@ -6,6 +6,7 @@ gem "tty-prompt"
 gem "pry-byebug"
 gem "activesupport"
 gem "random_name_generator"
+gem "colorize"
 
 group :test do
   gem "rspec"
