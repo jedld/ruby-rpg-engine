@@ -16,12 +16,16 @@ require "lib/session"
 # event handlers
 EventManager.standard_cli
 
-def start_battle(chosen_character, chosen_enemy)
-  puts "Battle has started between #{chosen_character.name} and #{chosen_enemy.name}"
+def start_battle(chosen_character, chosen_enemies)
+  puts "Battle has started between #{chosen_character.name} and #{chosen_enemies.map(&:name).join(',')}"
 
   battle_map = Battle.new(@session)
   battle_map.add(chosen_character, :a)
-  battle_map.add(chosen_enemy, :b)
+
+  chosen_enemies.each do |item|
+    battle_map.add(item, :b)
+  end
+
   battle_map.start
   puts "Combat Order:"
 
@@ -70,13 +74,13 @@ def training_dummy
     end
   end
 
-  chosen_enemy = @prompt.select("Select NPC") do |menu|
+  chosen_enemies = @prompt.multi_select("Select NPC") do |menu|
     @session.load_npcs.each do |character|
       menu.choice "#{character.name} (#{character.kind})", character
     end
   end
 
-  start_battle(chosen_character, chosen_enemy)
+  start_battle(chosen_character, chosen_enemies)
 end
 
 def start

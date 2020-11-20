@@ -65,11 +65,10 @@ class Battle
   def while_active(max_rounds = nil, &block)
     begin
       EventManager.received_event({source: self, event: :start_of_round, target: current_turn})
-      next if current_turn.dead? || current_turn.unconcious?
-
-      current_turn.reset_turn!(self)
-
-      block.call(current_turn)
+      if current_turn.concious?
+        current_turn.reset_turn!(self)
+        block.call(current_turn)
+      end
 
       @current_turn_index += 1
       if @current_turn_index >= @combat_order.length

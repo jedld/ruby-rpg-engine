@@ -33,5 +33,8 @@ RSpec.describe AiController::Standard do
         @battle.commit(action)
       end
     end
+    expect(@fighter.hp).to eq 53
+    expect(@npc1.hp).to eq 0
+    expect(@npc2.hp).to eq 0
   end
 end

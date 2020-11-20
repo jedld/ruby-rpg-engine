@@ -18,22 +18,24 @@ RSpec.describe Battle do
       srand(7000)
       action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
       expect(action.result).to eq([{
+        attack_name: 'Vicious Rapier',
         source: @fighter,
         type: :miss,
         attack_roll: DieRoll.new([2], 8),
         target: @npc}]
       )
       action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
-      expect(action.result).to eq([
+      expect(action.result).to eq([{
+        attack_name: "Vicious Rapier",
         type: :damage,
         source: @fighter,
-        attack_roll: DieRoll.new([14], 8),
+        attack_roll: DieRoll.new([10], 8),
         hit?: true,
-        damage: DieRoll.new([8], 7),
+        damage: DieRoll.new([2], 7),
         damage_type: 'piercing',
         target_ac: 15,
         target: @npc
-      ])
+      }])
       @battle.commit(action)
       expect(@npc.hp).to eq(0)
       expect(@npc.dead?).to be

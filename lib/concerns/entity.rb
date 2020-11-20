@@ -8,7 +8,7 @@ module Entity
     if (@hp < 0 && @hp.abs >= @properties[:max_hp])
       dead!
     elsif @hp <= 0
-      unconcious!
+      npc? ? dead! : unconcious!
     end
 
     @hp = 0 if @hp <= 0
