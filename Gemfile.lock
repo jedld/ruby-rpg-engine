@@ -67,6 +67,7 @@ GEM
 
 PLATFORMS
   ruby
+  x64-mingw32
 
 DEPENDENCIES
   activesupport
@@ -78,4 +79,4 @@ DEPENDENCIES
   tty-table
 
 BUNDLED WITH
-   1.16.2
+   2.1.4

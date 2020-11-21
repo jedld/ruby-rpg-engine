@@ -16,18 +16,47 @@ class AttackAction < Action
     end
   end
 
+  def self.build(session, source)
+    action = AttackAction.new(session, source, :attack)
+
+    OpenStruct.new({
+      action: action,
+      param: [
+        {
+          type: :select_target,
+          num: 1,
+        },
+      ],
+      next: ->(target) {
+        action.target = target
+        OpenStruct.new({
+          param: [
+            { type: :select_weapon },
+          ],
+          next: ->(weapon) {
+            action.using = weapon
+            OpenStruct.new({
+              param: nil,
+              next: ->() { action },
+            })
+          },
+        })
+      },
+    })
+  end
+
   def apply!
     @result.each do |item|
-      case(item[:type])
+      case (item[:type])
       when :damage
         EventManager.received_event({ source: item[:source], attack_roll: item[:attack_roll], target: item[:target], event: :attacked,
-          attack_name: item[:attack_name],
-          damage_type: item[:damage_type],
-          value: item[:damage].result })
+                                      attack_name: item[:attack_name],
+                                      damage_type: item[:damage_type],
+                                      value: item[:damage].result })
         item[:target].take_damage!(item)
       when :miss
         EventManager.received_event({ attack_roll: item[:attack_roll], attack_name: item[:attack_name],
-          source: item[:source], target: item[:target], event: :miss })
+                                      source: item[:source], target: item[:target], event: :miss })
       end
     end
   end
@@ -35,7 +64,7 @@ class AttackAction < Action
   def damage_modifier(weapon)
     damage_mod = @source.attack_ability_mod(weapon)
 
-    damage_mod += 2 if @source.has_class_feature?('dueling')
+    damage_mod += 2 if @source.has_class_feature?("dueling")
 
     "#{weapon[:damage]}+#{damage_mod}"
   end
@@ -66,12 +95,12 @@ class AttackAction < Action
     end
 
     hit = if attack_roll.nat_20?
-            true
-          elsif attack_roll.nat_1?
-            false
-          else
-            attack_roll.result >= target.armor_class
-          end
+        true
+      elsif attack_roll.nat_1?
+        false
+      else
+        attack_roll.result >= target.armor_class
+      end
 
     if hit
       @result = [{
@@ -83,7 +112,7 @@ class AttackAction < Action
         target_ac: target.armor_class,
         hit?: hit,
         damage_type: weapon[:damage_type],
-        damage: damage
+        damage: damage,
       }]
     else
       @result = [{
@@ -91,7 +120,7 @@ class AttackAction < Action
         source: @source,
         target: target,
         type: :miss,
-        attack_roll: attack_roll
+        attack_roll: attack_roll,
       }]
     end
 

@@ -1,5 +1,5 @@
 class Action
-  attr_reader :action_type, :result
+  attr_reader :action_type, :result, :source
 
   def initialize(session, source, action_type, opts = {})
     @source = source
