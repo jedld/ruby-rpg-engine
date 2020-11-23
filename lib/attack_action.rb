@@ -18,7 +18,6 @@ class AttackAction < Action
 
   def self.build(session, source)
     action = AttackAction.new(session, source, :attack)
-
     OpenStruct.new({
       action: action,
       param: [

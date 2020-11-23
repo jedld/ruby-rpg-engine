@@ -1,10 +1,10 @@
-require 'rubygems'
-require 'bundler/setup'
+require "rubygems"
+require "bundler/setup"
 require "tty-prompt"
-require 'json'
-require 'pry-byebug'
-require 'active_support'
-require 'active_support/core_ext'
+require "json"
+require "pry-byebug"
+require "active_support"
+require "active_support/core_ext"
 
 $LOAD_PATH << File.dirname(__FILE__)
 
@@ -17,7 +17,7 @@ require "lib/session"
 EventManager.standard_cli
 
 def start_battle(chosen_character, chosen_enemies)
-  puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(',')}"
+  puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(",")}"
 
   battle_map = Battle.new(@session)
   battle_map.add(chosen_character, :a)
@@ -88,13 +88,12 @@ def start
     answer = @prompt.select("Welcome to Wizards and Goblins (DnD 5e Adventure Engine)") do |menu|
       # menu.choice 'New Adventure ...', 1
       # menu.choice 'Load Game', 2
-      menu.choice 'Battle Simulator', 3
-      menu.choice 'Exit', 4
+      menu.choice "Battle Simulator", 3
+      menu.choice "Exit", 4
     end
     exit(1) if answer == 4
     training_dummy if answer == 3
   end while true
 end
-
 
 start
