@@ -83,16 +83,26 @@ def training_dummy
   start_battle(chosen_character, chosen_enemies)
 end
 
+def dice_roller
+  dice_roll_str = nil
+  begin
+    dice_roll_str = @prompt.ask("Dice Roll (ex. d20, d8+1) (a) > ")
+    dieRoll = DieRoll.roll dice_roll_str
+    puts "#{dieRoll.to_s} = #{dieRoll.result}"
+  end while dice_roll_str != "q"
+end
+
 def start
   begin
     answer = @prompt.select("Welcome to Wizards and Goblins (DnD 5e Adventure Engine)") do |menu|
       # menu.choice 'New Adventure ...', 1
-      # menu.choice 'Load Game', 2
-      menu.choice "Battle Simulator", 3
-      menu.choice "Exit", 4
+      menu.choice "Dice Roller", 1
+      menu.choice "Battle Simulator", 2
+      menu.choice "Exit", 3
     end
-    exit(1) if answer == 4
-    training_dummy if answer == 3
+    exit(1) if answer == 3
+    dice_roller if answer == 1
+    training_dummy if answer == 2
   end while true
 end
 

@@ -29,8 +29,11 @@ class DieRoll
         r.to_s
       end
     end # colorize
-
-    "(#{rolls.join(' + ')}) + #{@modifier}"
+    if (@modifier!=0)
+      "(#{rolls.join(' + ')}) + #{@modifier}"
+    else
+      "(#{rolls.join(' + ')})"
+    end
   end
 
   def self.numeric?(c)
