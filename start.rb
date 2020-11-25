@@ -18,31 +18,33 @@ EventManager.standard_cli
 
 def start_battle(chosen_character, chosen_enemies)
   puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(",")}"
+  map = BattleMap.new(@session, "maps/battle_sim")
+  battle = Battle.new(@session, map)
+  battle.add(chosen_character, :a, position: "spawn_point_1")
 
-  battle_map = Battle.new(@session)
-  battle_map.add(chosen_character, :a)
-
-  chosen_enemies.each do |item|
-    battle_map.add(item, :b)
+  chosen_enemies.each_with_index do |item, index|
+    battle.add(item, :b, position: "spawn_point_#{index + 2}")
   end
 
-  battle_map.start
+  battle.start
   puts "Combat Order:"
 
-  battle_map.combat_order.each_with_index do |entity, index|
+  battle.combat_order.each_with_index do |entity, index|
     puts "#{index + 1}. #{entity.name}"
   end
 
-  battle_map.while_active do |entity|
-    puts "#{entity.name}'s turn"
+  battle.while_active do |entity|
+    puts map.render
     puts ""
+    puts "#{entity.name}'s turn"
+    puts "==============================="
     if entity.npc?
       controller = AiController::Standard.new
-      action = controller.move_for(entity, battle_map)
-      battle_map.action!(action)
-      battle_map.commit(action)
+      action = controller.move_for(entity, battle)
+      battle.action!(action)
+      battle.commit(action)
     else
-      puts "#{entity.hp}/#{entity.max_hp}"
+      puts "#{entity.hp}/#{entity.max_hp} actions: #{entity.total_actions(battle)} bonus action: #{entity.total_bonus_actions(battle)}, movement: #{entity.available_movement(battle)}"
       action = @prompt.select("#{entity.name} will") do |menu|
         entity.available_actions(@session).each do |action|
           menu.choice action.label, action
@@ -52,19 +54,19 @@ def start_battle(chosen_character, chosen_enemies)
       case action.action_type
       when :attack
         target = @prompt.select("#{entity.name} targets") do |menu|
-          battle_map.valid_targets_for(entity, action).each do |target|
+          battle.valid_targets_for(entity, action).each do |target|
             menu.choice target.name, target
           end
         end
 
         action.target = target
-        battle_map.action!(action)
-        battle_map.commit(action)
+        battle.action!(action)
+        battle.commit(action)
       end
     end
   end
   puts "------------"
-  puts "battle ended in #{battle_map.round + 1} rounds."
+  puts "battle ended in #{battle.round + 1} rounds."
 end
 
 def training_dummy

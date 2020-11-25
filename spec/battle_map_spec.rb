@@ -4,7 +4,7 @@ RSpec.describe AttackAction do
     @battle_map = BattleMap.new(session, "fixtures/battle_sim")
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
     @npc = Npc.new(:goblin, name: "grok")
-    @battle_map.place(0, 1, @fighter)
+    @battle_map.place(0, 1, @fighter, "G")
   end
 
   specify "#size" do
@@ -22,7 +22,7 @@ RSpec.describe AttackAction do
 
   context "#place" do
     specify "place tokens in the batlefield" do
-      @battle_map.place(3, 3, @npc)
+      @battle_map.place(3, 3, @npc, "g")
       expect(@battle_map.render).to eq "·G··#·\n" +
                                        "···##·\n" +
                                        "······\n" +
@@ -33,7 +33,7 @@ RSpec.describe AttackAction do
   end
 
   specify "#distance" do
-    @battle_map.place(3, 3, @npc)
+    @battle_map.place(3, 3, @npc, "g")
     expect(@battle_map.distance(@npc, @fighter)).to eq(4)
   end
 
@@ -50,5 +50,13 @@ RSpec.describe AttackAction do
     expect(@battle_map.line_of_sight?(4, 2, 2, 0)).to_not be
     expect(@battle_map.line_of_sight?(1, 5, 3, 0)).to_not be
     expect(@battle_map.line_of_sight?(0, 0, 5, 5)).to be
+  end
+
+  specify "#spawn_points" do
+    expect(@battle_map.spawn_points).to eq({
+      "spawn_point_1" => { :location => [2, 3] },
+      "spawn_point_2" => { :location => [1, 5] },
+      "spawn_point_3" => { :location => [4, 0] },
+    })
   end
 end

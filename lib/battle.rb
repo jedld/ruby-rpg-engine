@@ -1,7 +1,7 @@
 class Battle
   attr_accessor :combat_order, :round
 
-  def initialize(session)
+  def initialize(session, map)
     @session = session
     @entities = {}
     @groups = {}
@@ -9,14 +9,19 @@ class Battle
     @combat_order = []
     @current_turn_index = 0
     @round = 0
+    @map = map
   end
 
-  def add(entity, group)
+  def add(entity, group, position: nil, token: nil)
     raise "entity cannot be nil" if entity.nil?
 
     @entities[entity] = { group: group }
-    @groups[group] ||=  Set.new
+    @groups[group] ||= Set.new
     @groups[group].add(entity)
+
+    unless position.nil?
+      @map.place_at_spawn_point(position, entity, token)
+    end
   end
 
   def entity_state_for(entity)
@@ -64,7 +69,7 @@ class Battle
 
   def while_active(max_rounds = nil, &block)
     begin
-      EventManager.received_event({source: self, event: :start_of_round, target: current_turn})
+      EventManager.received_event({ source: self, event: :start_of_round, target: current_turn })
       if current_turn.concious?
         current_turn.reset_turn!(self)
         block.call(current_turn)
@@ -77,8 +82,7 @@ class Battle
 
         return if !max_rounds.nil? && @round > max_rounds
       end
-
-    end while(!battle_ends?)
+    end while (!battle_ends?)
   end
 
   def battle_ends?

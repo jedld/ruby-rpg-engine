@@ -8,7 +8,7 @@ map:
     - ......
     - .##...
     - ......
-  layer2:
+  meta:
     - ....C.
     - ......
     - ......
@@ -18,7 +18,10 @@ map:
 legend:
   A:
     name: spawn_point_1
+    type: spawn_point
   B:
     name: spawn_point_2
-  c:
+    type: spawn_point
+  C:
     name: spawn_point_3
+    type: spawn_point

@@ -2,12 +2,13 @@ RSpec.describe Battle do
   let(:session) { Session.new }
   context "Simple Battle" do
     before do
-      @battle = Battle.new(session)
-      @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.json'))
+      @map = BattleMap.new(session, "fixtures/battle_sim")
+      @battle = Battle.new(session, @map)
+      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
       @npc = Npc.new(:goblin)
-      @battle.add(@fighter, :a)
-      @battle.add(@npc, :b)
-      EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name} died." })
+      @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
+      @battle.add(@npc, :b, position: :spawn_point_2, token: "g")
+      EventManager.register_event_listener([:died], ->(event) { puts "#{event[:source].name} died." })
       EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
       EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
       srand(7000)
@@ -16,15 +17,15 @@ RSpec.describe Battle do
     specify "attack" do
       @battle.start
       srand(7000)
-      action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
+      action = @battle.action(@fighter, :attack, target: @npc, using: "vicious_rapier")
       expect(action.result).to eq([{
-        attack_name: 'Vicious Rapier',
-        source: @fighter,
-        type: :miss,
-        attack_roll: DieRoll.new([2], 8, 20),
-        target: @npc}]
-      )
-      action = @battle.action(@fighter, :attack, target: @npc, using: 'vicious_rapier')
+                                 attack_name: "Vicious Rapier",
+                                 source: @fighter,
+                                 type: :miss,
+                                 attack_roll: DieRoll.new([2], 8, 20),
+                                 target: @npc,
+                               }])
+      action = @battle.action(@fighter, :attack, target: @npc, using: "vicious_rapier")
       expect(action.result).to eq([{
         attack_name: "Vicious Rapier",
         type: :damage,
@@ -32,9 +33,9 @@ RSpec.describe Battle do
         attack_roll: DieRoll.new([10], 8, 20),
         hit?: true,
         damage: DieRoll.new([2], 7, 8),
-        damage_type: 'piercing',
+        damage_type: "piercing",
         target_ac: 15,
-        target: @npc
+        target: @npc,
       }])
       @battle.commit(action)
       expect(@npc.hp).to eq(0)

@@ -1,7 +1,7 @@
 RSpec.describe AttackAction do
   let(:session) { Session.new }
   before do
-    @battle = Battle.new(session)
+    @battle = Battle.new(session, nil)
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
     @npc = Npc.new(:goblin)
   end

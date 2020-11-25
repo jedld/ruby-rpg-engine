@@ -1,18 +1,41 @@
 class BattleMap
+  attr_reader :spawn_points
+
   def initialize(session, map_file)
     @session = session
     @map_file = map_file
+    @spawn_points = {}
     @entities = {}
 
     @properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "#{map_file}.yml")).deep_symbolize_keys!
 
+    # terrain layer
     @base_map = @properties.dig(:map, :base).map do |lines|
       lines.each_char.map.to_a
     end.transpose
 
+    # meta layer
+    @meta_map = @properties.dig(:map, :meta).map do |lines|
+      lines.each_char.map.to_a
+    end.transpose
+
+    @legend = @properties[:legend] || {}
+
     @size = [@base_map.size, @base_map.first.size]
     @tokens = @size[0].times.map do
       @size[1].times.map { nil }
+    end
+
+    @meta_map.each_with_index do |meta_row, column_index|
+      meta_row.each_with_index do |token, row_index|
+        token_type = @legend.dig(token.to_sym, :type)
+        case (token_type)
+        when "spawn_point"
+          @spawn_points[@legend.dig(token.to_sym, :name)] = {
+            location: [column_index, row_index],
+          }
+        end
+      end
     end
   end
 
@@ -21,8 +44,17 @@ class BattleMap
   end
 
   def place(pos_x, pos_y, entity, token = nil)
+    raise "entity param is required" if entity.nil?
+
     @tokens[pos_x][pos_y] = { entity: entity, token: token || entity.name.first }
     @entities[entity] = [pos_x, pos_y]
+  end
+
+  def place_at_spawn_point(position, entity, token = nil)
+    raise "unknown spawn position #{position}. should be any of #{@spawn_points.keys.join(",")}" if !@spawn_points.key?(position.to_s)
+
+    pos_x, pos_y = @spawn_points[position.to_s][:location]
+    place(pos_x, pos_y, entity, token)
   end
 
   def distance(entity1, entity2)
