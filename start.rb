@@ -36,7 +36,13 @@ def move_ui(battle, map, entity)
     elsif movement == "x"
       return path
     elsif movement == "q"
-      return []
+      new_path = [path.last[0]-1, path.last[1] - 1]
+    elsif movement == 'e'
+      new_path = [path.last[0]+1, path.last[1] - 1]
+    elsif movement == 'z'
+      new_path = [path.last[0]-1, path.last[1] + 1]
+    elsif movement == 'c'
+      new_path = [path.last[0]+1, path.last[1] + 1]
     elsif movement == "r"
       path = [map.position_of(entity)]
       next
@@ -49,7 +55,7 @@ def move_ui(battle, map, entity)
     elsif map.valid_position?(*new_path) && map.movement_cost(path) < entity.available_movement(battle)
       path << new_path
     end
-  end while movement != "q"
+  end while movement != "x"
 end
 
 def start_battle(chosen_character, chosen_enemies)
