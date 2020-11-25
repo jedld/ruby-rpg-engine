@@ -12,20 +12,28 @@ RSpec.describe AttackAction do
   end
 
   specify "#render" do
-    expect(@battle_map.render).to eq "·G··#·\n" +
-                                     "···##·\n" +
-                                     "······\n" +
+    expect(@battle_map.render).to eq "····#·\n" +
+                                     "G··##·\n" +
+                                     "····#·\n" +
                                      "······\n" +
                                      "·##···\n" +
                                      "······\n"
+
+    @battle_map.place(2, 3, @npc, "X")
+    expect(@battle_map.render(line_of_sight: @npc)).to eq "····  \n" +
+                                                          "G··## \n" +
+                                                          "····# \n" +
+                                                          "··X···\n" +
+                                                          "·##···\n" +
+                                                          "    ··\n"
   end
 
   context "#place" do
     specify "place tokens in the batlefield" do
       @battle_map.place(3, 3, @npc, "g")
-      expect(@battle_map.render).to eq "·G··#·\n" +
-                                       "···##·\n" +
-                                       "······\n" +
+      expect(@battle_map.render).to eq "····#·\n" +
+                                       "G··##·\n" +
+                                       "····#·\n" +
                                        "···g··\n" +
                                        "·##···\n" +
                                        "······\n"
@@ -50,6 +58,10 @@ RSpec.describe AttackAction do
     expect(@battle_map.line_of_sight?(4, 2, 2, 0)).to_not be
     expect(@battle_map.line_of_sight?(1, 5, 3, 0)).to_not be
     expect(@battle_map.line_of_sight?(0, 0, 5, 5)).to be
+    expect(@battle_map.line_of_sight?(2, 3, 2, 4)).to be
+    expect(@battle_map.line_of_sight?(2, 3, 1, 4)).to be
+    expect(@battle_map.line_of_sight?(3, 2, 3, 1)).to be
+    expect(@battle_map.line_of_sight?(2, 3, 5, 1)).to_not be
   end
 
   specify "#spawn_points" do

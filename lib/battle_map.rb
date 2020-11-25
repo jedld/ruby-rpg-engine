@@ -54,7 +54,8 @@ class BattleMap
     raise "unknown spawn position #{position}. should be any of #{@spawn_points.keys.join(",")}" if !@spawn_points.key?(position.to_s)
 
     pos_x, pos_y = @spawn_points[position.to_s][:location]
-    place(pos_x, pos_y, entity, token)
+    place(pos_y, pos_x, entity, token)
+    puts "place #{entity.name} at #{pos_x}, #{pos_y}"
   end
 
   def distance(entity1, entity2)
@@ -64,12 +65,20 @@ class BattleMap
     Math.sqrt((pos1_x - pos2_x) ** 2 + (pos1_y - pos2_y) ** 2).ceil
   end
 
+  def line_of_sight_for?(entity, pos2_x, pos2_y, distance = nil)
+    raise "cannot find entity" if @entities[entity].nil?
+
+    pos1_x, pos1_y = @entities[entity]
+    line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance)
+  end
+
   def line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance = nil)
     if (pos2_x == pos1_x)
       scanner = pos2_y > pos1_y ? (pos1_y...pos2_y) : (pos2_y...pos1_y)
 
       scanner.each_with_index do |y, index|
         return false if !distance.nil? && index > distance
+        next if (y == pos1_y) || (y == pos2_y)
         return false if (@base_map[pos1_x][y] == "#")
       end
       return true
@@ -79,29 +88,36 @@ class BattleMap
         scanner = pos2_x > pos1_x ? (pos1_x...pos2_x) : (pos2_x...pos1_x)
         scanner.each_with_index do |x, index|
           return false if !distance.nil? && index > distance
+          next if (x == pos1_x) || (x == pos2_x)
           return false if (@base_map[x][pos2_y] == "#")
         end
         return true
       else
         scanner = pos2_x > pos1_x ? (pos1_x...pos2_x) : (pos2_x...pos1_x)
         b = pos1_y - m * pos1_x
-        step = 1 / m.abs
+        step = (m.abs > 1) ? 1 / m.abs : m.abs
+
         scanner.step(step).each_with_index do |x, index|
-          return false if !distance.nil? && index > distance
           y = (m * x + b).floor
-          return false if (@base_map[x][y] == "#")
+
+          return false if !distance.nil? && index > distance
+          next if (x.floor == pos1_x && y == pos1_y) || (x.floor == pos2_x && y == pos2_y)
+          return false if (@base_map[x.floor][y] == "#")
         end
         return true
       end
     end
   end
 
-  def render
+  def render(line_of_sight: nil)
     @base_map.transpose.each_with_index.map do |row, row_index|
       row.each_with_index.map do |c, col_index|
         c = "·" if c == "."
+
+        next " " if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+
         # render map layer
-        token = @tokens[row_index][col_index] ? @tokens[row_index][col_index][:token] : nil
+        token = @tokens[col_index][row_index] ? @tokens[col_index][row_index][:token] : nil
         token || c
       end.join
     end.join("\n") + "\n"

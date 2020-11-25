@@ -20,7 +20,7 @@ def start_battle(chosen_character, chosen_enemies)
   puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(",")}"
   map = BattleMap.new(@session, "maps/battle_sim")
   battle = Battle.new(@session, map)
-  battle.add(chosen_character, :a, position: "spawn_point_1")
+  battle.add(chosen_character, :a, position: "spawn_point_1", token: "X")
 
   chosen_enemies.each_with_index do |item, index|
     battle.add(item, :b, position: "spawn_point_#{index + 2}")
@@ -34,7 +34,6 @@ def start_battle(chosen_character, chosen_enemies)
   end
 
   battle.while_active do |entity|
-    puts map.render
     puts ""
     puts "#{entity.name}'s turn"
     puts "==============================="
@@ -44,6 +43,7 @@ def start_battle(chosen_character, chosen_enemies)
       battle.action!(action)
       battle.commit(action)
     else
+      puts map.render(line_of_sight: entity)
       puts "#{entity.hp}/#{entity.max_hp} actions: #{entity.total_actions(battle)} bonus action: #{entity.total_bonus_actions(battle)}, movement: #{entity.available_movement(battle)}"
       action = @prompt.select("#{entity.name} will") do |menu|
         entity.available_actions(@session).each do |action|
@@ -62,6 +62,11 @@ def start_battle(chosen_character, chosen_enemies)
         action.target = target
         battle.action!(action)
         battle.commit(action)
+      when :move
+        begin
+          puts "\e[H\e[2J"
+          movement = @prompt.keypress(map.render(line_of_sight: entity))
+        end while movement != "q"
       end
     end
   end
