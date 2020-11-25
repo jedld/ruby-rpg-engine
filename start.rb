@@ -16,6 +16,42 @@ require "lib/session"
 # event handlers
 EventManager.standard_cli
 
+def move_ui(battle, map, entity)
+  path = [map.position_of(entity)]
+  begin
+    puts "\e[H\e[2J"
+    puts "movement #{map.movement_cost(path).to_s.colorize(:green)}ft."
+    puts " "
+    puts map.render(line_of_sight: entity, path: path)
+    movement = @prompt.keypress(" (wsad) - movement, x - confirm path, r - reset")
+
+    if movement == "w"
+      new_path = [path.last[0], path.last[1] - 1]
+    elsif movement == "a"
+      new_path = [path.last[0] - 1, path.last[1]]
+    elsif movement == "d"
+      new_path = [path.last[0] + 1, path.last[1]]
+    elsif movement == "s"
+      new_path = [path.last[0], path.last[1] + 1]
+    elsif movement == "x"
+      return path
+    elsif movement == "q"
+      return []
+    elsif movement == "r"
+      path = [map.position_of(entity)]
+      next
+    else
+      next
+    end
+
+    if path.size > 1 && new_path == path[path.size - 2]
+      path.pop
+    elsif map.valid_position?(*new_path) && map.movement_cost(path) < entity.available_movement(battle)
+      path << new_path
+    end
+  end while movement != "q"
+end
+
 def start_battle(chosen_character, chosen_enemies)
   puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(",")}"
   map = BattleMap.new(@session, "maps/battle_sim")
@@ -63,10 +99,7 @@ def start_battle(chosen_character, chosen_enemies)
         battle.action!(action)
         battle.commit(action)
       when :move
-        begin
-          puts "\e[H\e[2J"
-          movement = @prompt.keypress(map.render(line_of_sight: entity))
-        end while movement != "q"
+        move_path = move_ui(battle, map, entity)
       end
     end
   end

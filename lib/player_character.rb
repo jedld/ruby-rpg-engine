@@ -5,9 +5,9 @@ class PlayerCharacter
   def initialize(properties)
     @properties = properties.deep_symbolize_keys!
     @ability_scores = @properties[:ability]
-    @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), '..','char_classes', "#{@properties[:class]}.json"))).deep_symbolize_keys!
+    @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), "..", "char_classes", "#{@properties[:class]}.json"))).deep_symbolize_keys!
     @equipped = @properties[:equipped]
-    @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', 'races', "#{@properties[:race]}.yml")).deep_symbolize_keys!
+    @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
     @statuses = Set.new
     @resistances = []
     setup_attributes
@@ -66,15 +66,15 @@ class PlayerCharacter
   end
 
   def perception_proficient?
-    @properties[:skills].include?('perception')
+    @properties[:skills].include?("perception")
   end
 
   def investigation_proficient?
-    @properties[:skills].include?('investigation')
+    @properties[:skills].include?("investigation")
   end
 
   def insight_proficient?
-    @properties[:skills].include?('insight')
+    @properties[:skills].include?("insight")
   end
 
   def to_h
@@ -88,19 +88,20 @@ class PlayerCharacter
         con: @ability_scores.fetch(:con),
         int: @ability_scores.fetch(:int),
         wis: @ability_scores.fetch(:wis),
-        cha: @ability_scores.fetch(:cha)
+        cha: @ability_scores.fetch(:cha),
       },
       passive: {
         perception: passive_perception,
         investigation: passive_investigation,
-        insight: passive_insight
-      }
+        insight: passive_insight,
+      },
     }
   end
 
   def available_actions(session, battle = nil)
     [:attack, :move, :dash, :dodge, :help, :ready, :end].map { |type|
-      if (type == :attack)
+      case (type)
+      when :attack
         # check all equipped and create attack for each
         @properties[:equipped].map do |item|
           weapon_detail = session.load_weapon(item)
@@ -111,6 +112,8 @@ class PlayerCharacter
           action.using = item
           action
         end.compact
+      when :move
+        MoveAction.new(session, self, type)
       else
         Action.new(session, self, type)
       end
@@ -130,14 +133,14 @@ class PlayerCharacter
   def attack_ability_mod(weapon)
     modifier = 0
 
-    case(weapon[:type])
-    when 'melee_attack'
-      if weapon[:properties].include?('finesse') # if finese automatically use the largest mod
+    case (weapon[:type])
+    when "melee_attack"
+      if weapon[:properties].include?("finesse") # if finese automatically use the largest mod
         modifier += [str_mod, dex_mod].max
       else
         modifier += str_mod
       end
-    when 'ranged_attack'
+    when "ranged_attack"
       modifier += dex_mod
     end
 
@@ -170,14 +173,14 @@ class PlayerCharacter
   end
 
   def equiped_ac
-    @equipments ||= YAML.load_file(File.join(File.dirname(__FILE__), '..', 'items', 'equipment.yml')).deep_symbolize_keys!
+    @equipments ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "equipment.yml")).deep_symbolize_keys!
 
     equipped_meta = @equipped.map { |e| @equipments[e.to_sym] }.compact
     armor = equipped_meta.detect do |equipment|
-              equipment[:type] == 'armor'
-            end
+      equipment[:type] == "armor"
+    end
 
-    shield = equipped_meta.detect { |e| e[:type] == 'shield' }
+    shield = equipped_meta.detect { |e| e[:type] == "shield" }
 
     (armor.nil? ? 10 : armor[:ac]) + (shield.nil? ? 0 : shield[:bonus_ac])
   end

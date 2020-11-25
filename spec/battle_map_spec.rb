@@ -45,6 +45,13 @@ RSpec.describe AttackAction do
     expect(@battle_map.distance(@npc, @fighter)).to eq(4)
   end
 
+  specify "#valid_position?" do
+    expect(@battle_map.valid_position?(6, 6)).to_not be
+    expect(@battle_map.valid_position?(-1, 4)).to_not be
+    expect(@battle_map.valid_position?(1, 4)).to_not be
+    expect(@battle_map.valid_position?(0, 0)).to be
+  end
+
   specify "#line_of_sight?" do
     expect(@battle_map.line_of_sight?(0, 0, 0, 1)).to be
     expect(@battle_map.line_of_sight?(0, 1, 0, 0)).to be

@@ -72,6 +72,23 @@ class BattleMap
     line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance)
   end
 
+  def position_of(entity)
+    @entities[entity]
+  end
+
+  def valid_position?(pos_x, pos_y)
+    return false if pos_x >= @base_map.size || pos_x < 0 || pos_y >= @base_map[0].size || pos_y < 0 # check for out of bounds
+    return false if @base_map[pos_x][pos_y] == "#"
+
+    true
+  end
+
+  def movement_cost(path = [])
+    return 0 if path.empty?
+
+    (path.size - 1) * 5
+  end
+
   def line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance = nil)
     if (pos2_x == pos1_x)
       scanner = pos2_y > pos1_y ? (pos1_y...pos2_y) : (pos2_y...pos1_y)
@@ -109,12 +126,19 @@ class BattleMap
     end
   end
 
-  def render(line_of_sight: nil)
+  def render(line_of_sight: nil, path: [])
     @base_map.transpose.each_with_index.map do |row, row_index|
       row.each_with_index.map do |c, col_index|
-        c = "·" if c == "."
+        c = "·".colorize(:light_black) if c == "."
+        c = "#".colorize(color: :black, background: :white) if c == "#"
 
-        next " " if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+        if !path.empty?
+          next "X" if path[0] == [col_index, row_index]
+          next "+" if path.include?([col_index, row_index])
+          next " " if !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
+        else
+          next " " if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+        end
 
         # render map layer
         token = @tokens[col_index][row_index] ? @tokens[col_index][row_index][:token] : nil
