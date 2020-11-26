@@ -114,7 +114,15 @@ class Battle
   end
 
   def trigger_opportunity_attack(entity, target, cur_x, cur_y)
-
+    event = {
+      target: target,
+      position: [cur_x, cur_y]
+    }
+    action = entity.trigger_event(:opportunity_attack, self, @session, @map, event)
+    if action
+      action.resolve(@session, @map, battle: self)
+      commit(action)
+    end
   end
 
   def commit(action)

@@ -1,5 +1,5 @@
 class AttackAction < Action
-  attr_accessor :target, :using, :npc_action
+  attr_accessor :target, :using, :npc_action, :as_reaction
 
   def to_s
     @action_type.to_s.humanize
@@ -57,10 +57,14 @@ class AttackAction < Action
                                       damage_type: item[:damage_type],
                                       value: item[:damage].result })
         item[:target].take_damage!(item)
-        item[:battle].entity_state_for(item[:source])[:action] -= 1
       when :miss
         EventManager.received_event({ attack_roll: item[:attack_roll], attack_name: item[:attack_name],
                                       source: item[:source], target: item[:target], event: :miss })
+      end
+
+      if as_reaction
+        item[:battle].entity_state_for(item[:source])[:reaction] -= 1
+      else
         item[:battle].entity_state_for(item[:source])[:action] -= 1
       end
     end

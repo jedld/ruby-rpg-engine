@@ -1,6 +1,7 @@
 RSpec.describe MoveAction do
   let(:session) { Session.new }
   before do
+    srand(1000)
     @map = BattleMap.new(session, "fixtures/battle_sim")
     @battle = Battle.new(session, @map)
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
@@ -36,8 +37,22 @@ RSpec.describe MoveAction do
   end
 
   specify "opportunity attach triggers" do
+    EventManager.standard_cli
+
+    @npc.attach_handler(:opportunity_attack, -> (battle, session, map, event) {
+      action = @npc.available_actions(session, battle).select { |s|
+        s.action_type == :attack
+      }.select { |s| s.npc_action[:type] == 'melee_attack' }.first
+
+      action.target = event[:target]
+      action.as_reaction = true
+      action
+    })
+
     @action.move_path = [[2,5], [3,5]]
+    expect(@fighter.hp).to eq(67)
     @battle.action!(@action)
     @battle.commit(@action)
+    expect(@fighter.hp).to eq(64)
   end
 end

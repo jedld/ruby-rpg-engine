@@ -64,7 +64,10 @@ def start_battle(chosen_character, chosen_enemies)
   battle = Battle.new(@session, map)
   battle.add(chosen_character, :a, position: "spawn_point_1", token: "X")
 
+  controller = AiController::Standard.new
+
   chosen_enemies.each_with_index do |item, index|
+    controller.register_handlers_on(item)
     battle.add(item, :b, position: "spawn_point_#{index + 2}")
   end
 
@@ -80,7 +83,6 @@ def start_battle(chosen_character, chosen_enemies)
     puts "#{entity.name}'s turn"
     puts "==============================="
     if entity.npc?
-      controller = AiController::Standard.new
       action = controller.move_for(entity, battle)
       if action.nil?
         puts "#{entity.name}: Can't do anything."
@@ -98,6 +100,7 @@ def start_battle(chosen_character, chosen_enemies)
           entity.available_actions(@session, battle).each do |action|
             menu.choice action.label, action
           end
+          menu.choice "Stop Battle", :stop
         end
 
         case action.action_type
@@ -123,6 +126,7 @@ def start_battle(chosen_character, chosen_enemies)
       end while action.action_type != :end
     end
   end
+
   puts "------------"
   puts "battle ended in #{battle.round + 1} rounds."
 end

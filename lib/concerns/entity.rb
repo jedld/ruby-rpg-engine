@@ -82,7 +82,7 @@ module Entity
   end
 
   def has_reaction?(battle)
-    battle.entity_state_for(self)[:reaction] > 0
+    (battle.entity_state_for(self)[:reaction].presence || 0) > 0
   end
 
   def str_mod
@@ -99,6 +99,16 @@ module Entity
 
   def dex_mod
     modifier_table(@ability_scores.fetch(:dex))
+  end
+
+  def attach_handler(event_name, callback)
+    @event_handlers ||= {}
+    @event_handlers[event_name.to_sym] = callback
+  end
+
+  def trigger_event(event_name, battle, session, map, event)
+    @event_handlers ||= {}
+    @event_handlers[event_name.to_sym].call(battle, session, map, event)
   end
 
   protected
