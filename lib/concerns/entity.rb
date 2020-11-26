@@ -69,6 +69,10 @@ module Entity
     })
   end
 
+  def has_action?(battle)
+    (battle.entity_state_for(self)[:action].presence || 0) > 0
+  end
+
   def total_actions(battle)
     battle.entity_state_for(self)[:action]
   end

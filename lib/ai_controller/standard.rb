@@ -31,12 +31,14 @@ module AiController
 
       # generate available targets
       valid_actions = []
-      available_actions.select { |a| a.action_type == :attack }.each do |action|
-        if action.npc_action
-          valid_targets = battle.valid_targets_for(entity, action)
-          if !valid_targets.first.nil?
-            action.target = valid_targets.first
-            valid_actions << action
+      if entity.has_action?(battle)
+        available_actions.select { |a| a.action_type == :attack }.each do |action|
+          if action.npc_action
+            valid_targets = battle.valid_targets_for(entity, action)
+            if !valid_targets.first.nil?
+              action.target = valid_targets.first
+              valid_actions << action
+            end
           end
         end
       end

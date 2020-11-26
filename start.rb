@@ -83,14 +83,16 @@ def start_battle(chosen_character, chosen_enemies)
     puts "#{entity.name}'s turn"
     puts "==============================="
     if entity.npc?
-      action = controller.move_for(entity, battle)
-      if action.nil?
-        puts "#{entity.name}: Can't do anything."
-        next
-      end
+      begin
+        action = controller.move_for(entity, battle)
+        if action.nil?
+          puts "#{entity.name}: End turn."
+          break
+        end
 
-      battle.action!(action)
-      battle.commit(action)
+        battle.action!(action)
+        battle.commit(action)
+      end while !action.nil?
     else
       begin
         puts map.render(line_of_sight: entity)
