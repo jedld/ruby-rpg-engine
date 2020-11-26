@@ -81,6 +81,10 @@ module Entity
     battle.entity_state_for(self)[:movement]
   end
 
+  def has_reaction?(battle)
+    battle.entity_state_for(self)[:reaction] > 0
+  end
+
   def str_mod
     modifier_table(@ability_scores.fetch(:str))
   end

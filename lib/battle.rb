@@ -113,6 +113,10 @@ class Battle
     live_groups.size <= 1
   end
 
+  def trigger_opportunity_attack(entity, target, cur_x, cur_y)
+
+  end
+
   def commit(action)
     return if action.nil?
 

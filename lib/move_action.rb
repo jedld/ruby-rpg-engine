@@ -33,7 +33,7 @@ class MoveAction < Action
     if battle
       opportunity_attacks = opportunity_attack_list(battle, map)
       opportunity_attacks.each do |enemy_opporunity|
-        next unless enemy_opporunity[:source].has_reaction?
+        next unless enemy_opporunity[:source].has_reaction?(battle)
 
         original_location = move_path[enemy_opporunity[:path] - 1]
         battle.trigger_opportunity_attack(enemy_opporunity[:source], @source, *original_location)

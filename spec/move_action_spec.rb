@@ -34,4 +34,10 @@ RSpec.describe MoveAction do
     @action.move_path = [[2,5], [3,5]]
     expect(@action.opportunity_attack_list(@battle, @map)).to eq [{ source: @npc, path: 1 }]
   end
+
+  specify "opportunity attach triggers" do
+    @action.move_path = [[2,5], [3,5]]
+    @battle.action!(@action)
+    @battle.commit(@action)
+  end
 end
