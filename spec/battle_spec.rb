@@ -6,10 +6,13 @@ RSpec.describe Battle do
       @battle = Battle.new(session, @map)
       @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
       @npc = Npc.new(:goblin)
+      @npc2 = Npc.new(:ogre)
       @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
       @battle.add(@npc, :b, position: :spawn_point_2, token: "g")
+      @battle.add(@npc2, :b, position: :spawn_point_3, token: "O")
       @fighter.reset_turn!(@battle)
       @npc.reset_turn!(@battle)
+      @npc2.reset_turn!(@battle)
 
       EventManager.register_event_listener([:died], ->(event) { puts "#{event[:source].name} died." })
       EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
@@ -28,6 +31,7 @@ RSpec.describe Battle do
                                  type: :miss,
                                  attack_roll: DieRoll.new([2], 8, 20),
                                  target: @npc,
+                                 npc_action: nil
                                }])
       action = @battle.action(@fighter, :attack, target: @npc, using: "vicious_rapier")
       expect(action.result).to eq([{
@@ -41,10 +45,19 @@ RSpec.describe Battle do
         damage_type: "piercing",
         target_ac: 15,
         target: @npc,
+        npc_action: nil
       }])
+
+      expect(@fighter.ammo_count("arrows")).to eq(20)
       @battle.commit(action)
+      expect(@fighter.ammo_count("arrows")).to eq(20)
+
       expect(@npc.hp).to eq(0)
       expect(@npc.dead?).to be
+      expect(@npc2.ammo_count("javelin")).to eq(1)
+      action = @battle.action(@npc2, :attack, target: @fighter, npc_action: @npc2.npc_actions[1])
+      @battle.commit(action)
+      expect(@npc2.ammo_count("javelin")).to eq(0)
     end
   end
 end

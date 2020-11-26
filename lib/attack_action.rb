@@ -62,6 +62,11 @@ class AttackAction < Action
                                       source: item[:source], target: item[:target], event: :miss })
       end
 
+      # handle ammo
+      if item[:npc_action] && item[:npc_action][:ammo]
+        item[:source].deduct_ammo(item.dig(:npc_action, :ammo), 1)
+      end
+
       if as_reaction
         item[:battle].entity_state_for(item[:source])[:reaction] -= 1
       else
@@ -123,6 +128,7 @@ class AttackAction < Action
         hit?: hit,
         damage_type: weapon[:damage_type],
         damage: damage,
+        npc_action: npc_action
       }]
     else
       @result = [{
@@ -132,6 +138,7 @@ class AttackAction < Action
         battle: battle,
         type: :miss,
         attack_roll: attack_roll,
+        npc_action: npc_action
       }]
     end
 

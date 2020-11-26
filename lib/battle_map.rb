@@ -65,6 +65,18 @@ class BattleMap
     Math.sqrt((pos1_x - pos2_x) ** 2 + (pos1_y - pos2_y) ** 2).ceil
   end
 
+  # Entity to look around
+  def look(entity, distance = nil)
+    @entities.map do |k, v|
+      next if k == entity
+
+      pos1_x, pos1_y = v
+      next unless line_of_sight_for?(entity, pos1_x, pos1_y, distance)
+
+      [k, [pos1_x, pos1_y]]
+    end.compact.to_h
+  end
+
   def line_of_sight_for?(entity, pos2_x, pos2_y, distance = nil)
     raise "cannot find entity" if @entities[entity].nil?
 

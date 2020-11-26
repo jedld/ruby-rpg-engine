@@ -8,6 +8,9 @@ class PlayerCharacter
     @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), "..", "char_classes", "#{@properties[:class]}.json"))).deep_symbolize_keys!
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
+    @inventory = @properties[:inventory].map do |inventory|
+      [inventory[:type], OpenStruct.new({ qty: inventory[:qty] })]
+    end.to_h
     @statuses = Set.new
     @resistances = []
     setup_attributes

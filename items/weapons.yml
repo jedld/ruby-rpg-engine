@@ -16,6 +16,9 @@ vicious_rapier:
     additional:
       die: 2d6
       restriction: nat20_attack
+  meta:
+    noise_target: 5
+    noise_source: 5
 longbow:
   name: Longbow
   type: ranged_attack
@@ -27,9 +30,13 @@ longbow:
   damage: 1d8
   modifiers:
   damage_type: piercing
+  ammo: arrows
   properties:
     - heavy
     - ammunition
     - ranged
   cost: 50
   weight: 2
+  meta:
+    noise_target: 5
+    noise_source: 5

@@ -7,8 +7,11 @@ RSpec.describe AiController::Standard do
   before do
     EventManager.clear
     EventManager.standard_cli
-    @map = BattleMap.new(session, "fixtures/battle_sim")
+    @map = BattleMap.new(session, "fixtures/battle_sim_2")
     @battle = Battle.new(session, @map)
+
+    controller.register_battle_listeners(@battle)
+
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
     @npc1 = Npc.new(:goblin)
     @npc2 = Npc.new(:ogre)
@@ -22,15 +25,18 @@ RSpec.describe AiController::Standard do
     srand(7000)
   end
 
-  xspecify "performs standard attacks" do
+  specify "performs standard attacks" do
     @battle.start
     @battle.while_active do |entity|
       if entity == @fighter
         target = [@npc1, @npc2].select { |a| a.concious? }.first
+        action = @battle.action(@fighter, :move, move_path: [[2,3],[2,4],[2,5]])
+        @battle.commit(action)
         action = @battle.action(@fighter, :attack, target: target, using: "vicious_rapier")
         @battle.commit(action)
       elsif entity == @npc1 || entity == @npc2
         action = controller.move_for(entity, @battle)
+
         @battle.action!(action)
         @battle.commit(action)
       end

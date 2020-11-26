@@ -1,19 +1,32 @@
 module AiController
   class Standard
+    attr_reader :battle_data
     def initialize
       @battle_data = {}
     end
 
+    def register_battle_listeners(battle)
+      # detects noisy things
+      battle.add_battlefield_event_listener(:sound, lambda { |entity, position, stealth|
+
+      })
+
+      # detects line of sight movement
+      battle.add_battlefield_event_listener(:movement, lambda { |entity, position|
+
+      })
+    end
+
     def register_handlers_on(entity)
-      entity.attach_handler(:opportunity_attack, ->(battle, session, map, event) {
+      entity.attach_handler(:opportunity_attack, lambda { |battle, session, map, event|
         entity_x, entity_y = map.position_of(entity)
         target_x, target_y = event[:position]
 
         distance = Math.sqrt((target_x - entity_x)**2 + (target_y - entity_y)**2).ceil
 
-        action = entity.available_actions(session, battle).select { |s|
+        action = entity.available_actions(session, battle).select do |s|
           s.action_type == :attack && s.npc_action[:type] == 'melee_attack' && distance <= s.npc_action[:range]
-        }.first
+        end.first
 
         if action
           action.target = event[:target]
@@ -25,27 +38,45 @@ module AiController
 
     def move_for(entity, battle)
       @battle_data[battle] ||= {}
-      @battle_data[battle][entity] ||= {}
+      @battle_data[battle][entity] ||= {
+        known_enemy_positions: {},
+        hiding_spots: {},
+        investigate_location: {}
+      }
+
+      enemy_positions = @battle_data[battle][entity][:known_enemy_positions]
+      hiding_spots = @battle_data[battle][entity][:hiding_spots]
+      investigate_location = @battle_data[battle][entity][:investigate_location]
+
+      objects_around_me = battle.map.look(entity)
+
+      my_group = battle.entity_state_for(entity)[:group]
+
+      objects_around_me.each do |object, location|
+        state = battle.entity_state_for(object)
+        next unless state
+
+        enemy_positions[object] = location if state[:group] != my_group
+      end
 
       available_actions = entity.available_actions(@session)
 
       # generate available targets
       valid_actions = []
+
       if entity.has_action?(battle)
         available_actions.select { |a| a.action_type == :attack }.each do |action|
-          if action.npc_action
-            valid_targets = battle.valid_targets_for(entity, action)
-            if !valid_targets.first.nil?
-              action.target = valid_targets.first
-              valid_actions << action
-            end
+          next unless action.npc_action
+
+          valid_targets = battle.valid_targets_for(entity, action)
+          unless valid_targets.first.nil?
+            action.target = valid_targets.first
+            valid_actions << action
           end
         end
       end
 
-      if !valid_actions.empty?
-        return valid_actions.first
-      end
+      return valid_actions.first unless valid_actions.empty?
     end
   end
 end

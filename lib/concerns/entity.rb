@@ -2,10 +2,10 @@ module Entity
   def take_damage!(damage_params)
     dmg = damage_params[:damage].result
     EventManager.received_event({ source: self, event: :damage, value: dmg })
-    dmg = (dmg.to_f / 2.to_f).floor if resistant_to?(damage_params[:damage_type])
+    dmg = (dmg / 2.to_f).floor if resistant_to?(damage_params[:damage_type])
     @hp -= dmg
 
-    if (@hp < 0 && @hp.abs >= @properties[:max_hp])
+    if @hp < 0 && @hp.abs >= @properties[:max_hp]
       dead!
     elsif @hp <= 0
       npc? ? dead! : unconcious!
@@ -37,14 +37,12 @@ module Entity
 
   def entered_melee?(map, pos_x, pos_y)
     cur_x, cur_y = map.position_of(self)
-    distance = Math.sqrt((cur_x - pos_x) ** 2 + (cur_y - pos_y) ** 2).ceil * 5 # one square - 5 ft
+    distance = Math.sqrt((cur_x - pos_x)**2 + (cur_y - pos_y)**2).ceil * 5 # one square - 5 ft
 
     # determine melee options
-    if distance <= melee_distance
-      return true
-    end
+    return true if distance <= melee_distance
 
-    return false
+    false
   end
 
   def unconcious!
@@ -54,7 +52,7 @@ module Entity
 
   def initiative!
     roll = DieRoll.roll("1d20+#{dex_mod}")
-    value = roll.result.to_f + @ability_scores.fetch(:dex).to_f / 100.to_f
+    value = roll.result.to_f + @ability_scores.fetch(:dex) / 100.to_f
     EventManager.received_event({ source: self, event: :initiative, roll: roll, value: value })
     value
   end
@@ -62,15 +60,15 @@ module Entity
   def reset_turn!(battle)
     entity_state = battle.entity_state_for(self)
     entity_state.merge!({
-      action: 1,
-      bonus_action: 1,
-      reaction: 1,
-      movement: speed,
-    })
+                          action: 1,
+                          bonus_action: 1,
+                          reaction: 1,
+                          movement: speed
+                        })
   end
 
   def has_action?(battle)
-    (battle.entity_state_for(self)[:action].presence || 0) > 0
+    (battle.entity_state_for(self)[:action].presence || 0).positive?
   end
 
   def total_actions(battle)
@@ -86,7 +84,7 @@ module Entity
   end
 
   def has_reaction?(battle)
-    (battle.entity_state_for(self)[:reaction].presence || 0) > 0
+    (battle.entity_state_for(self)[:reaction].presence || 0).positive?
   end
 
   def str_mod
@@ -113,6 +111,19 @@ module Entity
   def trigger_event(event_name, battle, session, map, event)
     @event_handlers ||= {}
     @event_handlers[event_name.to_sym].call(battle, session, map, event)
+  end
+
+  def deduct_ammo(ammo_type, amount = 1)
+    return if @inventory[ammo_type].nil?
+
+    qty = @inventory[ammo_type][:qty]
+    @inventory[ammo_type][:qty] = qty - amount
+  end
+
+  def ammo_count(ammo_type)
+    return 0 if @inventory[ammo_type].nil?
+
+    @inventory[ammo_type][:qty]
   end
 
   protected

@@ -20,22 +20,24 @@ class MoveAction < Action
   end
 
   def self.build(session, source)
-    action = MoveAction.new(session, source, :attack)
+    action = MoveAction.new(session, source, :move)
     action.build_map
   end
 
   def resolve(session, map, opts = {})
-    raise "no path specified" if move_path.nil? || move_path.empty?
+    raise "no path specified" if (move_path.nil? || move_path.empty?) && opts[:move_path].nil?
 
     # check for melee opportunity attacks
     battle = opts[:battle]
 
+    current_moves = move_path.presence || opts[:move_path]
+
     if battle
-      opportunity_attacks = opportunity_attack_list(battle, map)
+      opportunity_attacks = opportunity_attack_list(current_moves, battle, map)
       opportunity_attacks.each do |enemy_opporunity|
         next unless enemy_opporunity[:source].has_reaction?(battle)
 
-        original_location = move_path[enemy_opporunity[:path] - 1]
+        original_location = current_moves[enemy_opporunity[:path] - 1]
         battle.trigger_opportunity_attack(enemy_opporunity[:source], @source, *original_location)
       end
     end
@@ -45,17 +47,19 @@ class MoveAction < Action
       map: map,
       battle: battle,
       type: :move,
-      path: move_path,
-      position: move_path.last
+      path: current_moves,
+      position: current_moves.last
     }]
+
+    self
   end
 
-  def opportunity_attack_list(battle, map)
+  def opportunity_attack_list(current_moves, battle, map)
     # get opposing forces
     opponents = battle.opponents_of?(@source)
     entered_melee_range = Set.new
     left_melee_range = []
-    move_path.each_with_index do |path, index|
+    current_moves.each_with_index do |path, index|
       opponents.each do |enemy|
         entered_melee_range.add(enemy) if enemy.entered_melee?(map, *path)
         left_melee_range << { source: enemy, path: index } if !left_melee_range.include?(enemy) && entered_melee_range.include?(enemy) && !enemy.entered_melee?(map, *path)

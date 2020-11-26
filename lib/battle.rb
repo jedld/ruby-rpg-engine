@@ -1,15 +1,22 @@
 class Battle
   attr_accessor :combat_order, :round
+  attr_reader :map, :entities
 
   def initialize(session, map)
     @session = session
     @entities = {}
     @groups = {}
+    @battle_field_events = {}
     @battle_log = []
     @combat_order = []
     @current_turn_index = 0
     @round = 0
     @map = map
+  end
+
+  def add_battlefield_event_listener(event, handler)
+    @battle_field_events[event.to_sym] ||= []
+    @battle_field_events[event.to_sym] << handler
   end
 
   def add(entity, group, position: nil, token: nil)
@@ -129,6 +136,18 @@ class Battle
     return if action.nil?
 
     action.apply!
+    case(action.action_type)
+    when :move
+      trigger_event!(:movement, action.source, move_path: action.move_path)
+    end
     @battle_log << action
+  end
+
+  protected
+
+  def trigger_event!(event, source, opt = {})
+    @battle_field_events[event.to_sym]&.each do |handler|
+      handler.call(source, opt)
+    end
   end
 end
