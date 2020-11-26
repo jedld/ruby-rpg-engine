@@ -16,10 +16,9 @@ class AttackAction < Action
     end
   end
 
-  def self.build(session, source)
-    action = AttackAction.new(session, source, :attack)
+  def build_map
     OpenStruct.new({
-      action: action,
+      action: self,
       param: [
         {
           type: :select_target,
@@ -27,21 +26,26 @@ class AttackAction < Action
         },
       ],
       next: ->(target) {
-        action.target = target
+        self.target = target
         OpenStruct.new({
           param: [
             { type: :select_weapon },
           ],
           next: ->(weapon) {
-            action.using = weapon
+            self.using = weapon
             OpenStruct.new({
               param: nil,
-              next: ->() { action },
+              next: ->() { self },
             })
           },
         })
       },
     })
+  end
+
+  def self.build(session, source)
+    action = AttackAction.new(session, source, :attack)
+    action.build_map
   end
 
   def apply!
@@ -53,9 +57,11 @@ class AttackAction < Action
                                       damage_type: item[:damage_type],
                                       value: item[:damage].result })
         item[:target].take_damage!(item)
+        item[:battle].entity_state_for(item[:source])[:action] -= 1
       when :miss
         EventManager.received_event({ attack_roll: item[:attack_roll], attack_name: item[:attack_name],
                                       source: item[:source], target: item[:target], event: :miss })
+        item[:battle].entity_state_for(item[:source])[:action] -= 1
       end
     end
   end
@@ -68,12 +74,12 @@ class AttackAction < Action
     "#{weapon[:damage]}+#{damage_mod}"
   end
 
-  def resolve(session, opts = {})
+  def resolve(session, map, opts = {})
     target = opts[:target] || @target
     raise "target is a required option for :attack" if target.nil?
 
     npc_action = opts[:npc_action] || @npc_action
-
+    battle = opts[:battle]
     using = opts[:using] || @using
     raise "using or npc_action is a required option for :attack" if using.nil? && npc_action.nil?
 
@@ -106,6 +112,7 @@ class AttackAction < Action
         source: @source,
         target: target,
         type: :damage,
+        battle: battle,
         attack_name: attack_name,
         attack_roll: attack_roll,
         target_ac: target.armor_class,
@@ -118,6 +125,7 @@ class AttackAction < Action
         attack_name: attack_name,
         source: @source,
         target: target,
+        battle: battle,
         type: :miss,
         attack_roll: attack_roll,
       }]

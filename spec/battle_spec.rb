@@ -8,6 +8,9 @@ RSpec.describe Battle do
       @npc = Npc.new(:goblin)
       @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
       @battle.add(@npc, :b, position: :spawn_point_2, token: "g")
+      @fighter.reset_turn!(@battle)
+      @npc.reset_turn!(@battle)
+
       EventManager.register_event_listener([:died], ->(event) { puts "#{event[:source].name} died." })
       EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
       EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
@@ -19,6 +22,7 @@ RSpec.describe Battle do
       srand(7000)
       action = @battle.action(@fighter, :attack, target: @npc, using: "vicious_rapier")
       expect(action.result).to eq([{
+                                 battle: @battle,
                                  attack_name: "Vicious Rapier",
                                  source: @fighter,
                                  type: :miss,
@@ -30,6 +34,7 @@ RSpec.describe Battle do
         attack_name: "Vicious Rapier",
         type: :damage,
         source: @fighter,
+        battle: @battle,
         attack_roll: DieRoll.new([10], 8, 20),
         hit?: true,
         damage: DieRoll.new([2], 7, 8),

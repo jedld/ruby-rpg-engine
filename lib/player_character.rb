@@ -103,21 +103,25 @@ class PlayerCharacter
       case (type)
       when :attack
         # check all equipped and create attack for each
-        @properties[:equipped].map do |item|
-          weapon_detail = session.load_weapon(item)
-          next if weapon_detail.nil?
-          next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
+        if battle.nil? || total_actions(battle) > 0
+          @properties[:equipped].map do |item|
+            weapon_detail = session.load_weapon(item)
+            next if weapon_detail.nil?
+            next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
 
-          action = AttackAction.new(session, self, :attack)
-          action.using = item
-          action
-        end.compact
+            action = AttackAction.new(session, self, :attack)
+            action.using = item
+            action
+          end.compact
+        end
       when :move
-        MoveAction.new(session, self, type)
+        if battle.nil? || available_movement(battle) > 0
+          MoveAction.new(session, self, type)
+        end
       else
         Action.new(session, self, type)
       end
-    }.flatten
+    }.compact.flatten
   end
 
   def attack_roll_mod(weapon)

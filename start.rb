@@ -82,31 +82,45 @@ def start_battle(chosen_character, chosen_enemies)
     if entity.npc?
       controller = AiController::Standard.new
       action = controller.move_for(entity, battle)
+      if action.nil?
+        puts "#{entity.name}: Can't do anything."
+        next
+      end
+
       battle.action!(action)
       battle.commit(action)
     else
-      puts map.render(line_of_sight: entity)
-      puts "#{entity.hp}/#{entity.max_hp} actions: #{entity.total_actions(battle)} bonus action: #{entity.total_bonus_actions(battle)}, movement: #{entity.available_movement(battle)}"
-      action = @prompt.select("#{entity.name} will") do |menu|
-        entity.available_actions(@session).each do |action|
-          menu.choice action.label, action
-        end
-      end
+      begin
+        puts map.render(line_of_sight: entity)
+        puts "#{entity.hp}/#{entity.max_hp} actions: #{entity.total_actions(battle)} bonus action: #{entity.total_bonus_actions(battle)}, movement: #{entity.available_movement(battle)}"
 
-      case action.action_type
-      when :attack
-        target = @prompt.select("#{entity.name} targets") do |menu|
-          battle.valid_targets_for(entity, action).each do |target|
-            menu.choice target.name, target
+        action = @prompt.select("#{entity.name} will") do |menu|
+          entity.available_actions(@session, battle).each do |action|
+            menu.choice action.label, action
           end
         end
 
-        action.target = target
-        battle.action!(action)
-        battle.commit(action)
-      when :move
-        move_path = move_ui(battle, map, entity)
-      end
+        case action.action_type
+        when :attack
+          target = @prompt.select("#{entity.name} targets") do |menu|
+            battle.valid_targets_for(entity, action).each do |target|
+              menu.choice target.name, target
+            end
+            menu.choice "Back", nil
+          end
+
+          next if target == "Back"
+
+          action.target = target
+          battle.action!(action)
+          battle.commit(action)
+        when :move
+          move_path = move_ui(battle, map, entity)
+          action.move_path = move_path
+          battle.action!(action)
+          battle.commit(action)
+        end
+      end while action.action_type != :end
     end
   end
   puts "------------"

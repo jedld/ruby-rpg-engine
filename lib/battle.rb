@@ -30,26 +30,49 @@ class Battle
 
   def action(source, action_type, opts = {})
     action = source.available_actions(@session).detect { |act| act.action_type == action_type }
-    return action.resolve(@session, opts) if action
+    opts[:battle] = self
+    return action.resolve(@session, @map, opts) if action
 
     nil
   end
 
   def action!(action)
-    action.resolve(@session)
+    opts = {
+      battle: self
+    }
+    action.resolve(@session, @map, opts)
   end
 
   # Targets that make sense for a given action
   def valid_targets_for(entity, action)
     entity_group = @entities[entity][:group]
+    attack_range = if action.using
+                      weapon = @session.load_weapon(action.using)
+                      weapon[:range_max].presence || weapon[:range]
+                    elsif action.npc_action
+                      action.npc_action[:range_max].presence || action.npc_action[:range]
+                    end
 
     @entities.map do |k, prop|
       next if k == entity && action.action_type == :attack
       next if prop[:group] == entity_group
       next if k.dead?
+      next if !@map.line_of_sight_for?(entity, *@map.position_of(k))
+      next if @map.distance(k, entity) * 5 > attack_range
 
       k
     end.compact
+  end
+
+  def opponents_of?(entity)
+    source_state = entity_state_for(entity)
+    source_group = source_state[:group]
+
+    opponents = []
+    @entities.each do |k, state|
+      opponents << k  if !k.dead? && state[:group] != source_group
+    end
+    opponents
   end
 
   def start

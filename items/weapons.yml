@@ -4,7 +4,7 @@ vicious_rapier:
   proficiency_type:
     - martial
   subtype: weapon
-  reach: 5
+  range: 5
   damage: 1d8
   modifiers:
   damage_type: piercing

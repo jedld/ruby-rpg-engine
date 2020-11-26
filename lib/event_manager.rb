@@ -12,6 +12,8 @@ class EventManager
   end
 
   def self.received_event(event)
+    return if @event_listeners.nil?
+
     @event_listeners[event[:event]]&.each do |callable|
       callable.(event)
     end

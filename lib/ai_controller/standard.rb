@@ -1,6 +1,13 @@
 module AiController
   class Standard
+    def initialize
+      @battle_data = {}
+    end
+
     def move_for(entity, battle)
+      @battle_data[battle] ||= {}
+      @battle_data[battle][entity] ||= {}
+
       available_actions = entity.available_actions(@session)
 
       # generate available targets

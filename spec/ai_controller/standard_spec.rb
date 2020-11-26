@@ -7,20 +7,22 @@ RSpec.describe AiController::Standard do
   before do
     EventManager.clear
     EventManager.standard_cli
-    @battle = Battle.new(session, nil)
+    @map = BattleMap.new(session, "fixtures/battle_sim")
+    @battle = Battle.new(session, @map)
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
     @npc1 = Npc.new(:goblin)
     @npc2 = Npc.new(:ogre)
-    @battle.add(@fighter, :a)
-    @battle.add(@npc1, :b)
-    @battle.add(@npc2, :b)
+
+    @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
+    @battle.add(@npc1, :b, position: :spawn_point_2, token: "g")
+    @battle.add(@npc2, :b, position: :spawn_point_3, token: "g")
     EventManager.register_event_listener([:died], ->(event) { puts "#{event[:source].name} died." })
     EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name} unconsious." })
     EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
     srand(7000)
   end
 
-  specify "performs standard attacks" do
+  xspecify "performs standard attacks" do
     @battle.start
     @battle.while_active do |entity|
       if entity == @fighter

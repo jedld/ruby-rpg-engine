@@ -20,6 +20,6 @@ class Action
   def apply!
   end
 
-  def resolve(session, opts = {})
+  def resolve(session, map, opts = {})
   end
 end

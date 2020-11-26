@@ -54,7 +54,7 @@ class BattleMap
     raise "unknown spawn position #{position}. should be any of #{@spawn_points.keys.join(",")}" if !@spawn_points.key?(position.to_s)
 
     pos_x, pos_y = @spawn_points[position.to_s][:location]
-    place(pos_y, pos_x, entity, token)
+    place(pos_x, pos_y, entity, token)
     puts "place #{entity.name} at #{pos_x}, #{pos_y}"
   end
 
@@ -74,6 +74,13 @@ class BattleMap
 
   def position_of(entity)
     @entities[entity]
+  end
+
+  def move_to!(entity, pos_x, pos_y)
+    cur_x, cur_y = @entities[entity]
+    @tokens[pos_x][pos_y] = @tokens[cur_x][cur_y]
+    @tokens[cur_x][cur_y] = nil
+    @entities[entity] = [pos_x, pos_y]
   end
 
   def valid_position?(pos_x, pos_y)
@@ -115,11 +122,11 @@ class BattleMap
         step = (m.abs > 1) ? 1 / m.abs : m.abs
 
         scanner.step(step).each_with_index do |x, index|
-          y = (m * x + b).floor
+          y = (m * x + b).round
 
           return false if !distance.nil? && index > distance
-          next if (x.floor == pos1_x && y == pos1_y) || (x.floor == pos2_x && y == pos2_y)
-          return false if (@base_map[x.floor][y] == "#")
+          next if (x.round == pos1_x && y == pos1_y) || (x.round == pos2_x && y == pos2_y)
+          return false if (@base_map[x.round][y] == "#")
         end
         return true
       end

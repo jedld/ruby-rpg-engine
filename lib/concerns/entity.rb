@@ -35,6 +35,18 @@ module Entity
     !dead? && !unconcious?
   end
 
+  def entered_melee?(map, pos_x, pos_y)
+    cur_x, cur_y = map.position_of(self)
+    distance = Math.sqrt((cur_x - pos_x) ** 2 + (cur_y - pos_y) ** 2).ceil * 5 # one square - 5 ft
+
+    # determine melee options
+    if distance <= melee_distance
+      return true
+    end
+
+    return false
+  end
+
   def unconcious!
     EventManager.received_event({ source: self, event: :unconsious })
     @statuses.add(:unconsious)

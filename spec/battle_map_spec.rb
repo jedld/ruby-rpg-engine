@@ -1,6 +1,7 @@
 RSpec.describe AttackAction do
   let(:session) { Session.new }
   before do
+    String.disable_colorization true
     @battle_map = BattleMap.new(session, "fixtures/battle_sim")
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
     @npc = Npc.new(:goblin, name: "grok")
@@ -20,12 +21,12 @@ RSpec.describe AttackAction do
                                      "······\n"
 
     @battle_map.place(2, 3, @npc, "X")
-    expect(@battle_map.render(line_of_sight: @npc)).to eq "····  \n" +
+    expect(@battle_map.render(line_of_sight: @npc)).to eq "···   \n" +
                                                           "G··## \n" +
                                                           "····# \n" +
                                                           "··X···\n" +
-                                                          "·##···\n" +
-                                                          "    ··\n"
+                                                          " ##···\n" +
+                                                          "   ···\n"
   end
 
   context "#place" do
@@ -40,6 +41,7 @@ RSpec.describe AttackAction do
     end
   end
 
+  # distance in squares
   specify "#distance" do
     @battle_map.place(3, 3, @npc, "g")
     expect(@battle_map.distance(@npc, @fighter)).to eq(4)

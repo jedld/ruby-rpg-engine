@@ -56,6 +56,12 @@ class Npc
     }.flatten
   end
 
+  def melee_distance
+    @properties[:actions].select { |a| a[:type] == 'melee_attack' }.map do |action|
+      action[:range]
+    end&.max
+  end
+
   private
 
   def setup_attributes
