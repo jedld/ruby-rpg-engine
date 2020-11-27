@@ -1,5 +1,5 @@
 class MoveAction < Action
-  attr_accessor :move_path
+  attr_accessor :move_path, :as_dash
 
   def build_map
     OpenStruct.new({
@@ -31,6 +31,12 @@ class MoveAction < Action
     battle = opts[:battle]
 
     current_moves = move_path.presence || opts[:move_path]
+
+    if as_dash
+      current_moves = current_moves.take(@source.speed / 5)
+    elsif (current_moves.length - 1) > @source.available_movement(battle)
+      current_moves = current_moves.take(@source.available_movement(battle) + 1)
+    end
 
     if battle
       opportunity_attacks = opportunity_attack_list(current_moves, battle, map)
@@ -72,9 +78,13 @@ class MoveAction < Action
     @result.each do |item|
       case (item[:type])
       when :move
-        EventManager.received_event({ source: item[:source], position: item[:position], path: item[:path] })
+        EventManager.received_event({event: :move, source: item[:source], position: item[:position], path: item[:path] })
         item[:map].move_to!(item[:source], *item[:position])
-        item[:battle].entity_state_for(item[:source])[:movement] -= (item[:path].length - 1) * 5 if item[:battle]
+        if as_dash
+          item[:battle].entity_state_for(item[:source])[:action] -= 1
+        else
+          item[:battle].entity_state_for(item[:source])[:movement] -= (item[:path].length - 1) * 5 if item[:battle]
+        end
       end
     end
   end

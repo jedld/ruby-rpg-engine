@@ -25,7 +25,7 @@ longbow:
   proficiency_type:
     - martial
   subtype: weapon
-  range: 150,
+  range: 150
   range_max: 600
   damage: 1d8
   modifiers:

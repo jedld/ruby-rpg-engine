@@ -9,7 +9,7 @@ class AttackAction < Action
     if @npc_action
       "#{@action_type.to_s.humanize} with #{npc_action[:name]}"
     else
-      weapon = @session.load_weapon(@opts[:using] || @using)
+      weapon = Session.load_weapon(@opts[:using] || @using)
       attack_mod = @source.attack_roll_mod(weapon)
 
       "#{@action_type.to_s.humanize} with #{weapon[:name]} -> Hit: +#{attack_mod} Dmg: #{damage_modifier(weapon)}"
@@ -101,7 +101,7 @@ class AttackAction < Action
       attack_roll = DieRoll.roll("1d20+#{npc_action[:attack]}")
       damage = DieRoll.roll(npc_action[:damage_die])
     else
-      weapon = session.load_weapon(using.to_sym)
+      weapon = Session.load_weapon(using.to_sym)
       attack_name = weapon[:name]
       attack_mod = @source.attack_roll_mod(weapon)
       attack_roll = DieRoll.roll("1d20+#{attack_mod}")

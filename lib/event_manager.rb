@@ -25,5 +25,6 @@ class EventManager
     EventManager.register_event_listener([:attacked], ->(event) { puts "#{event[:source].name&.colorize(:blue)} attacked #{event[:target].name} with #{event[:attack_name]} to Hit: #{event[:attack_roll].to_s.colorize(:green)} for #{event[:value]} #{event[:damage_type]} damage." })
     EventManager.register_event_listener([:miss], ->(event) { puts "rolled #{event[:attack_roll].to_s} ... #{event[:source].name&.colorize(:blue)} missed his attack #{event[:attack_name]} on #{event[:target].name}" })
     EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name&.colorize(:blue)} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
+    EventManager.register_event_listener([:move], ->(event) { puts "#{event[:source].name&.colorize(:blue)} moved #{(event[:path].size - 1) * 5}ft."})
   end
 end

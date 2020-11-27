@@ -1,6 +1,6 @@
 class Battle
   attr_accessor :combat_order, :round
-  attr_reader :map, :entities
+  attr_reader :map, :entities, :session
 
   def initialize(session, map)
     @session = session
@@ -54,7 +54,7 @@ class Battle
   def valid_targets_for(entity, action)
     entity_group = @entities[entity][:group]
     attack_range = if action.using
-                      weapon = @session.load_weapon(action.using)
+                      weapon = Session.load_weapon(action.using)
                       weapon[:range_max].presence || weapon[:range]
                     elsif action.npc_action
                       action.npc_action[:range_max].presence || action.npc_action[:range]

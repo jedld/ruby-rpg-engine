@@ -29,7 +29,7 @@ class Session
     end
   end
 
-  def load_weapon(weapon)
+  def self.load_weapon(weapon)
     @weapons ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "weapons.yml")).deep_symbolize_keys!
     @weapons[weapon.to_sym]
   end

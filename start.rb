@@ -16,7 +16,7 @@ require "lib/session"
 # event handlers
 EventManager.standard_cli
 
-def move_ui(battle, map, entity)
+def move_ui(battle, map, entity, as_dash: false)
   path = [map.position_of(entity)]
   begin
     puts "\e[H\e[2J"
@@ -52,7 +52,7 @@ def move_ui(battle, map, entity)
 
     if path.size > 1 && new_path == path[path.size - 2]
       path.pop
-    elsif map.valid_position?(*new_path) && map.movement_cost(path) < entity.available_movement(battle)
+    elsif map.valid_position?(*new_path) && map.movement_cost(path) < (as_dash ? entity.speed : entity.available_movement(battle))
       path << new_path
     end
   end while movement != "x"
@@ -122,6 +122,12 @@ def start_battle(chosen_character, chosen_enemies)
         when :move
           move_path = move_ui(battle, map, entity)
           action.move_path = move_path
+          battle.action!(action)
+          battle.commit(action)
+        when :dash
+          move_path = move_ui(battle, map, entity, as_dash: true)
+          action.move_path = move_path
+          action.as_dash = true
           battle.action!(action)
           battle.commit(action)
         end

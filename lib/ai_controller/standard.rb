@@ -76,6 +76,38 @@ module AiController
         end
       end
 
+      # movement planner
+      if entity.has_action?(battle) && valid_actions.empty?
+        # look for enemy
+        if !enemy_positions.empty?
+          path_compute = PathCompute.new(battle.map, entity)
+          start_x, start_y = battle.map.position_of(entity)
+          to_enemy = enemy_positions.map do |k, v|
+            melee_positions = entity.locate_melee_positions(battle.map, v)
+            shortest_path = nil
+            shortest_length = 1_000_000
+
+            melee_positions.each do |positions|
+              path = path_compute.compute_path(start_x, start_y, *positions)
+              if path.size < shortest_length
+                shortest_path = path
+                shortest_length = path.size
+              end
+            end
+            [k, shortest_path]
+          end.to_h
+
+          to_enemy.each do |_, path|
+            next if path.nil? || path.empty?
+
+            move_action = MoveAction.new(battle.session, entity, :move)
+            move_action.as_dash = true if entity.available_movement(battle).zero?
+            move_action.move_path = path
+            valid_actions << move_action
+          end
+        end
+      end
+
       return valid_actions.first unless valid_actions.empty?
     end
   end

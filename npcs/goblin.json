@@ -7,7 +7,7 @@
   "default_ac" : 15,
   "max_hp" : 7,
   "hp_die" : "2d6",
-  "speed": "30",
+  "speed": 30,
   "passive_perception" : 9,
   "dark_vision" : 60,
   "ability" : {

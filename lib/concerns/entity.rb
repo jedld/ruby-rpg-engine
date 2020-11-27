@@ -45,6 +45,22 @@ module Entity
     false
   end
 
+  def locate_melee_positions(map, target_position)
+    result = []
+    step = melee_distance / 5
+    cur_x, cur_y = target_position
+    (-step..step).each do |x_off|
+      (-step..step).each do |y_off|
+        position = [cur_x + x_off, cur_y + y_off]
+        next if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
+        next unless map.passable?(self, *position)
+
+        result << position
+      end
+    end
+    result
+  end
+
   def unconcious!
     EventManager.received_event({ source: self, event: :unconsious })
     @statuses.add(:unconsious)
@@ -83,6 +99,10 @@ module Entity
     battle.entity_state_for(self)[:movement]
   end
 
+  def speed
+    @properties[:speed]
+  end
+
   def has_reaction?(battle)
     (battle.entity_state_for(self)[:reaction].presence || 0).positive?
   end
@@ -110,7 +130,7 @@ module Entity
 
   def trigger_event(event_name, battle, session, map, event)
     @event_handlers ||= {}
-    @event_handlers[event_name.to_sym].call(battle, session, map, event)
+    @event_handlers[event_name.to_sym]&.call(battle, session, map, event)
   end
 
   def deduct_ammo(ammo_type, amount = 1)

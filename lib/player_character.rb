@@ -8,7 +8,7 @@ class PlayerCharacter
     @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), "..", "char_classes", "#{@properties[:class]}.json"))).deep_symbolize_keys!
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
-    @inventory = @properties[:inventory].map do |inventory|
+    @inventory = @properties[:inventory]&.map do |inventory|
       [inventory[:type], OpenStruct.new({ qty: inventory[:qty] })]
     end.to_h
     @statuses = Set.new
@@ -101,6 +101,16 @@ class PlayerCharacter
     }
   end
 
+  def melee_distance
+    @properties[:equipped].map do |item|
+      weapon_detail = Session.load_weapon(item)
+      next if weapon_detail.nil?
+      next unless weapon_detail[:type] == 'melee_attack'
+
+      weapon_detail[:range]
+    end.compact.max
+  end
+
   def available_actions(session, battle = nil)
     [:attack, :move, :dash, :dodge, :help, :ready, :end].map { |type|
       case (type)
@@ -108,7 +118,7 @@ class PlayerCharacter
         # check all equipped and create attack for each
         if battle.nil? || total_actions(battle) > 0
           @properties[:equipped].map do |item|
-            weapon_detail = session.load_weapon(item)
+            weapon_detail = Session.load_weapon(item)
             next if weapon_detail.nil?
             next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
 
@@ -117,8 +127,8 @@ class PlayerCharacter
             action
           end.compact
         end
-      when :move
-        if battle.nil? || available_movement(battle) > 0
+      when :move, :dash
+        if battle.nil? || type == :dash || available_movement(battle) > 0
           MoveAction.new(session, self, type)
         end
       else
