@@ -25,7 +25,7 @@ class PlayerCharacter
   end
 
   def armor_class
-    equiped_ac + dex_mod
+    equipped_ac + dex_mod
   end
 
   def level
@@ -189,7 +189,7 @@ class PlayerCharacter
     @hp = @properties[:max_hp]
   end
 
-  def equiped_ac
+  def equipped_ac
     @equipments ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "equipment.yml")).deep_symbolize_keys!
 
     equipped_meta = @equipped.map { |e| @equipments[e.to_sym] }.compact
