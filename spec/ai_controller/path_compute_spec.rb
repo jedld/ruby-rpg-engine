@@ -4,7 +4,7 @@ RSpec.describe AiController::PathCompute do
     String.disable_colorization true
     @map = BattleMap.new(session, 'fixtures/path_finding_test')
     @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.json'))
-    @path_compute = AiController::PathCompute.new(@map, @fighter)
+    @path_compute = AiController::PathCompute.new(nil, @map, @fighter)
   end
 
   specify 'compute' do

@@ -113,7 +113,7 @@ class BattleMap
     if battle && @tokens[pos_x][pos_y]
       source_state = battle.entity_state_for(entity)
       source_group = source_state[:group]
-      location_state = battle.entity_state_for(@tokens[pos_x][pos_y])
+      location_state = battle.entity_state_for(@tokens[pos_x][pos_y][:entity])
       location_group = location_state[:group]
       return true if location_group.nil?
       return true if location_group == source_group

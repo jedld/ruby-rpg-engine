@@ -3,9 +3,10 @@ module AiController
   MAX_DISTANCE = 4_000_000
   # Path finding algorithm
   class PathCompute
-    def initialize(map, entity)
+    def initialize(battle, map, entity)
       @entity = entity
       @map = map
+      @battle = battle
       @max_x, @max_y = @map.size
     end
 
@@ -38,6 +39,7 @@ module AiController
         visited_nodes.add(current_node)
 
         current_node, node_d = q.delete_min
+        break if current_node.nil?
         return nil if node_d == MAX_DISTANCE
       end
 
@@ -74,7 +76,7 @@ module AiController
 
           next if cur_x < 0 || cur_y < 0 || cur_x >= @max_x || cur_y >= @max_y
           next if x_op == 0 && y_op == 0
-          next if !@map.passable?(@entity, cur_x, cur_y)
+          next if !@map.passable?(@entity, cur_x, cur_y, @battle)
 
           valid_paths.add([cur_x, cur_y])
         end

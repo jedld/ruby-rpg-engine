@@ -80,7 +80,7 @@ module AiController
       if entity.has_action?(battle) && valid_actions.empty?
         # look for enemy
         if !enemy_positions.empty?
-          path_compute = PathCompute.new(battle.map, entity)
+          path_compute = PathCompute.new(battle, battle.map, entity)
           start_x, start_y = battle.map.position_of(entity)
           to_enemy = enemy_positions.map do |k, v|
             melee_positions = entity.locate_melee_positions(battle.map, v)
