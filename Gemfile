@@ -7,6 +7,7 @@ gem "pry-byebug"
 gem "activesupport"
 gem "random_name_generator"
 gem "colorize"
+gem 'PriorityQueue', '~> 0.1.2'
 
 gem "solargraph", group: :development
 

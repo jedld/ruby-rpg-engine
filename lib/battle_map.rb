@@ -1,5 +1,5 @@
 class BattleMap
-  attr_reader :spawn_points
+  attr_reader :spawn_points, :size
 
   def initialize(session, map_file)
     @session = session
@@ -17,7 +17,7 @@ class BattleMap
     # meta layer
     @meta_map = @properties.dig(:map, :meta).map do |lines|
       lines.each_char.map.to_a
-    end.transpose
+    end.transpose if @properties.dig(:map, :meta)
 
     @legend = @properties[:legend] || {}
 
@@ -36,7 +36,7 @@ class BattleMap
           }
         end
       end
-    end
+    end if @meta_map
   end
 
   def size
@@ -108,6 +108,31 @@ class BattleMap
     (path.size - 1) * 5
   end
 
+  def passable?(entity, pos_x, pos_y, battle = nil)
+    return false if @base_map[pos_x][pos_y] == '#'
+    if battle && @tokens[pos_x][pos_y]
+      source_state = battle.entity_state_for(entity)
+      source_group = source_state[:group]
+      location_state = battle.entity_state_for(@tokens[pos_x][pos_y])
+      location_group = location_state[:group]
+      return true if location_group.nil?
+      return true if location_group == source_group
+      return false if location_group != source_group
+    end
+
+    return true
+  end
+
+  # check if this interrupts line of sight (not necessarily movement)
+  def opaque?(pos_x, pos_y)
+    case(@base_map[pos_x][pos_y])
+    when "#"
+      return true
+    end
+
+    false
+  end
+
   def line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance = nil)
     if (pos2_x == pos1_x)
       scanner = pos2_y > pos1_y ? (pos1_y...pos2_y) : (pos2_y...pos1_y)
@@ -115,7 +140,7 @@ class BattleMap
       scanner.each_with_index do |y, index|
         return false if !distance.nil? && index > distance
         next if (y == pos1_y) || (y == pos2_y)
-        return false if (@base_map[pos1_x][y] == "#")
+        return false if opaque?(pos1_x, y)
       end
       return true
     else
@@ -154,7 +179,7 @@ class BattleMap
         if !path.empty?
           next "X" if path[0] == [col_index, row_index]
           next "+" if path.include?([col_index, row_index])
-          next " " if !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
+          next " " if line_of_sight && !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
         else
           next " " if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
         end

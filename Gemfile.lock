@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    PriorityQueue (0.1.2)
     activesupport (6.0.3.4)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 0.7, < 2)
@@ -118,6 +119,7 @@ PLATFORMS
   x64-mingw32
 
 DEPENDENCIES
+  PriorityQueue (~> 0.1.2)
   activesupport
   colorize
   pry-byebug
