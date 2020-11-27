@@ -36,6 +36,7 @@ module AiController
         end
 
         break if current_node == [destination_x, destination_y]
+
         visited_nodes.add(current_node)
 
         current_node, node_d = q.delete_min

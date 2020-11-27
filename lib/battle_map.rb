@@ -187,6 +187,7 @@ class BattleMap
         end
 
         # render map layer
+        next "`" if @tokens[col_index][row_index]&.fetch(:entity)&.dead?
         token = @tokens[col_index][row_index] ? @tokens[col_index][row_index][:token] : nil
         token || c
       end.join
