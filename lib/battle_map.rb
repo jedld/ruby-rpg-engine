@@ -134,6 +134,8 @@ class BattleMap
   end
 
   def line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance = nil)
+    return true if [pos1_x, pos1_y] == [pos2_x, pos2_y]
+
     if (pos2_x == pos1_x)
       scanner = pos2_y > pos1_y ? (pos1_y...pos2_y) : (pos2_y...pos1_y)
 
