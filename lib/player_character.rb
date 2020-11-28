@@ -105,7 +105,7 @@ class PlayerCharacter
     @properties[:equipped].map do |item|
       weapon_detail = Session.load_weapon(item)
       next if weapon_detail.nil?
-      next unless weapon_detail[:type] == 'melee_attack'
+      next unless weapon_detail[:type] == "melee_attack"
 
       weapon_detail[:range]
     end.compact.max
@@ -126,6 +126,11 @@ class PlayerCharacter
             action.using = item
             action
           end.compact
+        end
+      when :dodge
+        if battle && total_actions(battle) > 0
+          action = DodgeAction.new(session, self, :dodge)
+          action
         end
       when :move, :dash
         if battle.nil? || type == :dash || available_movement(battle) > 0
