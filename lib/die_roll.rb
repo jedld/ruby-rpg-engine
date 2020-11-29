@@ -120,6 +120,12 @@ class DieRoll
         end
       end
     end
+
+    if state == :initial
+      modifier_str = die_count_str
+      die_count_str = "0"
+    end
+
     number_of_die = die_count_str.blank? ? 1 : die_count_str.to_i
     die_sides = die_type_str.to_i
 

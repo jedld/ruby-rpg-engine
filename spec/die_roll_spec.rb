@@ -6,6 +6,8 @@ RSpec.describe DieRoll do
 
   context "die rolls" do
     specify ".roll" do
+
+      expect(DieRoll.roll("1").result).to be 1
       100.times do
         expect(DieRoll.roll("1d6").result).to be_between 1, 6
       end

@@ -82,11 +82,22 @@ module Entity
                           movement: speed
                         })
     entity_state[:statuses].delete(:dodge)
+    entity_state[:statuses].delete(:disengage)
   end
 
   def dodging!(battle)
     entity_state = battle.entity_state_for(self)
     entity_state[:statuses].add(:dodge)
+  end
+
+  def disengage!(battle)
+    entity_state = battle.entity_state_for(self)
+    entity_state[:statuses].add(:disengage)
+  end
+
+  def disengage?(battle)
+    entity_state = battle.entity_state_for(self)
+    entity_state[:statuses]&.include?(:disengage)
   end
 
   def dodge?(battle)

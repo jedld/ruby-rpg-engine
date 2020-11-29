@@ -36,7 +36,7 @@ class Battle
 
     return if position.nil?
 
-    position.is_a?(Symbol) ? @map.place_at_spawn_point(position, entity, token) : @map.place(*position, entity, token)
+    position.is_a?(Array) ?@map.place(*position, entity, token) :  @map.place_at_spawn_point(position, entity, token)
   end
 
   def entity_state_for(entity)

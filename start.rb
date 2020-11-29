@@ -119,7 +119,7 @@ def start_battle(chosen_character, chosen_enemies)
           action.target = target
           battle.action!(action)
           battle.commit(action)
-        when :dodge
+        when :dodge, :disengage
           battle.action!(action)
           battle.commit(action)
         when :move

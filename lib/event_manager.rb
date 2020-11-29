@@ -23,7 +23,7 @@ class EventManager
     EventManager.register_event_listener([:died], ->(event) {puts "#{event[:source].name&.colorize(:blue)} died." })
     EventManager.register_event_listener([:unconsious], ->(event) { puts "#{event[:source].name&.colorize(:blue)} unconsious." })
     EventManager.register_event_listener([:attacked], ->(event) {
-      puts "#{event[:as_reaction] ? "Opportunity Attack: "  : ""} #{event[:source].name&.colorize(:blue)} attacked #{event[:target].name} with #{event[:attack_name]} to Hit: #{event[:attack_roll].to_s.colorize(:green)} = #{event[:attack_roll].result} for #{event[:value]} #{event[:damage_type]} damage."
+      puts "#{event[:as_reaction] ? "Opportunity Attack: "  : ""} #{event[:source].name&.colorize(:blue)} attacked #{event[:target].name} with #{event[:attack_name]} to Hit: #{event[:attack_roll].to_s.colorize(:green)} for #{event[:value]} #{event[:damage_type]} damage."
     })
     EventManager.register_event_listener([:miss], ->(event) { puts "#{event[:as_reaction] ? "Opportunity Attack: "  : ""} rolled #{event[:attack_roll].to_s} ... #{event[:source].name&.colorize(:blue)} missed his attack #{event[:attack_name]} on #{event[:target].name}" })
     EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name&.colorize(:blue)} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })

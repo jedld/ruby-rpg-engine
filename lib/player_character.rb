@@ -112,12 +112,12 @@ class PlayerCharacter
   end
 
   def available_actions(session, battle = nil)
-    [:attack, :move, :dash, :dodge, :help, :ready, :end].map { |type|
+    [:attack, :move, :dash, :dodge, :help, :ready, :disengage, :end].map { |type|
       case (type)
       when :attack
         # check all equipped and create attack for each
         if battle.nil? || total_actions(battle) > 0
-          @properties[:equipped].map do |item|
+          weapon_attacks = @properties[:equipped].map do |item|
             weapon_detail = Session.load_weapon(item)
             next if weapon_detail.nil?
             next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
@@ -126,10 +126,20 @@ class PlayerCharacter
             action.using = item
             action
           end.compact
+
+          unarmed_attack = AttackAction.new(session, self, :attack)
+          unarmed_attack.using = 'unarmed_attack'
+
+          weapon_attacks + [unarmed_attack]
         end
       when :dodge
         if battle && total_actions(battle) > 0
           action = DodgeAction.new(session, self, :dodge)
+          action
+        end
+      when :disengage
+        if battle && total_actions(battle) > 0
+          action = DisengageAction.new(session, self, :disengage)
           action
         end
       when :move, :dash
@@ -163,7 +173,7 @@ class PlayerCharacter
 
     case (weapon[:type])
     when "melee_attack"
-      if weapon[:properties].include?("finesse") # if finese automatically use the largest mod
+      if weapon[:properties]&.include?("finesse") # if finese automatically use the largest mod
         modifier += [str_mod, dex_mod].max
       else
         modifier += str_mod
@@ -176,6 +186,8 @@ class PlayerCharacter
   end
 
   def proficient_with_weapon?(weapon)
+    return true if weapon[:name] == 'Unarmed Attack'
+
     @properties[:weapon_proficiencies]&.detect do |prof|
       weapon[:proficiency_type]&.include?(prof)
     end

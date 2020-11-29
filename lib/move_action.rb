@@ -38,7 +38,7 @@ class MoveAction < Action
       current_moves = current_moves.take(@source.available_movement(battle) + 1)
     end
 
-    if battle
+    if battle && !@source.disengage?(battle)
       opportunity_attacks = opportunity_attack_list(current_moves, battle, map)
       opportunity_attacks.each do |enemy_opporunity|
         next unless enemy_opporunity[:source].has_reaction?(battle)

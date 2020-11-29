@@ -56,6 +56,7 @@ class AttackAction < Action
                                       attack_name: item[:attack_name],
                                       damage_type: item[:damage_type],
                                       as_reaction: as_reaction,
+                                      damage_roll: item[:damage],
                                       value: item[:damage].result })
         item[:target].take_damage!(item)
       when :miss
