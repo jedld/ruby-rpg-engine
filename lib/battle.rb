@@ -133,8 +133,10 @@ class Battle
       next unless state
       next unless object.concious?
 
-      state[:group] != my_group && map.distance(source, object) < object.melee_distance
+      return true if (state[:group] != my_group && (map.distance(source, object) <= (object.melee_distance / 5)))
     end
+
+    false
   end
 
   def battle_ends?

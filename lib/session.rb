@@ -1,6 +1,7 @@
 require "colorize"
 require "lib/die_roll"
 require "lib/concerns/entity"
+require "lib/concerns/rogue_class"
 require "lib/action"
 require "lib/attack_action"
 require "lib/dodge_action"

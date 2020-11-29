@@ -58,17 +58,18 @@ def move_ui(battle, map, entity, as_dash: false)
   end while movement != "x"
 end
 
-def start_battle(chosen_character, chosen_enemies)
-  puts "Battle has started between #{chosen_character.name.colorize(:blue)} and #{chosen_enemies.map(&:name).join(",")}"
+def start_battle(chosen_characters, chosen_enemies)
   map = BattleMap.new(@session, "maps/battle_sim")
   battle = Battle.new(@session, map)
-  battle.add(chosen_character, :a, position: "spawn_point_1", token: "X")
+  chosen_characters.each_with_index do |chosen_character, index|
+    battle.add(chosen_character, :a, position: "spawn_point_#{index + 1}", token: chosen_character.name[0])
+  end
 
   controller = AiController::Standard.new
 
   chosen_enemies.each_with_index do |item, index|
     controller.register_handlers_on(item)
-    battle.add(item, :b, position: "spawn_point_#{index + 2}")
+    battle.add(item, :b, position: "spawn_point_#{index + 3}")
   end
 
   battle.start
@@ -119,7 +120,7 @@ def start_battle(chosen_character, chosen_enemies)
           action.target = target
           battle.action!(action)
           battle.commit(action)
-        when :dodge, :disengage
+        when :dodge, :disengage, :disengage_bonus
           battle.action!(action)
           battle.commit(action)
         when :move
@@ -127,7 +128,7 @@ def start_battle(chosen_character, chosen_enemies)
           action.move_path = move_path
           battle.action!(action)
           battle.commit(action)
-        when :dash
+        when :dash, :dash_bonus
           move_path = move_ui(battle, map, entity, as_dash: true)
           action.move_path = move_path
           action.as_dash = true
@@ -143,7 +144,7 @@ def start_battle(chosen_character, chosen_enemies)
 end
 
 def training_dummy
-  chosen_character = @prompt.select("Select Character") do |menu|
+  chosen_characters = @prompt.multi_select("Select Character") do |menu|
     @session.load_characters.each do |character|
       menu.choice character.name, character
     end
@@ -155,7 +156,7 @@ def training_dummy
     end
   end
 
-  start_battle(chosen_character, chosen_enemies)
+  start_battle(chosen_characters, chosen_enemies)
 end
 
 def dice_roller

@@ -1,5 +1,7 @@
 class PlayerCharacter
   include Entity
+  include RogueClass
+
   attr_accessor :hp, :statuses, :other_counters, :resistances
 
   def initialize(properties)
@@ -112,7 +114,7 @@ class PlayerCharacter
   end
 
   def available_actions(session, battle = nil)
-    [:attack, :move, :dash, :dodge, :help, :ready, :disengage, :end].map { |type|
+    [:attack, :move, :dash, :dash_bonus, :dodge, :help, :ready, :disengage, :disengage_bonus, :end].map { |type|
       case (type)
       when :attack
         # check all equipped and create attack for each
@@ -137,14 +139,26 @@ class PlayerCharacter
           action = DodgeAction.new(session, self, :dodge)
           action
         end
+      when :disengage_bonus
+        if battle && has_class_feature?('cunning_action') && total_bonus_actions(battle) > 0
+          action = DisengageAction.new(session, self, :disengage_bonus, as_bonus_action: true)
+          action
+        end
       when :disengage
         if battle && total_actions(battle) > 0
           action = DisengageAction.new(session, self, :disengage)
           action
         end
-      when :move, :dash
+      when :move
         if battle.nil? || available_movement(battle) > 0
           MoveAction.new(session, self, type)
+        end
+      when :dash_bonus
+        if battle && has_class_feature?('cunning_action') && total_bonus_actions(battle) > 0
+          action = MoveAction.new(session, self, :dash_bonus)
+          action.as_dash = true
+          action.as_bonus_action = true
+          action
         end
       when :dash
         if battle.nil? || total_actions(battle) > 0

@@ -1,5 +1,5 @@
 class MoveAction < Action
-  attr_accessor :move_path, :as_dash
+  attr_accessor :move_path, :as_dash, :as_bonus_action
 
   def build_map
     OpenStruct.new({
@@ -80,7 +80,9 @@ class MoveAction < Action
       when :move
         EventManager.received_event({event: :move, source: item[:source], position: item[:position], path: item[:path] })
         item[:map].move_to!(item[:source], *item[:position])
-        if as_dash
+        if as_dash && as_bonus_action
+          item[:battle].entity_state_for(item[:source])[:bonus_action] -= 1
+        elsif as_dash
           item[:battle].entity_state_for(item[:source])[:action] -= 1
         else
           item[:battle].entity_state_for(item[:source])[:movement] -= (item[:path].length - 1) * 5 if item[:battle]

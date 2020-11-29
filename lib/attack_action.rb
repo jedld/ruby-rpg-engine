@@ -57,7 +57,8 @@ class AttackAction < Action
                                       damage_type: item[:damage_type],
                                       as_reaction: as_reaction,
                                       damage_roll: item[:damage],
-                                      value: item[:damage].result })
+                                      sneak_attack: item[:sneak_attack],
+                                      value: item[:damage].result + (item[:sneak_attack]&.result.presence || 0) })
         item[:target].take_damage!(item)
       when :miss
         EventManager.received_event({ attack_roll: item[:attack_roll],
@@ -97,8 +98,8 @@ class AttackAction < Action
     raise "using or npc_action is a required option for :attack" if using.nil? && npc_action.nil?
 
     attack_name = nil
-
     damage_roll = nil
+    sneak_attack_roll = nil
 
     if npc_action
       weapon = npc_action
@@ -117,6 +118,13 @@ class AttackAction < Action
 
     # perform the dice rolls
     attack_roll = DieRoll.roll("1d20+#{attack_mod}", disadvantage: advantage_mod.negative?, advantage: advantage_mod > 0)
+
+    if @source.has_class_feature?('sneak_attack') && (weapon[:properties]&.include?("finesse") || weapon[:type] == 'ranged_attack')
+      if advantage_mod.positive? || battle.enemy_in_melee_range?(target)
+        sneak_attack_roll = DieRoll.roll(@source.sneak_attack_level, crit: attack_roll.nat_20?)
+      end
+    end
+
     damage = DieRoll.roll(damage_roll, crit: attack_roll.nat_20?)
 
     hit = if attack_roll.nat_20?
@@ -135,6 +143,7 @@ class AttackAction < Action
         battle: battle,
         attack_name: attack_name,
         attack_roll: attack_roll,
+        sneak_attack: sneak_attack_roll,
         target_ac: target.armor_class,
         hit?: hit,
         damage_type: weapon[:damage_type],

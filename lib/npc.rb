@@ -66,6 +66,10 @@ class Npc
     end&.max
   end
 
+  def has_class_feature?(feature)
+    @properties[:attributes]&.include?(feature)
+  end
+
   private
 
   def setup_attributes

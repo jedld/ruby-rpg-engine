@@ -45,6 +45,7 @@ RSpec.describe Battle do
         damage_type: "piercing",
         target_ac: 15,
         target: @npc,
+        sneak_attack: nil,
         npc_action: nil
       }])
 

@@ -1,6 +1,8 @@
 module Entity
   def take_damage!(damage_params)
     dmg = damage_params[:damage].result
+    dmg += damage_params[:sneak_attack].result unless damage_params[:sneak_attack].nil?
+
     EventManager.received_event({ source: self, event: :damage, value: dmg })
     dmg = (dmg / 2.to_f).floor if resistant_to?(damage_params[:damage_type])
     @hp -= dmg
