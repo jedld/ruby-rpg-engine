@@ -17,7 +17,7 @@ class DodgeAction < Action
     @result = [{
       source: @source,
       type: :dodge,
-      battle: battle,
+      battle: opts[:battle],
     }]
     self
   end
@@ -26,8 +26,8 @@ class DodgeAction < Action
     @result.each do |item|
       case (item[:type])
       when :dodge
-        EventManager.received_event({ source: item[:source], event: :dodge })
-        item[:battle].dodging!(item[:source])
+        EventManager.received_event({source: item[:source], event: :dodge })
+        item[:source].dodging!(item[:battle])
       end
 
       if as_bonus_action

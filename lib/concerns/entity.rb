@@ -81,6 +81,17 @@ module Entity
                           reaction: 1,
                           movement: speed
                         })
+    entity_state[:statuses].delete(:dodge)
+  end
+
+  def dodging!(battle)
+    entity_state = battle.entity_state_for(self)
+    entity_state[:statuses].add(:dodge)
+  end
+
+  def dodge?(battle)
+    entity_state = battle.entity_state_for(self)
+    entity_state[:statuses]&.include?(:dodge)
   end
 
   def has_action?(battle)

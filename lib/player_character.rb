@@ -133,8 +133,14 @@ class PlayerCharacter
           action
         end
       when :move, :dash
-        if battle.nil? || type == :dash || available_movement(battle) > 0
+        if battle.nil? || available_movement(battle) > 0
           MoveAction.new(session, self, type)
+        end
+      when :dash
+        if battle.nil? || total_actions(battle) > 0
+          action = MoveAction.new(session, self, type)
+          action.as_dash = true
+          action
         end
       else
         Action.new(session, self, type)

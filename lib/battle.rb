@@ -1,6 +1,6 @@
 class Battle
   attr_accessor :combat_order, :round
-  attr_reader :map, :entities, :session
+  attr_reader :map, :entities, :session, :battle_log
 
   def initialize(session, map)
     @session = session
@@ -22,13 +22,21 @@ class Battle
   def add(entity, group, position: nil, token: nil)
     raise "entity cannot be nil" if entity.nil?
 
-    @entities[entity] = { group: group }
+    @entities[entity] = {
+      group: group,
+      action: 0,
+      bonus_action: 0,
+      reaction: 0,
+      movement: 0,
+      statuses: Set.new
+    }
+
     @groups[group] ||= Set.new
     @groups[group].add(entity)
 
-    unless position.nil?
-      @map.place_at_spawn_point(position, entity, token)
-    end
+    return if position.nil?
+
+    position.is_a?(Symbol) ? @map.place_at_spawn_point(position, entity, token) : @map.place(*position, entity, token)
   end
 
   def entity_state_for(entity)
@@ -113,6 +121,20 @@ class Battle
         return if !max_rounds.nil? && @round > max_rounds
       end
     end while (!battle_ends?)
+  end
+
+  def enemy_in_melee_range?(source)
+    objects_around_me = map.look(source)
+
+    my_group = entity_state_for(source)[:group]
+
+    objects_around_me.detect do |object, _|
+      state = entity_state_for(object)
+      next unless state
+      next unless object.concious?
+
+      state[:group] != my_group && map.distance(source, object) < object.melee_distance
+    end
   end
 
   def battle_ends?

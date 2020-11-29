@@ -1,34 +1,71 @@
 class DieRoll
   attr_reader :rolls, :modifier, :die_sides
 
-  def initialize(rolls, modifier, die_sides = 20)
+  def initialize(rolls, modifier, die_sides = 20, advantage: false, disadvantage: false)
     @rolls = rolls
     @modifier = modifier
     @die_sides = die_sides
+    @advantage = advantage
+    @disadvantage = disadvantage
   end
 
   def nat_20?
-    @rolls.include?(20)
+    if @advantage
+      @rolls.map { |r| r.max }.detect { |r| r == 20 }
+    elsif @disadvantage
+      @rolls.map { |r| r.min }.detect { |r| r == 20 }
+    else
+      @rolls.include?(20)
+    end
   end
 
   def nat_1?
-    @rolls.include?(1)
+    if @advantage
+      @rolls.map { |r| r.max }.detect { |r| r == 1 }
+    elsif @disadvantage
+      @rolls.map { |r| r.min }.detect { |r| r == 1 }
+    else
+      @rolls.include?(1)
+    end
   end
 
   def result
-    @rolls.sum + @modifier
+    sum = if @advantage
+      @rolls.map { |r| r.max }.sum
+    elsif @disadvantage
+      @rolls.map { |r| r.min }.sum
+    else
+      @rolls.sum
+    end
+
+    sum + @modifier
+  end
+
+  def color_roll(r)
+    if r == 1
+      r.to_s.colorize(:red)
+    elsif r == @die_sides
+      r.to_s.colorize(:green)
+    else
+      r.to_s
+    end
   end
 
   def to_s
     rolls = @rolls.map do |r|
-      if r == 1
-        r.to_s.colorize(:red)
-      elsif r == @die_sides
-        r.to_s.colorize(:green)
+      if @advantage
+        r.map { |i|
+          i == r.max ? color_roll(i) : i.to_s.colorize(:gray)
+        }.join(' | ')
+      elsif @disadvantage
+        r.map { |i|
+          i == r.min ? color_roll(i) : i.to_s.colorize(:gray)
+        }.join(' | ')
       else
-        r.to_s
+        color_roll(r)
       end
-    end # colorize
+    end
+
     if (@modifier!=0)
       "(#{rolls.join(' + ')}) + #{@modifier}"
     else
@@ -47,7 +84,7 @@ class DieRoll
     false
   end
 
-  def self.roll(roll_str, crit: false)
+  def self.roll(roll_str, crit: false, disadvantage: false, advantage: false)
     state = :initial
     number_of_die = 1
     die_sides = 20
@@ -90,10 +127,12 @@ class DieRoll
       number_of_die *= 2
     end
 
-    rolls = number_of_die.times.map do
-      (1..die_sides).to_a.sample
-    end
+    rolls = if (advantage || disadvantage)
+              number_of_die.times.map { [(1..die_sides).to_a.sample, (1..die_sides).to_a.sample] }
+            else
+              number_of_die.times.map { (1..die_sides).to_a.sample }
+            end
 
-    DieRoll.new(rolls, modifier_str.blank? ? 0 : "#{modifier_op}#{modifier_str}".to_i, die_sides)
+    DieRoll.new(rolls, modifier_str.blank? ? 0 : "#{modifier_op}#{modifier_str}".to_i, die_sides, advantage: advantage, disadvantage: disadvantage)
   end
 end

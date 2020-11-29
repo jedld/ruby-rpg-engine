@@ -53,6 +53,6 @@ RSpec.describe MoveAction do
     expect(@fighter.hp).to eq(67)
     @battle.action!(@action)
     @battle.commit(@action)
-    expect(@fighter.hp).to eq(64)
+    expect(@fighter.hp).to eq(60)
   end
 end

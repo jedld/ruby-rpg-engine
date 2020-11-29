@@ -55,10 +55,13 @@ class AttackAction < Action
         EventManager.received_event({ source: item[:source], attack_roll: item[:attack_roll], target: item[:target], event: :attacked,
                                       attack_name: item[:attack_name],
                                       damage_type: item[:damage_type],
+                                      as_reaction: as_reaction,
                                       value: item[:damage].result })
         item[:target].take_damage!(item)
       when :miss
-        EventManager.received_event({ attack_roll: item[:attack_roll], attack_name: item[:attack_name],
+        EventManager.received_event({ attack_roll: item[:attack_roll],
+                                      attack_name: item[:attack_name],
+                                      as_reaction: as_reaction,
                                       source: item[:source], target: item[:target], event: :miss })
       end
 
@@ -92,21 +95,28 @@ class AttackAction < Action
     using = opts[:using] || @using
     raise "using or npc_action is a required option for :attack" if using.nil? && npc_action.nil?
 
-    damage = nil
-    attack_roll = nil
     attack_name = nil
+
+    damage_roll = nil
+
     if npc_action
       weapon = npc_action
       attack_name = npc_action[:name]
-      attack_roll = DieRoll.roll("1d20+#{npc_action[:attack]}")
-      damage = DieRoll.roll(npc_action[:damage_die])
+      attack_mod = npc_action[:attack]
+      damage_roll = npc_action[:damage_die]
     else
       weapon = Session.load_weapon(using.to_sym)
       attack_name = weapon[:name]
       attack_mod = @source.attack_roll_mod(weapon)
-      attack_roll = DieRoll.roll("1d20+#{attack_mod}")
-      damage = DieRoll.roll(damage_modifier(weapon), crit: attack_roll.nat_20?)
+      damage_roll = damage_modifier(weapon)
     end
+
+    # DnD 5e advantage/disadvantage checks
+    advantage_mod = target_advantage_condition(battle, @source, target, weapon)
+
+    # perform the dice rolls
+    attack_roll = DieRoll.roll("1d20+#{attack_mod}", disadvantage: advantage_mod.negative?, advantage: advantage_mod > 0)
+    damage = DieRoll.roll(damage_roll, crit: attack_roll.nat_20?)
 
     hit = if attack_roll.nat_20?
         true
@@ -143,5 +153,22 @@ class AttackAction < Action
     end
 
     self
+  end
+
+  protected
+
+  # Check all the factors that affect advantage/disadvantage in attack rolls
+  def target_advantage_condition(battle, source, target, weapon)
+    advantage = []
+    advantage << -1 if target.dodge?(battle)
+
+    if weapon[:type] == 'ranged_attack' && battle.map
+      advantage << -1 if battle.enemy_in_melee_range?(source)
+    end
+
+    return 0 if advantage.empty?
+    return 0 if advantage.uniq.size > 1
+
+    advantage.first
   end
 end

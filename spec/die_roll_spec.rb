@@ -1,5 +1,6 @@
 RSpec.describe DieRoll do
   before do
+    String.disable_colorization true
     srand(1000)
   end
 
@@ -30,6 +31,19 @@ RSpec.describe DieRoll do
       100.times do
         expect(DieRoll.roll("1d6", crit: true).result).to be_between 2, 12
       end
+    end
+
+    specify "roll with disadvantage" do
+      roll = DieRoll.roll("1d20", disadvantage: true)
+      expect(roll.to_s).to eq("(20 | 8)")
+      expect(roll.result).to eq 8
+    end
+
+    specify "roll with advantage" do
+      roll = DieRoll.roll("1d20", advantage: true)
+      expect(roll.to_s).to eq("(20 | 8)")
+      expect(roll.result).to eq 20
+      expect(roll.nat_20?).to be
     end
   end
 end

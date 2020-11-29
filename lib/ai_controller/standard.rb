@@ -55,6 +55,7 @@ module AiController
       objects_around_me.each do |object, location|
         state = battle.entity_state_for(object)
         next unless state
+        next unless object.concious?
 
         enemy_positions[object] = location if state[:group] != my_group
       end
@@ -106,6 +107,10 @@ module AiController
             valid_actions << move_action
           end
         end
+      end
+
+      if entity.has_action?(battle)
+        valid_actions << DodgeAction.new(battle.session, entity, :dodge)
       end
 
       return valid_actions.first unless valid_actions.empty?

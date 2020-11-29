@@ -119,6 +119,9 @@ def start_battle(chosen_character, chosen_enemies)
           action.target = target
           battle.action!(action)
           battle.commit(action)
+        when :dodge
+          battle.action!(action)
+          battle.commit(action)
         when :move
           move_path = move_ui(battle, map, entity)
           action.move_path = move_path
