@@ -91,6 +91,7 @@ module AiController
             melee_positions.each do |positions|
               path = path_compute.compute_path(start_x, start_y, *positions)
               next if path.nil? # no route
+
               if path.size < shortest_length
                 shortest_path = path
                 shortest_length = path.size

@@ -54,7 +54,17 @@ module Entity
     cur_x, cur_y = target_position
     (-step..step).each do |x_off|
       (-step..step).each do |y_off|
-        position = [cur_x + x_off, cur_y + y_off]
+        next if x_off == 0 && y_off == 0
+
+        # adjust melee position based on token size
+        adjusted_x_off = x_off
+        adjusted_y_off = y_off
+
+        adjusted_x_off -= token_size - 1 if x_off < 0
+        adjusted_y_off -= token_size - 1 if y_off < 0
+
+        position = [cur_x + adjusted_x_off, cur_y + adjusted_y_off]
+
         next if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
         next unless map.passable?(self, *position)
 

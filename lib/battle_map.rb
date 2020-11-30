@@ -71,10 +71,28 @@ class BattleMap
   end
 
   def distance(entity1, entity2)
-    pos1_x, pos1_y = @entities[entity1]
-    pos2_x, pos2_y = @entities[entity2]
+    # entity 1 squares
+    entity_1_sq = entity_squares(entity1)
+    entity_2_sq = entity_squares(entity2)
 
-    Math.sqrt((pos1_x - pos2_x)**2 + (pos1_y - pos2_y)**2).floor
+    entity_1_sq.map do |ent1_pos|
+      entity_2_sq.map do |ent2_pos|
+        pos1_x, pos1_y = ent1_pos
+        pos2_x, pos2_y = ent2_pos
+        Math.sqrt((pos1_x - pos2_x)**2 + (pos1_y - pos2_y)**2).floor
+      end
+    end.flatten.min
+  end
+
+  def entity_squares(entity)
+    pos1_x, pos1_y = @entities[entity]
+    entity_1_squares = []
+    (0...entity.token_size).each do |ofs_x|
+      (0...entity.token_size).each do |ofs_y|
+        entity_1_squares << [pos1_x + ofs_x, pos1_y + ofs_y]
+      end
+    end
+    entity_1_squares
   end
 
   # Entity to look around

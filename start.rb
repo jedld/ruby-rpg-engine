@@ -85,8 +85,11 @@ def start_battle(chosen_characters, chosen_enemies)
     puts "#{entity.name}'s turn"
     puts "==============================="
     if entity.npc?
+      cycles = 0
       begin
+        cycles += 1
         action = controller.move_for(entity, battle)
+
         if action.nil?
           puts "#{entity.name}: End turn."
           break

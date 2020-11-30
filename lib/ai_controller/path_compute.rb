@@ -50,11 +50,16 @@ module AiController
       return nil if distances[destination_x][destination_y] == MAX_DISTANCE  # no route!
 
       path << current_node
+      cycles = 0
+      visited_nodes = Set.new
+      visited_nodes.add(current_node)
       Kernel.loop do
+        cycles += 1
         adjacent_squares = get_adjacent_from(*current_node)
         min_node = nil
         min_distance = nil
-        adjacent_squares.each do |node|
+
+        adjacent_squares.reject { |n| visited_nodes.include?(n) }.each do |node|
           line_distance = Math.sqrt((destination_x - node[0]) ** 2 + (destination_y - node[1]) ** 2)
           current_distance = distances[node[0]][node[1]].to_f + line_distance / MAX_DISTANCE.to_f
           if min_node.nil? || current_distance < min_distance
@@ -62,9 +67,12 @@ module AiController
             min_node = node
           end
         end
+
+        return nil if min_node.nil?
+
         path << min_node
         current_node = min_node
-
+        visited_nodes.add(current_node)
         break if current_node == [source_x, source_y]
       end
 
@@ -79,7 +87,7 @@ module AiController
           cur_y = pos_y + y_op
 
           next if cur_x < 0 || cur_y < 0 || cur_x >= @max_x || cur_y >= @max_y
-          next if x_op == 0 && y_op == 0
+          next if x_op.zero? && y_op.zero?
           next if !@map.passable?(@entity, cur_x, cur_y, @battle)
 
           valid_paths.add([cur_x, cur_y])
