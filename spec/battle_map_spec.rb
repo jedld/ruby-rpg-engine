@@ -77,7 +77,7 @@ RSpec.describe AttackAction do
     expect(@battle_map.spawn_points).to eq({
       "spawn_point_1" => { :location => [2, 3] },
       "spawn_point_2" => { :location => [1, 5] },
-      "spawn_point_3" => { :location => [4, 0] },
+      "spawn_point_3" => { :location => [5, 0] },
     })
   end
 end
