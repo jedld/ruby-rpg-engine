@@ -41,11 +41,14 @@ module AiController
 
         current_node, node_d = q.delete_min
         break if current_node.nil?
+
         return nil if node_d == MAX_DISTANCE
       end
 
       path = []
       current_node = [destination_x, destination_y]
+      return nil if distances[destination_x][destination_y] == MAX_DISTANCE  # no route!
+
       path << current_node
       Kernel.loop do
         adjacent_squares = get_adjacent_from(*current_node)

@@ -155,6 +155,22 @@ module Entity
     modifier_table(@ability_scores.fetch(:wis))
   end
 
+  def token_size
+    square_size = size.to_sym
+    case(square_size)
+    when :small
+      1
+    when :medium
+      1
+    when :large
+      2
+    when :huge
+      3
+    else
+      raise "invalid size #{square_size}"
+    end
+  end
+
   def int_mod
     modifier_table(@ability_scores.fetch(:int))
   end

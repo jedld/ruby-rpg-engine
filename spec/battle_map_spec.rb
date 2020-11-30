@@ -25,7 +25,7 @@ RSpec.describe AttackAction do
       expect(@battle_map.render(line_of_sight: @npc)).to eq "···   \n" +
                                                             "G··## \n" +
                                                             "····# \n" +
-                                                            "··X···\n" +
+                                                            "··g···\n" +
                                                             " ##···\n" +
                                                             "   ···\n"
     end
@@ -93,7 +93,14 @@ RSpec.describe AttackAction do
     end
 
     it "renders token sizes correctly" do
-      expect(@battle_map.render).to eq("")
+      expect(@battle_map.render).to eq(
+        "#######\n" +
+        "O┐····#\n" +
+        "└┘····#\n" +
+        "####··#\n" +
+        "······#\n" +
+        "G·····#\n" +
+        "#######\n")
     end
   end
 end

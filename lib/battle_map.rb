@@ -53,11 +53,9 @@ class BattleMap
     @tokens[pos_x][pos_y] = entity_data
     @entities[entity] = [pos_x, pos_y]
 
-    if entity.size == 'large'
-      (0..1).each do |ofs_x|
-        (0..1).each do |ofs_y|
-          @tokens[pos_x + ofs_x][pos_y + ofs_y] = entity_data
-        end
+    (0...entity.token_size).each do |ofs_x|
+      (0...entity.token_size).each do |ofs_y|
+        @tokens[pos_x + ofs_x][pos_y + ofs_y] = entity_data
       end
     end
   end
@@ -104,8 +102,21 @@ class BattleMap
 
   def move_to!(entity, pos_x, pos_y)
     cur_x, cur_y = @entities[entity]
-    @tokens[pos_x][pos_y] = @tokens[cur_x][cur_y]
-    @tokens[cur_x][cur_y] = nil
+
+    entity_data = @tokens[cur_x][cur_y]
+
+    (0...entity.token_size).each do |ofs_x|
+      (0...entity.token_size).each do |ofs_y|
+        @tokens[cur_x + ofs_x][cur_y + ofs_y] = nil
+      end
+    end
+
+    (0...entity.token_size).each do |ofs_x|
+      (0...entity.token_size).each do |ofs_y|
+        @tokens[pos_x + ofs_x][pos_y + ofs_y] = entity_data
+      end
+    end
+
     @entities[entity] = [pos_x, pos_y]
   end
 
@@ -135,16 +146,25 @@ class BattleMap
   end
 
   def passable?(entity, pos_x, pos_y, battle = nil)
-    return false if @base_map[pos_x][pos_y] == '#'
+    (0...entity.token_size).each do |ofs_x|
+      (0...entity.token_size).each do |ofs_y|
+        return false if pos_x + ofs_x >= @size[0]
+        return false if pos_y + ofs_y >= @size[1]
 
-    if battle && @tokens[pos_x][pos_y]
-      source_state = battle.entity_state_for(entity)
-      source_group = source_state[:group]
-      location_state = battle.entity_state_for(@tokens[pos_x][pos_y][:entity])
-      location_group = location_state[:group]
-      return true if location_group.nil?
-      return true if location_group == source_group
-      return false if location_group != source_group
+        return false if @base_map[pos_x + ofs_x][pos_y + ofs_y] == '#'
+
+        if battle && @tokens[pos_x + ofs_x][pos_y + ofs_y]
+          source_state = battle.entity_state_for(entity)
+          source_group = source_state[:group]
+          location_state = battle.entity_state_for(@tokens[pos_x + ofs_x][pos_y + ofs_y][:entity])
+          next if @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity] == entity
+
+          location_group = location_state[:group]
+          next if location_group.nil?
+          next if location_group == source_group
+          return false if location_group != source_group
+        end
+      end
     end
 
     true
@@ -217,7 +237,7 @@ class BattleMap
     entity = @tokens[pos_x][pos_y]
     if entity[:entity].token
       m_x, m_y = @entities[entity[:entity]]
-      entity[:entity].token[pos_x - m_x][pos_y - m_y]
+      entity[:entity].token[pos_y - m_y][pos_x - m_x]
     else
       @tokens[pos_x][pos_y][:token]
     end

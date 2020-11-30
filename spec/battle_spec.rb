@@ -6,7 +6,7 @@ RSpec.describe Battle do
       @battle = Battle.new(session, @map)
       @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
       @npc = Npc.new(:goblin)
-      @npc2 = Npc.new(:ogre)
+      @npc2 = Npc.new(:goblin)
       @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
       @battle.add(@npc, :b, position: :spawn_point_2, token: "g")
       @battle.add(@npc2, :b, position: :spawn_point_3, token: "O")
@@ -55,10 +55,8 @@ RSpec.describe Battle do
 
       expect(@npc.hp).to eq(0)
       expect(@npc.dead?).to be
-      expect(@npc2.ammo_count("javelin")).to eq(1)
       action = @battle.action(@npc2, :attack, target: @fighter, npc_action: @npc2.npc_actions[1])
       @battle.commit(action)
-      expect(@npc2.ammo_count("javelin")).to eq(0)
     end
   end
 end
