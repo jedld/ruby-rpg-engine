@@ -101,7 +101,7 @@ class BattleMap
       next if k == entity
 
       pos1_x, pos1_y = v
-      next unless line_of_sight_for?(entity, pos1_x, pos1_y, distance)
+      next unless line_of_sight_for_ex?(entity, k, distance)
 
       [k, [pos1_x, pos1_y]]
     end.compact.to_h
@@ -112,6 +112,22 @@ class BattleMap
 
     pos1_x, pos1_y = @entities[entity]
     line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance)
+  end
+
+  def line_of_sight_for_ex?(entity, entity2, distance = nil)
+    raise 'cannot find entity' if @entities[entity].nil?
+
+    entity_1_squares = entity_squares(entity)
+    entity_2_squares = entity_squares(entity2)
+
+    entity_1_squares.each do |pos1|
+      entity_2_squares.each do |pos2|
+        pos1_x, pos1_y = pos1
+        pos2_x, pos2_y = pos2
+        return true if line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance)
+      end
+    end
+    false
   end
 
   def position_of(entity)
@@ -147,14 +163,14 @@ class BattleMap
     true
   end
 
-  def movement_cost(entity, path = [])
+  def movement_cost(entity, path, battle = nil)
     return 0 if path.empty?
 
     cost = 0
     path.each_with_index do |position, index|
       next unless index > 0
 
-      cost += if difficult_terrain?(entity, *position)
+      cost += if difficult_terrain?(entity, *position, battle)
                 2
               else
                 1
@@ -196,7 +212,8 @@ class BattleMap
     true
   end
 
-  def difficult_terrain?(_entity, pos_x, pos_y, _battle = nil)
+  def difficult_terrain?(entity, pos_x, pos_y, _battle = nil)
+    return false if @tokens[pos_x][pos_y] &&  @tokens[pos_x][pos_y][:entity] == entity
     return true if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
 
     false

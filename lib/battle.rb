@@ -93,7 +93,7 @@ class Battle
       next if k == entity && action.action_type == :attack
       next if prop[:group] == entity_group
       next if k.dead?
-      next if !@map.line_of_sight_for?(entity, *@map.position_of(k))
+      next unless @map.line_of_sight_for_ex?(entity, k)
       next if @map.distance(k, entity) * 5 > attack_range
 
       k

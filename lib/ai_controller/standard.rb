@@ -90,9 +90,13 @@ module AiController
 
             melee_positions.each do |positions|
               path = path_compute.compute_path(start_x, start_y, *positions)
-              next if path.nil? # no route
+              next if path.nil?
 
-              if path.size < shortest_length
+              path = path.take(entity.available_movement(battle) + 1)
+              next if path.length == 1 # no route
+
+              movement_cost = battle.map.movement_cost(entity, path, battle)
+              if movement_cost < shortest_length
                 shortest_path = path
                 shortest_length = path.size
               end
@@ -104,7 +108,9 @@ module AiController
             next if path.nil? || path.empty?
 
             move_action = MoveAction.new(battle.session, entity, :move)
-            move_action.as_dash = true if entity.available_movement(battle).zero?
+            if entity.available_movement(battle).zero?
+              move_action.as_dash = true
+            end
             move_action.move_path = path
             valid_actions << move_action
           end

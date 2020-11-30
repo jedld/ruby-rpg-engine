@@ -100,7 +100,7 @@ RSpec.describe AttackAction do
         "####··#\n" +
         "······#\n" +
         "G·····#\n" +
-        "#######\n")
+        "·······\n")
     end
   end
 end

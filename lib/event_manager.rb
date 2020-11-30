@@ -32,7 +32,7 @@ class EventManager
     EventManager.register_event_listener([:damage], ->(event) { puts "#{event[:source].name} #{event[:source].describe_health}"})
     EventManager.register_event_listener([:miss], ->(event) { puts "#{event[:as_reaction] ? "Opportunity Attack: "  : ""} rolled #{event[:attack_roll].to_s} ... #{event[:source].name&.colorize(:blue)} missed his attack #{event[:attack_name]} on #{event[:target].name}" })
     EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name&.colorize(:blue)} rolled a #{event[:roll].to_s} = (#{event[:value]}) with dex tie break for initiative." })
-    EventManager.register_event_listener([:move], ->(event) { puts "#{event[:source].name&.colorize(:blue)} moved #{(event[:path].size - 1) * 5}ft."})
+    EventManager.register_event_listener([:move], ->(event) { puts "#{event[:source].name&.colorize(:blue)} moved #{(event[:path].size - 1) * 5}ft."; binding.pry if (event[:path].size - 1) == 0 })
     EventManager.register_event_listener([:dodge], ->(event) { puts "#{event[:source].name&.colorize(:blue)} takes the dodge action."})
     EventManager.register_event_listener([:help], ->(event) { puts "#{event[:source].name&.colorize(:blue)} is helping to attack #{event[:target].name&.colorize(:red)}"})
   end

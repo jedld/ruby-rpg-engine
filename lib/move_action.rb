@@ -24,6 +24,23 @@ class MoveAction < Action
     action.build_map
   end
 
+  def compute_actual_moves(current_moves, map, battle, movement_budget)
+    actual_moves = []
+    current_moves.each_with_index do |m, index|
+      if index > 0
+        if map.difficult_terrain?(@source, *m, battle)
+          movement_budget -= 2
+        else
+          movement_budget -= 1
+        end
+      end
+
+      break if movement_budget.negative?
+
+      actual_moves << m
+    end
+  end
+
   def resolve(session, map, opts = {})
     raise "no path specified" if (move_path.nil? || move_path.empty?) && opts[:move_path].nil?
 
@@ -40,19 +57,7 @@ class MoveAction < Action
                         @source.available_movement(battle)
                       end
 
-    current_moves.each_with_index do |m, index|
-      if index > 0
-        if map.difficult_terrain?(@source, *m, battle)
-          movement_budget -= 2
-        else
-          movement_budget -= 1
-        end
-      end
-
-      break if movement_budget.negative?
-
-      actual_moves << m
-    end
+    actual_moves = compute_actual_moves(current_moves, map, battle, movement_budget)
 
     if (actual_moves.last && !map.placeable?(@source, *actual_moves.last, battle))
       actual_moves.pop
@@ -110,7 +115,7 @@ class MoveAction < Action
         elsif as_dash
           item[:battle].entity_state_for(item[:source])[:action] -= 1
         else
-          item[:battle].entity_state_for(item[:source])[:movement] -= (item[:path].length - 1) * 5 if item[:battle]
+          item[:battle].entity_state_for(item[:source])[:movement] -= item[:battle].map.movement_cost(item[:source], item[:path], item[:battle]) if item[:battle]
         end
       end
     end
