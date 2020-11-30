@@ -14,7 +14,9 @@ speed: 40
 passive_perception: 9
 dark_vision: 60
 token:
-  - O
+  - O┐
+  - └┘
+color: green
 ability:
   str: 19
   dex: 8
