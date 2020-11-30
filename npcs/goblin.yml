@@ -14,6 +14,9 @@ hp_die: 2d6
 speed: 30
 passive_perception: 9
 dark_vision: 60
+token:
+ - g
+color: green
 ability:
   str: 8
   dex: 14
