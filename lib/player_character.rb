@@ -35,6 +35,14 @@ class PlayerCharacter
     @properties[:level]
   end
 
+  def size
+    @properties[:size] || @race_properties[:size]
+  end
+
+  def token
+    @properties[:token]
+  end
+
   def speed
     @race_properties[:base_speed]
   end

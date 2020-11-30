@@ -7,17 +7,20 @@ class BattleMap
     @spawn_points = {}
     @entities = {}
 
-    @properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "#{map_file}.yml")).deep_symbolize_keys!
+    @properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', "#{map_file}.yml")).deep_symbolize_keys!
 
     # terrain layer
     @base_map = @properties.dig(:map, :base).map do |lines|
-      lines.each_char.map.to_a
-    end.transpose
+                  lines.each_char.map.to_a
+                end.transpose
+
 
     # meta layer
-    @meta_map = @properties.dig(:map, :meta).map do |lines|
-      lines.each_char.map.to_a
-    end.transpose if @properties.dig(:map, :meta)
+    if @properties.dig(:map, :meta)
+      @meta_map = @properties.dig(:map, :meta).map do |lines|
+        lines.each_char.map.to_a
+      end.transpose
+    end
 
     @legend = @properties[:legend] || {}
 
@@ -26,32 +29,43 @@ class BattleMap
       @size[1].times.map { nil }
     end
 
-    @meta_map.each_with_index do |meta_row, column_index|
-      meta_row.each_with_index do |token, row_index|
-        token_type = @legend.dig(token.to_sym, :type)
-        case (token_type)
-        when "spawn_point"
-          @spawn_points[@legend.dig(token.to_sym, :name)] = {
-            location: [column_index, row_index],
-          }
+    if @meta_map
+      @meta_map.each_with_index do |meta_row, column_index|
+        meta_row.each_with_index do |token, row_index|
+          token_type = @legend.dig(token.to_sym, :type)
+          case token_type
+          when 'spawn_point'
+            @spawn_points[@legend.dig(token.to_sym, :name)] = {
+              location: [column_index, row_index]
+            }
+          end
         end
       end
-    end if @meta_map
+    end
   end
 
-  def size
-    @size
-  end
+  attr_reader :size
 
   def place(pos_x, pos_y, entity, token = nil)
-    raise "entity param is required" if entity.nil?
+    raise 'entity param is required' if entity.nil?
 
-    @tokens[pos_x][pos_y] = { entity: entity, token: token || entity.name.first }
+    entity_data = { entity: entity, token: token || entity.name.first }
+    @tokens[pos_x][pos_y] = entity_data
     @entities[entity] = [pos_x, pos_y]
+
+    if entity.size == 'large'
+      (0..1).each do |ofs_x|
+        (0..1).each do |ofs_y|
+          @tokens[pos_x + ofs_x][pos_y + ofs_y] = entity_data
+        end
+      end
+    end
   end
 
   def place_at_spawn_point(position, entity, token = nil)
-    raise "unknown spawn position #{position}. should be any of #{@spawn_points.keys.join(",")}" if !@spawn_points.key?(position.to_s)
+    unless @spawn_points.key?(position.to_s)
+      raise "unknown spawn position #{position}. should be any of #{@spawn_points.keys.join(',')}"
+    end
 
     pos_x, pos_y = @spawn_points[position.to_s][:location]
     place(pos_x, pos_y, entity, token)
@@ -62,7 +76,7 @@ class BattleMap
     pos1_x, pos1_y = @entities[entity1]
     pos2_x, pos2_y = @entities[entity2]
 
-    Math.sqrt((pos1_x - pos2_x) ** 2 + (pos1_y - pos2_y) ** 2).floor
+    Math.sqrt((pos1_x - pos2_x)**2 + (pos1_y - pos2_y)**2).floor
   end
 
   # Entity to look around
@@ -78,7 +92,7 @@ class BattleMap
   end
 
   def line_of_sight_for?(entity, pos2_x, pos2_y, distance = nil)
-    raise "cannot find entity" if @entities[entity].nil?
+    raise 'cannot find entity' if @entities[entity].nil?
 
     pos1_x, pos1_y = @entities[entity]
     line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance)
@@ -96,8 +110,10 @@ class BattleMap
   end
 
   def valid_position?(pos_x, pos_y)
-    return false if pos_x >= @base_map.size || pos_x < 0 || pos_y >= @base_map[0].size || pos_y < 0 # check for out of bounds
-    return false if @base_map[pos_x][pos_y] == "#"
+    if pos_x >= @base_map.size || pos_x < 0 || pos_y >= @base_map[0].size || pos_y < 0
+      return false
+    end # check for out of bounds
+    return false if @base_map[pos_x][pos_y] == '#'
 
     true
   end
@@ -107,19 +123,20 @@ class BattleMap
 
     cost = 0
     path.each_with_index do |position, index|
-      if index > 0
-        if difficult_terrain?(entity, *position)
-          cost += 2
-        else
-          cost += 1
-        end
-      end
+      next unless index > 0
+
+      cost += if difficult_terrain?(entity, *position)
+                2
+              else
+                1
+              end
     end
     cost * 5
   end
 
   def passable?(entity, pos_x, pos_y, battle = nil)
     return false if @base_map[pos_x][pos_y] == '#'
+
     if battle && @tokens[pos_x][pos_y]
       source_state = battle.entity_state_for(entity)
       source_group = source_state[:group]
@@ -130,18 +147,18 @@ class BattleMap
       return false if location_group != source_group
     end
 
-    return true
+    true
   end
 
   def placeable?(entity, pos_x, pos_y, battle = nil)
-    return false if !passable?(entity, pos_x, pos_y, battle)
+    return false unless passable?(entity, pos_x, pos_y, battle)
     return false if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
     return false if @base_map[pos_x][pos_y] != '.'
 
     true
   end
 
-  def difficult_terrain?(entity, pos_x, pos_y, battle = nil)
+  def difficult_terrain?(_entity, pos_x, pos_y, _battle = nil)
     return true if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
 
     false
@@ -149,8 +166,8 @@ class BattleMap
 
   # check if this interrupts line of sight (not necessarily movement)
   def opaque?(pos_x, pos_y)
-    case(@base_map[pos_x][pos_y])
-    when "#"
+    case (@base_map[pos_x][pos_y])
+    when '#'
       return true
     end
 
@@ -160,7 +177,7 @@ class BattleMap
   def line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance = nil)
     return true if [pos1_x, pos1_y] == [pos2_x, pos2_y]
 
-    if (pos2_x == pos1_x)
+    if pos2_x == pos1_x
       scanner = pos2_y > pos1_y ? (pos1_y...pos2_y) : (pos2_y...pos1_y)
 
       scanner.each_with_index do |y, index|
@@ -168,51 +185,62 @@ class BattleMap
         next if (y == pos1_y) || (y == pos2_y)
         return false if opaque?(pos1_x, y)
       end
-      return true
+      true
     else
       m = (pos2_y - pos1_y).to_f / (pos2_x - pos1_x).to_f
-      if (m == 0)
+      if m == 0
         scanner = pos2_x > pos1_x ? (pos1_x...pos2_x) : (pos2_x...pos1_x)
         scanner.each_with_index do |x, index|
           return false if !distance.nil? && index > distance
           next if (x == pos1_x) || (x == pos2_x)
-          return false if (@base_map[x][pos2_y] == "#")
+          return false if @base_map[x][pos2_y] == '#'
         end
-        return true
+        true
       else
         scanner = pos2_x > pos1_x ? (pos1_x...pos2_x) : (pos2_x...pos1_x)
         b = pos1_y - m * pos1_x
-        step = (m.abs > 1) ? 1 / m.abs : m.abs
+        step = m.abs > 1 ? 1 / m.abs : m.abs
 
         scanner.step(step).each_with_index do |x, index|
           y = (m * x + b).round
 
           return false if !distance.nil? && index > distance
           next if (x.round == pos1_x && y == pos1_y) || (x.round == pos2_x && y == pos2_y)
-          return false if (@base_map[x.round][y] == "#")
+          return false if @base_map[x.round][y] == '#'
         end
-        return true
+        true
       end
+    end
+  end
+
+  def npc_token(pos_x, pos_y)
+    entity = @tokens[pos_x][pos_y]
+    if entity[:entity].token
+      m_x, m_y = @entities[entity[:entity]]
+      entity[:entity].token[pos_x - m_x][pos_y - m_y]
+    else
+      @tokens[pos_x][pos_y][:token]
     end
   end
 
   def render(line_of_sight: nil, path: [])
     @base_map.transpose.each_with_index.map do |row, row_index|
       row.each_with_index.map do |c, col_index|
-        c = "·".colorize(:light_black) if c == "."
-        c = "#".colorize(color: :black, background: :white) if c == "#"
+        c = '·'.colorize(:light_black) if c == '.'
+        c = '#'.colorize(color: :black, background: :white) if c == '#'
 
         if !path.empty?
-          next "X" if path[0] == [col_index, row_index]
-          next "+" if path.include?([col_index, row_index])
-          next " " if line_of_sight && !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
+          next 'X' if path[0] == [col_index, row_index]
+          next '+' if path.include?([col_index, row_index])
+          next ' ' if line_of_sight && !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
         else
-          next " " if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+          next ' ' if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
         end
 
         # render map layer
-        next "`" if @tokens[col_index][row_index]&.fetch(:entity)&.dead?
-        token = @tokens[col_index][row_index] ? @tokens[col_index][row_index][:token] : nil
+        next '`' if @tokens[col_index][row_index]&.fetch(:entity)&.dead?
+
+        token = @tokens[col_index][row_index] ? npc_token(col_index, row_index) : nil
         token || c
       end.join
     end.join("\n") + "\n"

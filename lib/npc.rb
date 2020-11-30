@@ -32,6 +32,14 @@ class Npc
     @properties[:kind]
   end
 
+  def size
+    @properties[:size]
+  end
+
+  def token
+    @properties[:token]
+  end
+
   def max_hp
     @max_hp
   end
