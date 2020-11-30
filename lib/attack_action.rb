@@ -1,5 +1,6 @@
 class AttackAction < Action
   attr_accessor :target, :using, :npc_action, :as_reaction
+  attr_reader :advantage_mod
 
   def to_s
     @action_type.to_s.humanize
@@ -77,6 +78,9 @@ class AttackAction < Action
       else
         item[:battle].entity_state_for(item[:source])[:action] -= 1
       end
+
+      # dismiss help actions
+      item[:battle].dismiss_help_for(item[:target])
     end
   end
 
@@ -86,6 +90,14 @@ class AttackAction < Action
     damage_mod += 2 if @source.has_class_feature?("dueling")
 
     "#{weapon[:damage]}+#{damage_mod}"
+  end
+
+  def with_advantage?
+    @advantage_mod > 0
+  end
+
+  def with_disadvantage?
+    @advantage_mod.negative?
   end
 
   def resolve(session, map, opts = {})
@@ -114,13 +126,13 @@ class AttackAction < Action
     end
 
     # DnD 5e advantage/disadvantage checks
-    advantage_mod = target_advantage_condition(battle, @source, target, weapon)
+    @advantage_mod = target_advantage_condition(battle, @source, target, weapon)
 
     # perform the dice rolls
-    attack_roll = DieRoll.roll("1d20+#{attack_mod}", disadvantage: advantage_mod.negative?, advantage: advantage_mod > 0)
+    attack_roll = DieRoll.roll("1d20+#{attack_mod}", disadvantage: with_disadvantage?, advantage: with_advantage?)
 
     if @source.has_class_feature?('sneak_attack') && (weapon[:properties]&.include?("finesse") || weapon[:type] == 'ranged_attack')
-      if advantage_mod.positive? || battle.enemy_in_melee_range?(target)
+      if with_advantage? || battle.enemy_in_melee_range?(target, [@source])
         sneak_attack_roll = DieRoll.roll(@source.sneak_attack_level, crit: attack_roll.nat_20?)
       end
     end
@@ -171,6 +183,7 @@ class AttackAction < Action
   def target_advantage_condition(battle, source, target, weapon)
     advantage = []
     advantage << -1 if target.dodge?(battle)
+    advantage << 1 if battle.help_with?(target)
 
     if weapon[:type] == 'ranged_attack' && battle.map
       advantage << -1 if battle.enemy_in_melee_range?(source)

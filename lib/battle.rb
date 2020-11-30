@@ -28,7 +28,8 @@ class Battle
       bonus_action: 0,
       reaction: 0,
       movement: 0,
-      statuses: Set.new
+      statuses: Set.new,
+      target_effect: {}
     }
 
     @groups[group] ||= Set.new
@@ -41,6 +42,24 @@ class Battle
 
   def entity_state_for(entity)
     @entities[entity]
+  end
+
+  def dismiss_help_actions_for(source)
+    @entities.each do |_k, entity|
+      entity[:target_effect]&.delete(source) if entity[:target_effect][source] == :help
+    end
+  end
+
+  def help_with?(target)
+    if @entities[target]
+      return @entities[target][:target_effect].values.include?(:help)
+    end
+
+    false
+  end
+
+  def dismiss_help_for(target)
+    @entities[target][:target_effect].delete_if { |_k, v| v == :help }
   end
 
   def action(source, action_type, opts = {})
@@ -61,12 +80,14 @@ class Battle
   # Targets that make sense for a given action
   def valid_targets_for(entity, action)
     entity_group = @entities[entity][:group]
-    attack_range = if action.using
-                      weapon = Session.load_weapon(action.using)
-                      weapon[:range_max].presence || weapon[:range]
-                    elsif action.npc_action
-                      action.npc_action[:range_max].presence || action.npc_action[:range]
-                    end
+    attack_range = if action.action_type == :help
+                     5
+                   elsif action.npc_action
+                     action.npc_action[:range_max].presence || action.npc_action[:range]
+                   elsif action.using
+                     weapon = Session.load_weapon(action.using)
+                     weapon[:range_max].presence || weapon[:range]
+                   end
 
     @entities.map do |k, prop|
       next if k == entity && action.action_type == :attack
@@ -123,12 +144,14 @@ class Battle
     end while (!battle_ends?)
   end
 
-  def enemy_in_melee_range?(source)
+  def enemy_in_melee_range?(source, exclude = [])
     objects_around_me = map.look(source)
 
     my_group = entity_state_for(source)[:group]
 
     objects_around_me.detect do |object, _|
+      next if exclude.include?(object)
+
       state = entity_state_for(object)
       next unless state
       next unless object.concious?

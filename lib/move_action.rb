@@ -32,19 +32,44 @@ class MoveAction < Action
 
     current_moves = move_path.presence || opts[:move_path]
 
-    if as_dash
-      current_moves = current_moves.take(@source.speed / 5)
-    elsif (current_moves.length - 1) > @source.available_movement(battle)
-      current_moves = current_moves.take(@source.available_movement(battle) + 1)
+    actual_moves = []
+
+    movement_budget = if as_dash
+                        @source.speed / 5
+                      else @source.available_movement(battle)
+                        @source.available_movement(battle)
+                      end
+
+    current_moves.each_with_index do |m, index|
+      if index > 0
+        if map.difficult_terrain?(@source, *m, battle)
+          movement_budget -= 2
+        else
+          movement_budget -= 1
+        end
+      end
+
+      break if movement_budget.negative?
+
+      actual_moves << m
+    end
+
+    if (actual_moves.last && !map.placeable?(@source, *actual_moves.last, battle))
+      actual_moves.pop
     end
 
     if battle && !@source.disengage?(battle)
-      opportunity_attacks = opportunity_attack_list(current_moves, battle, map)
+      opportunity_attacks = opportunity_attack_list(actual_moves, battle, map)
       opportunity_attacks.each do |enemy_opporunity|
         next unless enemy_opporunity[:source].has_reaction?(battle)
 
-        original_location = current_moves[enemy_opporunity[:path] - 1]
+        original_location = actual_moves[enemy_opporunity[:path] - 1]
         battle.trigger_opportunity_attack(enemy_opporunity[:source], @source, *original_location)
+
+        unless @source.concious?
+          actual_moves = original_location
+          break
+        end
       end
     end
 
@@ -53,8 +78,8 @@ class MoveAction < Action
       map: map,
       battle: battle,
       type: :move,
-      path: current_moves,
-      position: current_moves.last
+      path: actual_moves,
+      position: actual_moves.last
     }]
 
     self

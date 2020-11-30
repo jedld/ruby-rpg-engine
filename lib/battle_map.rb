@@ -62,7 +62,7 @@ class BattleMap
     pos1_x, pos1_y = @entities[entity1]
     pos2_x, pos2_y = @entities[entity2]
 
-    Math.sqrt((pos1_x - pos2_x) ** 2 + (pos1_y - pos2_y) ** 2).ceil
+    Math.sqrt((pos1_x - pos2_x) ** 2 + (pos1_y - pos2_y) ** 2).floor
   end
 
   # Entity to look around
@@ -102,10 +102,20 @@ class BattleMap
     true
   end
 
-  def movement_cost(path = [])
+  def movement_cost(entity, path = [])
     return 0 if path.empty?
 
-    (path.size - 1) * 5
+    cost = 0
+    path.each_with_index do |position, index|
+      if index > 0
+        if difficult_terrain?(entity, *position)
+          cost += 2
+        else
+          cost += 1
+        end
+      end
+    end
+    cost * 5
   end
 
   def passable?(entity, pos_x, pos_y, battle = nil)
@@ -121,6 +131,20 @@ class BattleMap
     end
 
     return true
+  end
+
+  def placeable?(entity, pos_x, pos_y, battle = nil)
+    return false if !passable?(entity, pos_x, pos_y, battle)
+    return false if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
+    return false if @base_map[pos_x][pos_y] != '.'
+
+    true
+  end
+
+  def difficult_terrain?(entity, pos_x, pos_y, battle = nil)
+    return true if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
+
+    false
   end
 
   # check if this interrupts line of sight (not necessarily movement)

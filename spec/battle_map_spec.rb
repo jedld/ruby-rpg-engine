@@ -44,7 +44,7 @@ RSpec.describe AttackAction do
   # distance in squares
   specify "#distance" do
     @battle_map.place(3, 3, @npc, "g")
-    expect(@battle_map.distance(@npc, @fighter)).to eq(4)
+    expect(@battle_map.distance(@npc, @fighter)).to eq(3)
   end
 
   specify "#valid_position?" do

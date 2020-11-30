@@ -2,11 +2,12 @@ require 'random_name_generator'
 
 class Npc
   include Entity
+  include HealthFlavor
 
   attr_accessor :hp, :statuses, :resistances, :npc_actions
 
   def initialize(type, opt = {})
-    @properties = JSON.parse(File.read(File.join('npcs', "#{type}.json"))).deep_symbolize_keys!
+    @properties = YAML.load_file(File.join('npcs', "#{type}.yml")).deep_symbolize_keys!
     @ability_scores = @properties[:ability]
     @inventory = @properties[:default_inventory].map do |inventory|
       [inventory[:type], OpenStruct.new({ qty: inventory[:qty] })]
@@ -29,6 +30,10 @@ class Npc
 
   def kind
     @properties[:kind]
+  end
+
+  def max_hp
+    @max_hp
   end
 
   def npc?
@@ -73,6 +78,7 @@ class Npc
   private
 
   def setup_attributes
-    @hp = @opt[:rand_life] ? DieRoll.roll(@properties[:hp_die]).result : @properties[:max_hp]
+    @max_hp = @opt[:rand_life] ? DieRoll.roll(@properties[:hp_die]).result : @properties[:max_hp]
+    @hp = @max_hp
   end
 end

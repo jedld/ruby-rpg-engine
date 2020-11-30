@@ -20,7 +20,7 @@ def move_ui(battle, map, entity, as_dash: false)
   path = [map.position_of(entity)]
   begin
     puts "\e[H\e[2J"
-    puts "movement #{map.movement_cost(path).to_s.colorize(:green)}ft."
+    puts "movement #{map.movement_cost(entity, path).to_s.colorize(:green)}ft."
     puts " "
     puts map.render(line_of_sight: entity, path: path)
     movement = @prompt.keypress(" (wsad) - movement, x - confirm path, r - reset")
@@ -34,6 +34,7 @@ def move_ui(battle, map, entity, as_dash: false)
     elsif movement == "s"
       new_path = [path.last[0], path.last[1] + 1]
     elsif movement == "x"
+      next if !map.placeable?(entity, *path.last, battle)
       return path
     elsif movement == "q"
       new_path = [path.last[0]-1, path.last[1] - 1]
@@ -52,7 +53,7 @@ def move_ui(battle, map, entity, as_dash: false)
 
     if path.size > 1 && new_path == path[path.size - 2]
       path.pop
-    elsif map.valid_position?(*new_path) && map.movement_cost(path) < (as_dash ? entity.speed : entity.available_movement(battle))
+    elsif map.valid_position?(*new_path) && map.movement_cost(entity, path + [new_path]) <= (as_dash ? entity.speed : entity.available_movement(battle))
       path << new_path
     end
   end while movement != "x"
@@ -120,16 +121,33 @@ def start_battle(chosen_characters, chosen_enemies)
           action.target = target
           battle.action!(action)
           battle.commit(action)
+        when :help
+          target = @prompt.select("#{entity.name} targets") do |menu|
+            battle.valid_targets_for(entity, action).each do |target|
+              menu.choice target.name, target
+            end
+            menu.choice "Back", nil
+          end
+
+          next if target == "Back"
+
+          action.target = target
+          battle.action!(action)
+          battle.commit(action)
         when :dodge, :disengage, :disengage_bonus
           battle.action!(action)
           battle.commit(action)
         when :move
           move_path = move_ui(battle, map, entity)
+          next if move_path.nil?
+
           action.move_path = move_path
           battle.action!(action)
           battle.commit(action)
         when :dash, :dash_bonus
           move_path = move_ui(battle, map, entity, as_dash: true)
+          next if move_path.nil?
+
           action.move_path = move_path
           action.as_dash = true
           battle.action!(action)

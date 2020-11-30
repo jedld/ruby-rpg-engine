@@ -1,24 +1,27 @@
-RSpec.describe DodgeAction do
+RSpec.describe HelpAction do
   let(:session) { Session.new }
   before do
     EventManager.standard_cli
     String.disable_colorization true
     @battle = Battle.new(session, nil)
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
-    @npc = Npc.new(:goblin)
+    @rogue = PlayerCharacter.load(File.join("fixtures", "halfling_rogue.json"))
+    @npc = Npc.new(:goblin, name: "Gruk")
     @battle.add(@fighter, :a)
+    @battle.add(@rogue, :a)
     @battle.add(@npc, :b)
     @npc.reset_turn!(@battle)
     @fighter.reset_turn!(@battle)
   end
 
   it "auto build" do
-    expect(@npc.dodge?(@battle)).to_not be
-    cont = DodgeAction.build(session, @npc)
-    dodge_action = cont.next.call()
-    dodge_action.resolve(session, nil, battle: @battle)
-    dodge_action.apply!
-    expect(@npc.dodge?(@battle)).to be
+    expect(@rogue.help?(@battle, @npc)).to_not be
+    cont = HelpAction.build(session, @rogue)
+    help_action = cont.next.call(@npc).next.call()
+    help_action.resolve(session, nil, battle: @battle)
+    help_action.apply!
+    expect(@rogue.help?(@battle, @npc)).to be
+    expect(@battle.help_with?(@npc)).to be
 
     cont = AttackAction.build(session, @fighter)
     begin
@@ -34,8 +37,14 @@ RSpec.describe DodgeAction do
       }
       cont = cont.next.call(*param)
     end while !param.nil?
+
     expect(cont.target).to eq(@npc)
     expect(cont.source).to eq(@fighter)
     expect(cont.using).to eq("vicious_rapier")
+    @battle.action!(cont)
+
+    expect(cont.with_advantage?).to be
+    @battle.commit(cont)
+    expect(@battle.help_with?(@npc)).to_not be
   end
 end

@@ -1,6 +1,7 @@
 class PlayerCharacter
   include Entity
   include RogueClass
+  include HealthFlavor
 
   attr_accessor :hp, :statuses, :other_counters, :resistances
 
@@ -137,6 +138,11 @@ class PlayerCharacter
       when :dodge
         if battle && total_actions(battle) > 0
           action = DodgeAction.new(session, self, :dodge)
+          action
+        end
+      when :help
+        if battle && total_actions(battle) > 0
+          action = HelpAction.new(session, self, :help)
           action
         end
       when :disengage_bonus

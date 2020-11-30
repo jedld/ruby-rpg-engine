@@ -3,7 +3,7 @@ module Entity
     dmg = damage_params[:damage].result
     dmg += damage_params[:sneak_attack].result unless damage_params[:sneak_attack].nil?
 
-    EventManager.received_event({ source: self, event: :damage, value: dmg })
+
     dmg = (dmg / 2.to_f).floor if resistant_to?(damage_params[:damage_type])
     @hp -= dmg
 
@@ -12,8 +12,9 @@ module Entity
     elsif @hp <= 0
       npc? ? dead! : unconcious!
     end
-
     @hp = 0 if @hp <= 0
+
+    EventManager.received_event({ source: self, event: :damage, value: dmg })
   end
 
   def resistant_to?(damage_type)
@@ -85,6 +86,7 @@ module Entity
                         })
     entity_state[:statuses].delete(:dodge)
     entity_state[:statuses].delete(:disengage)
+    battle.dismiss_help_actions_for(self)
   end
 
   def dodging!(battle)
@@ -105,6 +107,20 @@ module Entity
   def dodge?(battle)
     entity_state = battle.entity_state_for(self)
     entity_state[:statuses]&.include?(:dodge)
+  end
+
+  def help?(battle, target)
+    entity_state = battle.entity_state_for(target)
+    if entity_state[:target_effect]&.key?(self)
+      return entity_state[:target_effect][self] == :help
+    end
+
+    false
+  end
+
+  def help!(battle, target)
+    entity_state = battle.entity_state_for(target)
+    entity_state[:target_effect][self] = :help
   end
 
   def has_action?(battle)
