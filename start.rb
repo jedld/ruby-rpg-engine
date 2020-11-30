@@ -16,6 +16,42 @@ require "lib/session"
 # event handlers
 EventManager.standard_cli
 
+def target_ui(battle, map, entity, initial_pos: nil, num_select: 1)
+  selected = []
+  initial_pos = initial_pos || map.position_of(entity)
+  begin
+    puts "\e[H\e[2J"
+    puts " "
+    puts map.render(line_of_sight: entity, select_pos: initial_pos)
+    @prompt.say("#{map.entity_at(*initial_pos)&.name}")
+    movement = @prompt.keypress(" (wsad) - movement, x - select, r - reset")
+
+    if movement == "w"
+      new_pos = [initial_pos[0], initial_pos[1] - 1]
+    elsif movement == "a"
+      new_pos = [initial_pos[0] - 1, initial_pos[1]]
+    elsif movement == "d"
+      new_pos = [initial_pos[0] + 1, initial_pos[1]]
+    elsif movement == "s"
+      new_pos = [initial_pos[0], initial_pos[1] + 1]
+    elsif movement == "x"
+      selected << initial_pos
+    elsif movement == "r"
+      new_pos = [map.position_of(entity)]
+      next
+    else
+      next
+    end
+
+    next if new_pos.nil?
+    next if !map.line_of_sight_for?(entity, *new_pos)
+
+    initial_pos = new_pos
+  end while movement != "x"
+
+  selected.map { |e| map.entity_at(*e)}
+end
+
 def move_ui(battle, map, entity, as_dash: false)
   path = [map.position_of(entity)]
   begin
@@ -118,10 +154,17 @@ def start_battle(chosen_characters, chosen_enemies)
             battle.valid_targets_for(entity, action).each do |target|
               menu.choice target.name, target
             end
+            menu.choice "Manual"
             menu.choice "Back", nil
           end
 
           next if target == "Back"
+          if target == "Manual"
+            target = target_ui(battle, map, entity)
+            target = target&.first
+
+            next if target.nil?
+          end
 
           action.target = target
           battle.action!(action)

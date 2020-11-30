@@ -134,6 +134,13 @@ class BattleMap
     @entities[entity]
   end
 
+  def entity_at(pos_x, pos_y)
+    entity_data = @tokens[pos_x][pos_y]
+    return nil if entity_data.nil?
+
+    entity_data[:entity]
+  end
+
   def move_to!(entity, pos_x, pos_y)
     cur_x, cur_y = @entities[entity]
 
@@ -278,25 +285,35 @@ class BattleMap
     end
   end
 
-  def render(line_of_sight: nil, path: [])
+  def render_position(c, col_index, row_index, path: [], line_of_sight: nil)
+    c = '·'.colorize(:light_black) if c == '.'
+    c = '#' if c == '#'
+
+    if !path.empty?
+      return 'X' if path[0] == [col_index, row_index]
+      return '+' if path.include?([col_index, row_index])
+      return ' ' if line_of_sight && !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
+    else
+      return ' ' if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+    end
+
+    # render map layer
+    return '`' if @tokens[col_index][row_index]&.fetch(:entity)&.dead?
+
+    token = @tokens[col_index][row_index] ? npc_token(col_index, row_index) : nil
+    token || c
+  end
+
+  def render(line_of_sight: nil, path: [], select_pos: nil)
     @base_map.transpose.each_with_index.map do |row, row_index|
       row.each_with_index.map do |c, col_index|
-        c = '·'.colorize(:light_black) if c == '.'
-        c = '#'.colorize(color: :black, background: :white) if c == '#'
 
-        if !path.empty?
-          next 'X' if path[0] == [col_index, row_index]
-          next '+' if path.include?([col_index, row_index])
-          next ' ' if line_of_sight && !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
+        display = render_position(c, col_index, row_index, path: path, line_of_sight: line_of_sight)
+        if select_pos && select_pos == [col_index, row_index]
+          display.colorize(color: :black, background: :white)
         else
-          next ' ' if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+          display
         end
-
-        # render map layer
-        next '`' if @tokens[col_index][row_index]&.fetch(:entity)&.dead?
-
-        token = @tokens[col_index][row_index] ? npc_token(col_index, row_index) : nil
-        token || c
       end.join
     end.join("\n") + "\n"
   end
