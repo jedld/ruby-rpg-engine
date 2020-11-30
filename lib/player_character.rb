@@ -155,7 +155,8 @@ class PlayerCharacter
         end
       when :disengage_bonus
         if battle && has_class_feature?('cunning_action') && total_bonus_actions(battle) > 0
-          action = DisengageAction.new(session, self, :disengage_bonus, as_bonus_action: true)
+          action = DisengageAction.new(session, self, :disengage_bonus)
+          action.as_bonus_action = true
           action
         end
       when :disengage
