@@ -38,12 +38,23 @@ module Entity
     !dead? && !unconcious?
   end
 
-  def entered_melee?(map, pos_x, pos_y)
-    cur_x, cur_y = map.position_of(self)
-    distance = Math.sqrt((cur_x - pos_x)**2 + (cur_y - pos_y)**2).ceil * 5 # one square - 5 ft
+  # convenience method used to determine if a creature
+  # entered or is at melee range of another
+  def entered_melee?(map, entity, pos_x, pos_y)
+    entity_1_sq = map.entity_squares(self)
+    entity_2_sq = map.entity_squares_at_pos(entity, pos_x, pos_y)
 
-    # determine melee options
-    return true if distance <= melee_distance
+    entity_1_sq.each do |entity_1_pos|
+      entity_2_sq.each do |entity_2_pos|
+        cur_x, cur_y = entity_1_pos
+        pos_x, pos_y = entity_2_pos
+
+        distance = Math.sqrt((cur_x - pos_x)**2 + (cur_y - pos_y)**2).floor * 5 # one square - 5 ft
+
+        # determine melee options
+        return true if distance <= melee_distance
+      end
+    end
 
     false
   end

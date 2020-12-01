@@ -95,6 +95,16 @@ class BattleMap
     entity_1_squares
   end
 
+  def entity_squares_at_pos(entity, pos1_x, pos1_y)
+    entity_1_squares = []
+    (0...entity.token_size).each do |ofs_x|
+      (0...entity.token_size).each do |ofs_y|
+        entity_1_squares << [pos1_x + ofs_x, pos1_y + ofs_y]
+      end
+    end
+    entity_1_squares
+  end
+
   # Entity to look around
   def look(entity, distance = nil)
     @entities.map do |k, v|

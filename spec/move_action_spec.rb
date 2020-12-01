@@ -1,9 +1,9 @@
 RSpec.describe MoveAction do
   let(:session) { Session.new }
+  let(:map) { BattleMap.new(session, "fixtures/battle_sim") }
   before do
     srand(1000)
-    @map = BattleMap.new(session, "fixtures/battle_sim")
-    @battle = Battle.new(session, @map)
+    @battle = Battle.new(session, map)
     @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
     @npc = Npc.new(:goblin)
     @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
@@ -28,12 +28,23 @@ RSpec.describe MoveAction do
   it "auto build" do
     @battle.action!(@action)
     @battle.commit(@action)
-    expect(@map.position_of(@fighter)).to eq([1,2])
+    expect(map.position_of(@fighter)).to eq([1,2])
   end
 
   specify "#opportunity_attack_list" do
     @action.move_path = [[2,5], [3,5]]
-    expect(@action.opportunity_attack_list(@action.move_path, @battle, @map)).to eq [{ source: @npc, path: 1 }]
+    expect(@action.opportunity_attack_list(@action.move_path, @battle, map)).to eq [{ source: @npc, path: 1 }]
+  end
+
+  context "opportunity attack large creature" do
+    let(:map) { BattleMap.new(session, "fixtures/battle_sim_2") }
+
+    specify "opportunity attacks on large creatures" do
+      @ogre = Npc.new(:ogre)
+      @battle.add(@ogre, :b, position: [1,1], token: "g")
+      @ogre.reset_turn!(@battle)
+      expect(@action.opportunity_attack_list([[1,0],[2,0],[3,0]], @battle, map).size).to eq(0)
+    end
   end
 
   specify "opportunity attach triggers" do

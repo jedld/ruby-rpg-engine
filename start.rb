@@ -16,7 +16,7 @@ require "lib/session"
 # event handlers
 EventManager.standard_cli
 
-def target_ui(battle, map, entity, initial_pos: nil, num_select: 1)
+def target_ui(battle, map, entity, initial_pos: nil, num_select: 1, validation: nil)
   selected = []
   initial_pos = initial_pos || map.position_of(entity)
   begin
@@ -35,9 +35,11 @@ def target_ui(battle, map, entity, initial_pos: nil, num_select: 1)
     elsif movement == "s"
       new_pos = [initial_pos[0], initial_pos[1] + 1]
     elsif movement == "x"
+      next if validation && !validation.call(new_pos)
+
       selected << initial_pos
     elsif movement == "r"
-      new_pos = [map.position_of(entity)]
+      new_pos = map.position_of(entity)
       next
     else
       next
@@ -45,6 +47,7 @@ def target_ui(battle, map, entity, initial_pos: nil, num_select: 1)
 
     next if new_pos.nil?
     next if !map.line_of_sight_for?(entity, *new_pos)
+
 
     initial_pos = new_pos
   end while movement != "x"
@@ -160,7 +163,13 @@ def start_battle(chosen_characters, chosen_enemies)
 
           next if target == "Back"
           if target == "Manual"
-            target = target_ui(battle, map, entity)
+            target = target_ui(battle, map, entity, validation: -> (selected) {
+              selected_entity = map.entity_at(*selected)
+
+              return false unless selected_entity
+
+              battle.valid_targets_for(entity, action).include?(selected_entity)
+            })
             target = target&.first
 
             next if target.nil?

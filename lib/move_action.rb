@@ -97,8 +97,8 @@ class MoveAction < Action
     left_melee_range = []
     current_moves.each_with_index do |path, index|
       opponents.each do |enemy|
-        entered_melee_range.add(enemy) if enemy.entered_melee?(map, *path)
-        left_melee_range << { source: enemy, path: index } if !left_melee_range.include?(enemy) && entered_melee_range.include?(enemy) && !enemy.entered_melee?(map, *path)
+        entered_melee_range.add(enemy) if enemy.entered_melee?(map, @source, *path)
+        left_melee_range << { source: enemy, path: index } if !left_melee_range.include?(enemy) && entered_melee_range.include?(enemy) && !enemy.entered_melee?(map, @source, *path)
       end
     end
     left_melee_range
