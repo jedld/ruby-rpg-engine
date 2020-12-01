@@ -1,4 +1,6 @@
 module RogueClass
+  attr_accessor :rogue_level
+
   def sneak_attack_level
     [
       "1d6", "1d6",

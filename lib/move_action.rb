@@ -1,6 +1,10 @@
 class MoveAction < Action
   attr_accessor :move_path, :as_dash, :as_bonus_action
 
+  def self.can?(entity, battle)
+    battle.nil? || entity.available_movement(battle) > 0
+  end
+
   def build_map
     OpenStruct.new({
       action: self,

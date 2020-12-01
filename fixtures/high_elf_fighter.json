@@ -1,7 +1,9 @@
 {
   "name" : "Gomerin",
   "race" : "high_elf",
-  "class" : "fighter",
+  "classes" : {
+    "fighter": 1
+  },
   "level" : 7,
   "hit_die" : "inherit",
   "max_hp" : 67,

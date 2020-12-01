@@ -37,13 +37,13 @@ RSpec.describe PlayerCharacter do
     end
 
     specify "#available_actions" do
-      expect(@fighter.available_actions(session).map(&:to_s)).to eq ["Attack", "Attack", "Attack", "Move", "Dash", "Ready", "End"]
+      expect(@fighter.available_actions(session).map(&:to_s)).to eq ["Attack", "Attack", "Attack", "Move", "Dash"]
     end
 
     specify "#to_h" do
       expect(@fighter.to_h).to eq({
         :ability => {:cha=>11, :con=>16, :dex=>20, :int=>16, :str=>12, :wis=>12},
-        :class => "fighter",
+        :classes =>  { "fighter": 1},
         :hp => 67,
         :name => "Gomerin",
         :passive => {:insight=>11, :investigation=>13, :perception=>14},

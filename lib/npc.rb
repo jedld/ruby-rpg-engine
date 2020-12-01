@@ -79,7 +79,7 @@ class Npc
     end&.max
   end
 
-  def has_class_feature?(feature)
+  def class_feature?(feature)
     @properties[:attributes]&.include?(feature)
   end
 

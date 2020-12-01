@@ -1,6 +1,7 @@
 class PlayerCharacter
   include Entity
   include RogueClass
+  include FighterClass
   include HealthFlavor
 
   attr_accessor :hp, :statuses, :other_counters, :resistances
@@ -8,7 +9,10 @@ class PlayerCharacter
   def initialize(properties)
     @properties = properties.deep_symbolize_keys!
     @ability_scores = @properties[:ability]
-    @class_properties = JSON.parse(File.read(File.join(File.dirname(__FILE__), "..", "char_classes", "#{@properties[:class]}.json"))).deep_symbolize_keys!
+    @class_properties = @properties[:classes].map do |klass, level|
+      send(:"#{klass}_level=", level)
+      [klass.to_sym, JSON.parse(File.read(File.join(File.dirname(__FILE__), "..", "char_classes", "#{klass}.json"))).deep_symbolize_keys!]
+    end.to_h
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
     @inventory = @properties[:inventory]&.map do |inventory|
@@ -48,7 +52,7 @@ class PlayerCharacter
   end
 
   def c_class
-    @properties[:class]
+    @properties[:classes]
   end
 
   def passive_perception
@@ -76,7 +80,7 @@ class PlayerCharacter
   end
 
   def proficiency_bonus
-    @class_properties[:proficiency_bonuses][level - 1]
+    proficiency_bonus_table[level - 1]
   end
 
   def perception_proficient?
@@ -94,7 +98,7 @@ class PlayerCharacter
   def to_h
     {
       name: name,
-      class: c_class,
+      classes: c_class,
       hp: hp,
       ability: {
         str: @ability_scores.fetch(:str),
@@ -123,64 +127,49 @@ class PlayerCharacter
   end
 
   def available_actions(session, battle = nil)
-    [:attack, :move, :dash, :dash_bonus, :dodge, :help, :ready, :disengage, :disengage_bonus, :end].map { |type|
+    %i[attack move dash dash_bonus dodge help disengage disengage_bonus].map { |type|
+      next unless "#{type.to_s.camelize}Action".constantize.can?(self, battle)
+
       case (type)
       when :attack
         # check all equipped and create attack for each
-        if battle.nil? || total_actions(battle) > 0
-          weapon_attacks = @properties[:equipped].map do |item|
-            weapon_detail = Session.load_weapon(item)
-            next if weapon_detail.nil?
-            next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
+        weapon_attacks = @properties[:equipped].map do |item|
+          weapon_detail = Session.load_weapon(item)
+          next if weapon_detail.nil?
+          next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
 
-            action = AttackAction.new(session, self, :attack)
-            action.using = item
-            action
-          end.compact
+          action = AttackAction.new(session, self, :attack)
+          action.using = item
+          action
+        end.compact
 
-          unarmed_attack = AttackAction.new(session, self, :attack)
-          unarmed_attack.using = 'unarmed_attack'
+        unarmed_attack = AttackAction.new(session, self, :attack)
+        unarmed_attack.using = 'unarmed_attack'
 
-          weapon_attacks + [unarmed_attack]
-        end
+        weapon_attacks + [unarmed_attack]
       when :dodge
-        if battle && total_actions(battle) > 0
-          action = DodgeAction.new(session, self, :dodge)
-          action
-        end
+        DodgeAction.new(session, self, :dodge)
       when :help
-        if battle && total_actions(battle) > 0
-          action = HelpAction.new(session, self, :help)
-          action
-        end
+        action = HelpAction.new(session, self, :help)
+        action
       when :disengage_bonus
-        if battle && has_class_feature?('cunning_action') && total_bonus_actions(battle) > 0
-          action = DisengageAction.new(session, self, :disengage_bonus)
-          action.as_bonus_action = true
-          action
-        end
+        action = DisengageAction.new(session, self, :disengage_bonus)
+        action.as_bonus_action = true
+        action
       when :disengage
-        if battle && total_actions(battle) > 0
-          action = DisengageAction.new(session, self, :disengage)
-          action
-        end
+        action = DisengageAction.new(session, self, :disengage)
+        action
       when :move
-        if battle.nil? || available_movement(battle) > 0
-          MoveAction.new(session, self, type)
-        end
+        MoveAction.new(session, self, type)
       when :dash_bonus
-        if battle && has_class_feature?('cunning_action') && total_bonus_actions(battle) > 0
-          action = MoveAction.new(session, self, :dash_bonus)
-          action.as_dash = true
-          action.as_bonus_action = true
-          action
-        end
+        action = MoveAction.new(session, self, :dash_bonus)
+        action.as_dash = true
+        action.as_bonus_action = true
+        action
       when :dash
-        if battle.nil? || total_actions(battle) > 0
-          action = MoveAction.new(session, self, type)
-          action.as_dash = true
-          action
-        end
+        action = MoveAction.new(session, self, type)
+        action.as_dash = true
+        action
       else
         Action.new(session, self, type)
       end
@@ -200,16 +189,12 @@ class PlayerCharacter
   def attack_ability_mod(weapon)
     modifier = 0
 
-    case (weapon[:type])
-    when "melee_attack"
-      if weapon[:properties]&.include?("finesse") # if finese automatically use the largest mod
-        modifier += [str_mod, dex_mod].max
-      else
-        modifier += str_mod
-      end
-    when "ranged_attack"
-      modifier += dex_mod
-    end
+    modifier += case (weapon[:type])
+                when 'melee_attack'
+                  weapon[:properties]&.include?('finesse') ? [str_mod, dex_mod].max : str_mod
+                when 'ranged_attack'
+                  dex_mod
+                end
 
     modifier
   end
@@ -222,8 +207,10 @@ class PlayerCharacter
     end
   end
 
-  def has_class_feature?(feature)
-    @properties[:class_features]&.include?(feature)
+  def class_feature?(feature)
+    return true if @properties[:class_features]&.include?(feature)
+
+    @class_properties.values.detect { |p| p[:class_features]&.include?(feature) }
   end
 
   def self.load(path)
@@ -237,6 +224,10 @@ class PlayerCharacter
 
   private
 
+  def proficiency_bonus_table
+    [2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]
+  end
+
   def setup_attributes
     @hp = @properties[:max_hp]
   end
@@ -246,10 +237,10 @@ class PlayerCharacter
 
     equipped_meta = @equipped.map { |e| @equipments[e.to_sym] }.compact
     armor = equipped_meta.detect do |equipment|
-      equipment[:type] == "armor"
+      equipment[:type] == 'armor'
     end
 
-    shield = equipped_meta.detect { |e| e[:type] == "shield" }
+    shield = equipped_meta.detect { |e| e[:type] == 'shield' }
 
     (armor.nil? ? 10 : armor[:ac]) + (shield.nil? ? 0 : shield[:bonus_ac])
   end

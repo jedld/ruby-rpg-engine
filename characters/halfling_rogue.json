@@ -1,7 +1,7 @@
 {
   "name" : "RumbleBelly",
   "race" : "halfling",
-  "class" : "rogue",
+  "classes" :  { "rogue": 1 },
   "level" : 1,
   "hit_die" : "inherit",
   "max_hp" : 67,
@@ -14,8 +14,8 @@
     "cha" : 17
   },
   "class_features" : [
-    "cunning_action",
-    "sneak_attack"
+    "sneak_attack",
+    "cunning_action"
   ],
   "skills": [
      "acrobatics",

@@ -1,7 +1,7 @@
 {
   "name" : "Gomerin",
   "race" : "high_elf",
-  "class" : "fighter",
+  "classes" :  { "fighter": 1 },
   "level" : 1,
   "hit_die" : "inherit",
   "max_hp" : 67,
@@ -14,7 +14,7 @@
     "cha" : 11
   },
   "class_features" : [
-    "dueling"
+    "dueling","second_wind"
   ],
   "skills": [
      "acrobatics",

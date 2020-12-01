@@ -1,6 +1,10 @@
 class DodgeAction < Action
   attr_accessor :as_bonus_action
 
+  def self.can?(entity, battle)
+    battle && entity.total_actions(battle) > 0
+  end
+
   def build_map
     OpenStruct.new({
       param: nil,

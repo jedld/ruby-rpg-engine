@@ -1,6 +1,10 @@
 class HelpAction < Action
   attr_accessor :target
 
+  def self.can?(entity, battle)
+    battle && entity.total_actions(battle) > 0
+  end
+
   def build_map
     OpenStruct.new({
       action: self,

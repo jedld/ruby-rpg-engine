@@ -2,6 +2,10 @@ class AttackAction < Action
   attr_accessor :target, :using, :npc_action, :as_reaction
   attr_reader :advantage_mod
 
+  def self.can?(entity, battle)
+    battle.nil? || entity.total_actions(battle).positive?
+  end
+
   def to_s
     @action_type.to_s.humanize
   end
@@ -69,9 +73,8 @@ class AttackAction < Action
       end
 
       # handle ammo
-      if item[:npc_action] && item[:npc_action][:ammo]
-        item[:source].deduct_ammo(item.dig(:npc_action, :ammo), 1)
-      end
+
+      item[:source].deduct_ammo(item.dig(:npc_action, :ammo), 1) if item[:npc_action] && item[:npc_action][:ammo]
 
       if as_reaction
         item[:battle].entity_state_for(item[:source])[:reaction] -= 1
@@ -87,7 +90,7 @@ class AttackAction < Action
   def damage_modifier(weapon)
     damage_mod = @source.attack_ability_mod(weapon)
 
-    damage_mod += 2 if @source.has_class_feature?("dueling")
+    damage_mod += 2 if @source.class_feature?('dueling')
 
     "#{weapon[:damage]}+#{damage_mod}"
   end
@@ -131,7 +134,7 @@ class AttackAction < Action
     # perform the dice rolls
     attack_roll = DieRoll.roll("1d20+#{attack_mod}", disadvantage: with_disadvantage?, advantage: with_advantage?)
 
-    if @source.has_class_feature?('sneak_attack') && (weapon[:properties]&.include?("finesse") || weapon[:type] == 'ranged_attack')
+    if @source.class_feature?('sneak_attack') && (weapon[:properties]&.include?("finesse") || weapon[:type] == 'ranged_attack')
       if with_advantage? || battle.enemy_in_melee_range?(target, [@source])
         sneak_attack_roll = DieRoll.roll(@source.sneak_attack_level, crit: attack_roll.nat_20?)
       end

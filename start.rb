@@ -70,9 +70,10 @@ def start_battle(chosen_characters, chosen_enemies)
           entity.available_actions(@session, battle).each do |action|
             menu.choice action.label, action
           end
+          menu.choice "End", :end
           menu.choice "Stop Battle", :stop
         end
-
+        break if action == :end
         return if action == :stop
 
         case action.action_type
@@ -135,7 +136,7 @@ def start_battle(chosen_characters, chosen_enemies)
           battle.action!(action)
           battle.commit(action)
         end
-      end while action.action_type != :end
+      end while true
     end
   end
 
