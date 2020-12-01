@@ -6,97 +6,17 @@ require "pry-byebug"
 require "active_support"
 require "active_support/core_ext"
 
+
 $LOAD_PATH << File.dirname(__FILE__)
 
 require "lib/session"
+require "lib/cli/commandline_ui"
 
 @prompt = TTY::Prompt.new
 @session = Session.new
 
 # event handlers
 EventManager.standard_cli
-
-def target_ui(battle, map, entity, initial_pos: nil, num_select: 1, validation: nil)
-  selected = []
-  initial_pos = initial_pos || map.position_of(entity)
-  begin
-    puts "\e[H\e[2J"
-    puts " "
-    puts map.render(line_of_sight: entity, select_pos: initial_pos)
-    @prompt.say("#{map.entity_at(*initial_pos)&.name}")
-    movement = @prompt.keypress(" (wsad) - movement, x - select, r - reset")
-
-    if movement == "w"
-      new_pos = [initial_pos[0], initial_pos[1] - 1]
-    elsif movement == "a"
-      new_pos = [initial_pos[0] - 1, initial_pos[1]]
-    elsif movement == "d"
-      new_pos = [initial_pos[0] + 1, initial_pos[1]]
-    elsif movement == "s"
-      new_pos = [initial_pos[0], initial_pos[1] + 1]
-    elsif movement == "x"
-      next if validation && !validation.call(new_pos)
-
-      selected << initial_pos
-    elsif movement == "r"
-      new_pos = map.position_of(entity)
-      next
-    else
-      next
-    end
-
-    next if new_pos.nil?
-    next if !map.line_of_sight_for?(entity, *new_pos)
-
-
-    initial_pos = new_pos
-  end while movement != "x"
-
-  selected.map { |e| map.entity_at(*e)}
-end
-
-def move_ui(battle, map, entity, as_dash: false)
-  path = [map.position_of(entity)]
-  begin
-    puts "\e[H\e[2J"
-    puts "movement #{map.movement_cost(entity, path).to_s.colorize(:green)}ft."
-    puts " "
-    puts map.render(line_of_sight: entity, path: path)
-    movement = @prompt.keypress(" (wsad) - movement, x - confirm path, r - reset")
-
-    if movement == "w"
-      new_path = [path.last[0], path.last[1] - 1]
-    elsif movement == "a"
-      new_path = [path.last[0] - 1, path.last[1]]
-    elsif movement == "d"
-      new_path = [path.last[0] + 1, path.last[1]]
-    elsif movement == "s"
-      new_path = [path.last[0], path.last[1] + 1]
-    elsif movement == "x"
-      next if !map.placeable?(entity, *path.last, battle)
-      return path
-    elsif movement == "q"
-      new_path = [path.last[0]-1, path.last[1] - 1]
-    elsif movement == 'e'
-      new_path = [path.last[0]+1, path.last[1] - 1]
-    elsif movement == 'z'
-      new_path = [path.last[0]-1, path.last[1] + 1]
-    elsif movement == 'c'
-      new_path = [path.last[0]+1, path.last[1] + 1]
-    elsif movement == "r"
-      path = [map.position_of(entity)]
-      next
-    else
-      next
-    end
-
-    if path.size > 1 && new_path == path[path.size - 2]
-      path.pop
-    elsif map.valid_position?(*new_path) && map.movement_cost(entity, path + [new_path]) <= (as_dash ? entity.speed : entity.available_movement(battle))
-      path << new_path
-    end
-  end while movement != "x"
-end
 
 def start_battle(chosen_characters, chosen_enemies)
   map = BattleMap.new(@session, "maps/battle_sim")
@@ -120,6 +40,8 @@ def start_battle(chosen_characters, chosen_enemies)
   end
 
   battle.while_active do |entity|
+    command_line = CommandlineUI.new(battle, map, entity)
+
     puts ""
     puts "#{entity.name}'s turn"
     puts "==============================="
@@ -151,6 +73,8 @@ def start_battle(chosen_characters, chosen_enemies)
           menu.choice "Stop Battle", :stop
         end
 
+        return if action == :stop
+
         case action.action_type
         when :attack
           target = @prompt.select("#{entity.name} targets") do |menu|
@@ -163,7 +87,7 @@ def start_battle(chosen_characters, chosen_enemies)
 
           next if target == "Back"
           if target == "Manual"
-            target = target_ui(battle, map, entity, validation: -> (selected) {
+            target = command_line.target_ui(validation: -> (selected) {
               selected_entity = map.entity_at(*selected)
 
               return false unless selected_entity
@@ -195,14 +119,15 @@ def start_battle(chosen_characters, chosen_enemies)
           battle.action!(action)
           battle.commit(action)
         when :move
-          move_path = move_ui(battle, map, entity)
+
+          move_path = command_line.move_ui
           next if move_path.nil?
 
           action.move_path = move_path
           battle.action!(action)
           battle.commit(action)
         when :dash, :dash_bonus
-          move_path = move_ui(battle, map, entity, as_dash: true)
+          move_path = command_line.move_ui(as_dash: true)
           next if move_path.nil?
 
           action.move_path = move_path
