@@ -1,4 +1,10 @@
 module Entity
+  def heal!(amt)
+    prev_hp = @hp
+    @hp = [max_hp, @hp + amt].min
+    EventManager.received_event({ source: self, event: :heal, previous: prev_hp, new: @hp, value: amt })
+  end
+
   def take_damage!(damage_params)
     dmg = damage_params[:damage].result
     dmg += damage_params[:sneak_attack].result unless damage_params[:sneak_attack].nil?

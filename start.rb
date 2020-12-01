@@ -135,6 +135,9 @@ def start_battle(chosen_characters, chosen_enemies)
           action.as_dash = true
           battle.action!(action)
           battle.commit(action)
+        else
+          battle.action!(action)
+          battle.commit(action)
         end
       end while true
     end

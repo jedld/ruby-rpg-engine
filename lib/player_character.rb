@@ -9,10 +9,6 @@ class PlayerCharacter
   def initialize(properties)
     @properties = properties.deep_symbolize_keys!
     @ability_scores = @properties[:ability]
-    @class_properties = @properties[:classes].map do |klass, level|
-      send(:"#{klass}_level=", level)
-      [klass.to_sym, YAML.load_file(File.join(File.dirname(__FILE__), "..", "char_classes", "#{klass}.yml")).deep_symbolize_keys!]
-    end.to_h
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
     @inventory = @properties[:inventory]&.map do |inventory|
@@ -21,6 +17,11 @@ class PlayerCharacter
     @statuses = Set.new
     @resistances = []
     setup_attributes
+    @class_properties = @properties[:classes].map do |klass, level|
+      send(:"#{klass}_level=", level)
+      send(:"initialize_#{klass}")
+      [klass.to_sym, YAML.load_file(File.join(File.dirname(__FILE__), "..", "char_classes", "#{klass}.yml")).deep_symbolize_keys!]
+    end.to_h
   end
 
   def name
@@ -130,7 +131,7 @@ class PlayerCharacter
     %i[attack move dash dash_bonus dodge help disengage disengage_bonus].map { |type|
       next unless "#{type.to_s.camelize}Action".constantize.can?(self, battle)
 
-      case (type)
+      case type
       when :attack
         # check all equipped and create attack for each
         weapon_attacks = @properties[:equipped].map do |item|
@@ -173,7 +174,7 @@ class PlayerCharacter
       else
         Action.new(session, self, type)
       end
-    }.compact.flatten
+    }.compact.flatten + c_class.keys.map { |c| send(:"special_actions_for_#{c}", session, battle) }.flatten
   end
 
   def attack_roll_mod(weapon)

@@ -35,5 +35,7 @@ class EventManager
     EventManager.register_event_listener([:move], ->(event) { puts "#{event[:source].name&.colorize(:blue)} moved #{(event[:path].size - 1) * 5}ft."; binding.pry if (event[:path].size - 1) == 0 })
     EventManager.register_event_listener([:dodge], ->(event) { puts "#{event[:source].name&.colorize(:blue)} takes the dodge action."})
     EventManager.register_event_listener([:help], ->(event) { puts "#{event[:source].name&.colorize(:blue)} is helping to attack #{event[:target].name&.colorize(:red)}"})
+    EventManager.register_event_listener([:second_wind], ->(event) { puts SecondWindAction.describe(event) })
+    EventManager.register_event_listener([:heal], ->(event) { puts "#{event[:source].name&.colorize(:blue)} heals for #{event[:value]}hp" })
   end
 end
