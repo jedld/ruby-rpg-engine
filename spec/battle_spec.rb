@@ -4,7 +4,7 @@ RSpec.describe Battle do
     before do
       @map = BattleMap.new(session, "fixtures/battle_sim")
       @battle = Battle.new(session, @map)
-      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
       @npc = Npc.new(:goblin)
       @npc2 = Npc.new(:goblin)
       @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")

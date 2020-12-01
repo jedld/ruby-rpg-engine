@@ -21,9 +21,9 @@ require "lib/ai_controller/standard"
 
 class Session
   def load_characters
-    files = Dir[File.join(File.dirname(__FILE__), "..", "characters", "*.json")]
+    files = Dir[File.join(File.dirname(__FILE__), "..", "characters", "*.yml")]
     @characters ||= files.map do |file|
-      JSON.parse(File.read(file))
+      YAML.load_file(file)
     end
     @characters.map do |char_content|
       PlayerCharacter.new(char_content)

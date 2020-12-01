@@ -5,7 +5,7 @@ RSpec.describe PlayerCharacter do
 
   context "fighter" do
     before do
-      @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.json'))
+      @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.yml'))
     end
 
     it "creates a player character" do

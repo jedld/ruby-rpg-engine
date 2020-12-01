@@ -4,7 +4,7 @@ RSpec.describe MoveAction do
   before do
     srand(1000)
     @battle = Battle.new(session, map)
-    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
     @npc = Npc.new(:goblin)
     @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
     @battle.add(@npc, :b, position: :spawn_point_2, token: "g")

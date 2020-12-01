@@ -11,7 +11,7 @@ class PlayerCharacter
     @ability_scores = @properties[:ability]
     @class_properties = @properties[:classes].map do |klass, level|
       send(:"#{klass}_level=", level)
-      [klass.to_sym, JSON.parse(File.read(File.join(File.dirname(__FILE__), "..", "char_classes", "#{klass}.json"))).deep_symbolize_keys!]
+      [klass.to_sym, YAML.load_file(File.join(File.dirname(__FILE__), "..", "char_classes", "#{klass}.yml")).deep_symbolize_keys!]
     end.to_h
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
@@ -214,7 +214,7 @@ class PlayerCharacter
   end
 
   def self.load(path)
-    fighter_prop = JSON.parse(File.read(path)).deep_symbolize_keys!
+    fighter_prop = YAML.load_file(path).deep_symbolize_keys!
     @fighter = PlayerCharacter.new(fighter_prop)
   end
 

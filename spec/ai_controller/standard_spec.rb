@@ -12,7 +12,7 @@ RSpec.describe AiController::Standard do
 
     controller.register_battle_listeners(@battle)
 
-    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
     @npc1 = Npc.new(:goblin)
     @npc2 = Npc.new(:ogre)
 

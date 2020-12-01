@@ -4,7 +4,7 @@ RSpec.describe DodgeAction do
     EventManager.standard_cli
     String.disable_colorization true
     @battle = Battle.new(session, nil)
-    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
     @npc = Npc.new(:goblin)
     @battle.add(@fighter, :a)
     @battle.add(@npc, :b)

@@ -4,8 +4,8 @@ RSpec.describe HelpAction do
     EventManager.standard_cli
     String.disable_colorization true
     @battle = Battle.new(session, nil)
-    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
-    @rogue = PlayerCharacter.load(File.join("fixtures", "halfling_rogue.json"))
+    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
+    @rogue = PlayerCharacter.load(File.join("fixtures", "halfling_rogue.yml"))
     @npc = Npc.new(:goblin, name: "Gruk")
     @battle.add(@fighter, :a)
     @battle.add(@rogue, :a)

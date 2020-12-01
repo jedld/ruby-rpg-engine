@@ -4,7 +4,7 @@ RSpec.describe AttackAction do
     before do
       String.disable_colorization true
       @battle_map = BattleMap.new(session, "fixtures/battle_sim")
-      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
       @npc = Npc.new(:goblin, name: "grok")
       @battle_map.place(0, 1, @fighter, "G")
     end
@@ -86,7 +86,7 @@ RSpec.describe AttackAction do
   context "other sizes thest" do
     before do
       @battle_map = BattleMap.new(session, "fixtures/battle_sim_3")
-      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
       @npc = Npc.new(:ogre, name: "grok")
       @battle_map.place(0, 5, @fighter, "G")
       @battle_map.place(0, 1, @npc)

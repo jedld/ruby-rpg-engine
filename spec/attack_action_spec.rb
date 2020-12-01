@@ -5,7 +5,7 @@ RSpec.describe AttackAction do
     srand(1000)
     @battle_map = BattleMap.new(session, "fixtures/battle_sim")
     @battle = Battle.new(session, @battle_map)
-    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
     @npc = Npc.new(:ogre)
     @npc2 = Npc.new(:goblin)
     @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")

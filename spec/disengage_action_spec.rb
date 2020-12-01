@@ -2,7 +2,7 @@ RSpec.describe DisengageAction do
   let(:session) { Session.new }
   before do
     @battle = Battle.new(session, nil)
-    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.json"))
+    @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
     @npc = Npc.new(:goblin)
     @battle.add(@fighter, :a)
     @battle.add(@npc, :b)
