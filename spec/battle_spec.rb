@@ -49,9 +49,9 @@ RSpec.describe Battle do
         npc_action: nil
       }])
 
-      expect(@fighter.ammo_count("arrows")).to eq(20)
+      expect(@fighter.item_count("arrows")).to eq(20)
       @battle.commit(action)
-      expect(@fighter.ammo_count("arrows")).to eq(20)
+      expect(@fighter.item_count("arrows")).to eq(20)
 
       expect(@npc.hp).to eq(0)
       expect(@npc.dead?).to be

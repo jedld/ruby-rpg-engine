@@ -216,17 +216,28 @@ module Entity
     @event_handlers[event_name.to_sym]&.call(battle, session, map, event)
   end
 
-  def deduct_ammo(ammo_type, amount = 1)
+  def deduct_item(ammo_type, amount = 1)
     return if @inventory[ammo_type].nil?
 
     qty = @inventory[ammo_type][:qty]
     @inventory[ammo_type][:qty] = qty - amount
   end
 
-  def ammo_count(ammo_type)
+  def item_count(ammo_type)
     return 0 if @inventory[ammo_type].nil?
 
     @inventory[ammo_type][:qty]
+  end
+
+  def usable_items
+    @inventory.map do |k, v|
+      item_details = Session.load_equipment(v.type)
+      next unless item_details
+      next unless item_details[:usable]
+      next if item_details[:consumable] && v.qty.zero?
+
+      { name: k, label: item_details[:name] || k, item: item_details }
+    end.compact
   end
 
   protected

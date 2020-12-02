@@ -22,6 +22,18 @@ $LOAD_PATH << File.join(File.dirname(__FILE__), '..')
 
 require 'lib/session'
 
+def auto_build_self(source, session, action_class, build_opts = {})
+  cont = action_class.build(session, source)
+    begin
+    param = cont.param&.map { |p|
+      raise "param not specified #{p[:type]}" unless build_opts[p[:type]]
+      build_opts[p[:type]]
+    }
+    cont = cont.next.call(*param)
+  end while !param.nil?
+  cont
+end
+
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest

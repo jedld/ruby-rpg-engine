@@ -11,9 +11,11 @@ class PlayerCharacter
     @ability_scores = @properties[:ability]
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
-    @inventory = @properties[:inventory]&.map do |inventory|
-      [inventory[:type], OpenStruct.new({ qty: inventory[:qty] })]
-    end.to_h
+    @inventory = {}
+    @properties[:inventory]&.each do |inventory|
+      @inventory[inventory[:type]] ||= OpenStruct.new({ type: inventory[:type], qty: 0 })
+      @inventory[inventory[:type]].qty += inventory[:qty]
+    end
     @statuses = Set.new
     @resistances = []
     setup_attributes
@@ -128,7 +130,7 @@ class PlayerCharacter
   end
 
   def available_actions(session, battle = nil)
-    %i[attack move dash dash_bonus dodge help disengage disengage_bonus].map { |type|
+    %i[attack move dash dash_bonus dodge help disengage disengage_bonus use_item].map { |type|
       next unless "#{type.to_s.camelize}Action".constantize.can?(self, battle)
 
       case type

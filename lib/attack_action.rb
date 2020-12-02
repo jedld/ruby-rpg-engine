@@ -74,7 +74,7 @@ class AttackAction < Action
 
       # handle ammo
 
-      item[:source].deduct_ammo(item.dig(:npc_action, :ammo), 1) if item[:npc_action] && item[:npc_action][:ammo]
+      item[:source].deduct_item(item.dig(:npc_action, :ammo), 1) if item[:npc_action] && item[:npc_action][:ammo]
 
       if as_reaction
         item[:battle].entity_state_for(item[:source])[:reaction] -= 1

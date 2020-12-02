@@ -1,4 +1,4 @@
-require 'priority_queue'
+require 'pqueue'
 module AiController
   MAX_DISTANCE = 4_000_000
   # Path finding algorithm
@@ -13,7 +13,7 @@ module AiController
     # compute path using Djikstras shortest path
     def compute_path(source_x, source_y, destination_x, destination_y)
 
-      q = PriorityQueue.new
+      pq = PQueue.new([]){ |a, b| a[1] < b[1] }
       visited_nodes = Set.new
 
       distances = @max_x.times.map do
@@ -32,14 +32,14 @@ module AiController
         adjacent_squares.reject { |n| visited_nodes.include?(n) }.each do |node|
           current_distance = distance + 1
           distances[node[0]][node[1]] = current_distance if distances[node[0]][node[1]] > current_distance
-          q[node] = distances[node[0]][node[1]]
+          pq << [node, distances[node[0]][node[1]]]
         end
 
         break if current_node == [destination_x, destination_y]
 
         visited_nodes.add(current_node)
 
-        current_node, node_d = q.delete_min
+        current_node, node_d = pq.pop
         break if current_node.nil?
 
         return nil if node_d == MAX_DISTANCE

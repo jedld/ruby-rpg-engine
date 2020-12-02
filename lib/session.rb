@@ -10,6 +10,7 @@ require "lib/help_action"
 require "lib/disengage_action"
 require "lib/move_action"
 require "lib/dash_action"
+require "lib/use_item_action"
 require "lib/battle"
 require "lib/battle_map"
 require "lib/event_manager"
@@ -39,5 +40,10 @@ class Session
   def self.load_weapon(weapon)
     @weapons ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "weapons.yml")).deep_symbolize_keys!
     @weapons[weapon.to_sym]
+  end
+
+  def self.load_equipment(item)
+    @equipment ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "equipment.yml")).deep_symbolize_keys!
+    @equipment[item.to_sym]
   end
 end

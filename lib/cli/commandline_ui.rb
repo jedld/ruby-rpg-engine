@@ -8,6 +8,33 @@ class CommandlineUI
     @prompt = TTY::Prompt.new
   end
 
+  def attack_ui(entity, action)
+    target = @prompt.select("#{entity.name} targets") do |menu|
+      battle.valid_targets_for(entity, action).each do |target|
+        menu.choice target.name, target
+      end
+      menu.choice "Manual"
+      menu.choice "Back", nil
+    end
+
+    return nil if target == "Back"
+
+    if target == "Manual"
+      target = target_ui(validation: -> (selected) {
+        selected_entity = map.entity_at(*selected)
+
+        return false unless selected_entity
+
+        battle.valid_targets_for(entity, action).include?(selected_entity)
+      })
+      target = target&.first
+
+      return nil if target.nil?
+    end
+
+    target
+  end
+
   def target_ui(initial_pos: nil, num_select: 1, validation: nil)
     selected = []
     initial_pos = initial_pos || map.position_of(entity)

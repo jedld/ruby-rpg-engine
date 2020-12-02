@@ -26,3 +26,10 @@ shield_of_the_hidden_lord:
   type: shield
   require_attune: true
   bonus_ac: 4
+healing_potion:
+  name: Potion of Healing
+  type: potion
+  usable: true
+  consumable: true
+  hp_regained: 2d4+2
+  item_class: ItemLibrary::HealingPotion

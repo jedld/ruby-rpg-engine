@@ -78,29 +78,7 @@ def start_battle(chosen_characters, chosen_enemies)
 
         case action.action_type
         when :attack
-          target = @prompt.select("#{entity.name} targets") do |menu|
-            battle.valid_targets_for(entity, action).each do |target|
-              menu.choice target.name, target
-            end
-            menu.choice "Manual"
-            menu.choice "Back", nil
-          end
-
-          next if target == "Back"
-          if target == "Manual"
-            target = command_line.target_ui(validation: -> (selected) {
-              selected_entity = map.entity_at(*selected)
-
-              return false unless selected_entity
-
-              battle.valid_targets_for(entity, action).include?(selected_entity)
-            })
-            target = target&.first
-
-            next if target.nil?
-          end
-
-          action.target = target
+          action.target = command_line.attack_ui(entity, action)
           battle.action!(action)
           battle.commit(action)
         when :help
