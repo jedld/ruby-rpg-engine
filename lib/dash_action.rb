@@ -1,6 +1,6 @@
 class DashAction < MoveAction
   def self.can?(entity, battle)
-    battle.nil? || entity.total_actions(battle) > 0
+    battle && entity.total_actions(battle) > 0
   end
 end
 
