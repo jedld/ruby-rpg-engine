@@ -55,7 +55,7 @@ class Battle
 
   def dismiss_help_actions_for(source)
     @entities.each do |_k, entity|
-      entity[:target_effect]&.delete(source) if entity[:target_effect][source] == :help
+      entity[:target_effect]&.delete(source) if %i[help help_ability_check].include?(entity[:target_effect][source])
     end
   end
 
@@ -105,10 +105,10 @@ class Battle
 
     @entities.map do |k, prop|
       next if !target_types.include?(:self) && k == entity
-      next if !target_types.include?(:allies) && prop[:group] == entity_group
+      next if !target_types.include?(:allies) && prop[:group] == entity_group && k != entity
       next if !target_types.include?(:enemies) && prop[:group] != entity_group
       next if k.dead?
-      next unless @map.line_of_sight_for_ex?(entity, k)
+      next if !target_types.include?(:ignore_los) && !@map.line_of_sight_for_ex?(entity, k)
       next if @map.distance(k, entity) * 5 > attack_range
 
       k

@@ -166,12 +166,12 @@ class PlayerCharacter
       when :move
         MoveAction.new(session, self, type)
       when :dash_bonus
-        action = MoveAction.new(session, self, :dash_bonus)
+        action = DashBonusAction.new(session, self, :dash_bonus)
         action.as_dash = true
         action.as_bonus_action = true
         action
       when :dash
-        action = MoveAction.new(session, self, type)
+        action = DashAction.new(session, self, type)
         action.as_dash = true
         action
       when :use_item

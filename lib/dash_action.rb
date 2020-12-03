@@ -5,7 +5,8 @@ class DashAction < MoveAction
       action: self,
       param: [
         {
-          type: :movement
+          type: :movement,
+          as_dash: true,
         },
       ],
       next: ->(path) {
@@ -24,7 +25,7 @@ class DashAction < MoveAction
   end
 end
 
-class DashBonusAction < MoveAction
+class DashBonusAction < DashAction
   def self.can?(entity, battle)
     battle && entity.class_feature?('cunning_action') && entity.total_bonus_actions(battle) > 0
   end

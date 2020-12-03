@@ -148,8 +148,13 @@ module Entity
   end
 
   def help!(battle, target)
-    entity_state = battle.entity_state_for(target)
-    entity_state[:target_effect][self] = :help
+    target_state = battle.entity_state_for(target)
+    entity_state = battle.entity_state_for(self)
+    target_state[:target_effect][self] = if target_state[:group] != entity_state[:group]
+                                           :help
+                                         else
+                                           :help_ability_check
+                                         end
   end
 
   def has_action?(battle)

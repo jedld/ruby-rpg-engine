@@ -11,9 +11,8 @@ class HelpAction < Action
       param: [
         {
           type: :select_target,
-          options: {
-            allow_ally: true
-          },
+          target_types: [:allies, :enemies],
+          range: 5,
           num: 1,
         }
       ],

@@ -75,7 +75,7 @@ class CommandlineUI
     selected.map { |e| map.entity_at(*e)}
   end
 
-  def move_ui(as_dash: false)
+  def move_ui(options = {})
     path = [map.position_of(entity)]
     begin
       puts "\e[H\e[2J"
@@ -114,7 +114,7 @@ class CommandlineUI
 
       if path.size > 1 && new_path == path[path.size - 2]
         path.pop
-      elsif map.passable?(entity, *new_path, battle) && map.movement_cost(entity, path + [new_path]) <= (as_dash ? entity.speed : entity.available_movement(battle))
+      elsif map.passable?(entity, *new_path, battle) && map.movement_cost(entity, path + [new_path]) <= (options[:as_dash] ? entity.speed : entity.available_movement(battle))
         path << new_path
       end
     end while true
@@ -126,7 +126,7 @@ class CommandlineUI
       param = cont.param&.map { |p|
         case (p[:type])
         when :movement
-          move_path = move_ui
+          move_path = move_ui(p)
           return nil if move_path.nil?
 
           move_path
