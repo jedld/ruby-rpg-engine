@@ -174,6 +174,9 @@ class PlayerCharacter
         action = MoveAction.new(session, self, type)
         action.as_dash = true
         action
+      when :use_item
+        action = UseItemAction.new(session, self, type)
+        action
       else
         Action.new(session, self, type)
       end

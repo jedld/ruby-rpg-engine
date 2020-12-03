@@ -9,9 +9,9 @@ class CommandlineUI
     @prompt = TTY::Prompt.new
   end
 
-  def attack_ui(entity, action)
+  def attack_ui(entity, action, options = {})
     target = @prompt.select("#{entity.name} targets") do |menu|
-      battle.valid_targets_for(entity, action).each do |target|
+      battle.valid_targets_for(entity, action, options).each do |target|
         menu.choice target.name, target
       end
       menu.choice "Manual"
@@ -26,7 +26,7 @@ class CommandlineUI
 
         return false unless selected_entity
 
-        battle.valid_targets_for(entity, action).include?(selected_entity)
+        battle.valid_targets_for(entity, action, options).include?(selected_entity)
       })
       target = target&.first
 
@@ -131,12 +131,23 @@ class CommandlineUI
 
           move_path
         when :target, :select_target
-          target = attack_ui(entity, action)
+          target = attack_ui(entity, action, p)
           return nil if target.nil?
 
           target
         when :select_weapon
-          action.using ? action.using : action.npc_action
+          action.using || action.npc_action
+        when :select_item
+          item = @prompt.select("#{entity.name} use item") do |menu|
+            entity.usable_items.each do |item|
+              menu.choice item[:label], item[:name]
+            end
+            menu.choice "Back", :back
+          end
+
+          return nil if item == :back
+
+          item
         else
           raise "unknown #{p[:type]}"
         end

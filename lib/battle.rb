@@ -87,20 +87,26 @@ class Battle
   end
 
   # Targets that make sense for a given action
-  def valid_targets_for(entity, action)
+  def valid_targets_for(entity, action, options = {})
+    target_types = options[:target_types]&.map(&:to_sym) || [:enemies]
     entity_group = @entities[entity][:group]
     attack_range = if action.action_type == :help
                      5
-                   elsif action.npc_action
-                     action.npc_action[:range_max].presence || action.npc_action[:range]
-                   elsif action.using
-                     weapon = Session.load_weapon(action.using)
-                     weapon[:range_max].presence || weapon[:range]
+                   elsif  action.action_type == :attack
+                     if action.npc_action
+                       action.npc_action[:range_max].presence || action.npc_action[:range]
+                     elsif action.using
+                       weapon = Session.load_weapon(action.using)
+                       weapon[:range_max].presence || weapon[:range]
+                     end
+                   else
+                     options[:range]
                    end
 
     @entities.map do |k, prop|
-      next if k == entity && action.action_type == :attack
-      next if prop[:group] == entity_group
+      next if !target_types.include?(:self) && k == entity
+      next if !target_types.include?(:allies) && prop[:group] == entity_group
+      next if !target_types.include?(:enemies) && prop[:group] != entity_group
       next if k.dead?
       next unless @map.line_of_sight_for_ex?(entity, k)
       next if @map.distance(k, entity) * 5 > attack_range

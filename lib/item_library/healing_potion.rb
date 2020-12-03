@@ -6,7 +6,8 @@ module ItemLibrary
           {
             type: :select_target,
             num: 1,
-            range: 5
+            range: 5,
+            target_types: [:allies, :self]
           }
         ],
         next: ->(target) {

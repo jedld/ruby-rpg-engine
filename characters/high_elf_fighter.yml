@@ -40,3 +40,5 @@ equipped:
 inventory:
 - type: arrows
   qty: 20
+- type: healing_potion
+  qty: 1
