@@ -13,7 +13,7 @@ RSpec.describe UseItemAction do
     specify "resolve and apply" do
       expect(entity.item_count('healing_potion')).to eq(1)
       @action.resolve(session)
-      @action.apply!
+      @action.apply!(nil)
       expect(entity.item_count('healing_potion')).to eq(0)
     end
   end

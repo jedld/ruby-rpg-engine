@@ -17,7 +17,7 @@ RSpec.describe DodgeAction do
     cont = DodgeAction.build(session, @npc)
     dodge_action = cont.next.call()
     dodge_action.resolve(session, nil, battle: @battle)
-    dodge_action.apply!
+    dodge_action.apply!(@battle)
     expect(@npc.dodge?(@battle)).to be
 
     cont = AttackAction.build(session, @fighter)

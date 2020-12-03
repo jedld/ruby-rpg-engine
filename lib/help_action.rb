@@ -11,6 +11,9 @@ class HelpAction < Action
       param: [
         {
           type: :select_target,
+          options: {
+            allow_ally: true
+          },
           num: 1,
         }
       ],
@@ -39,7 +42,7 @@ class HelpAction < Action
     self
   end
 
-  def apply!
+  def apply!(battle)
     @result.each do |item|
       case (item[:type])
       when :help
@@ -47,7 +50,7 @@ class HelpAction < Action
         item[:source].help!(item[:battle], item[:target])
       end
 
-      item[:battle].entity_state_for(item[:source])[:action] -= 1
+      battle.entity_state_for(item[:source])[:action] -= 1
     end
   end
 end

@@ -26,18 +26,18 @@ class DisengageAction < Action
     self
   end
 
-  def apply!
+  def apply!(battle)
     @result.each do |item|
       case (item[:type])
       when :disengage
         EventManager.received_event({source: item[:source], event: :disengage })
-        item[:source].disengage!(item[:battle])
+        item[:source].disengage!(battle)
       end
 
       if as_bonus_action
-        item[:battle].entity_state_for(item[:source])[:bonus_action] -= 1
+        battle.entity_state_for(item[:source])[:bonus_action] -= 1
       else
-        item[:battle].entity_state_for(item[:source])[:action] -= 1
+        battle.entity_state_for(item[:source])[:action] -= 1
       end
     end
   end

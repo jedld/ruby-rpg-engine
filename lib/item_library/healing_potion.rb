@@ -30,9 +30,16 @@ module ItemLibrary
       @properties[:consumable]
     end
 
-    def use!(battle, map, entity)
+    def resolve
       hp_regain_roll = DieRoll.roll(@properties[:hp_regained])
-      entity.heal!(hp_regain_roll.result)
+
+      {
+        hp_gain_roll: hp_regain_roll
+      }
+    end
+
+    def use!(entity, result)
+      entity.heal!(result[:hp_gain_roll].result)
     end
   end
 end

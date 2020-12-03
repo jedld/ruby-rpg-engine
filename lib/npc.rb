@@ -23,6 +23,7 @@ class Npc
              %w[Guzar Irth Grukurg Zoduk].sample(1).first
            end
     @name = opt.fetch(:name, name)
+    entity_uid = SecureRandom.uuid
     setup_attributes
   end
 

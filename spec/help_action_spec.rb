@@ -19,7 +19,7 @@ RSpec.describe HelpAction do
     cont = HelpAction.build(session, @rogue)
     help_action = cont.next.call(@npc).next.call()
     help_action.resolve(session, nil, battle: @battle)
-    help_action.apply!
+    help_action.apply!(@battle)
     expect(@rogue.help?(@battle, @npc)).to be
     expect(@battle.help_with?(@npc)).to be
 

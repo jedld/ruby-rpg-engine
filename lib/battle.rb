@@ -181,8 +181,8 @@ class Battle
 
   def commit(action)
     return if action.nil?
-
-    action.apply!
+    # check_action_serialization(action)
+    action.apply!(self)
     case(action.action_type)
     when :move
       trigger_event!(:movement, action.source, move_path: action.move_path)
@@ -191,6 +191,19 @@ class Battle
   end
 
   protected
+
+  def check_action_serialization(action)
+    action.result.each do |r|
+      r.each do |k, v|
+        next if v.is_a?(String)
+        next if v.is_a?(Integer)
+        next if [true, false].include?(v)
+        next if v.is_a?(Numeric)
+
+        raise "#{action.action_type} value #{k} -> #{v} not serializable!"
+      end
+    end
+  end
 
   def trigger_event!(event, source, opt = {})
     @battle_field_events[event.to_sym]&.each do |handler|

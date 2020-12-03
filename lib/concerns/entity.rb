@@ -1,4 +1,6 @@
 module Entity
+  attr_accessor :entity_uid
+
   def heal!(amt)
     prev_hp = @hp
     @hp = [max_hp, @hp + amt].min

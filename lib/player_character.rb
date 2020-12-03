@@ -18,6 +18,7 @@ class PlayerCharacter
     end
     @statuses = Set.new
     @resistances = []
+    entity_uid = SecureRandom.uuid
     setup_attributes
     @class_properties = @properties[:classes].map do |klass, level|
       send(:"#{klass}_level=", level)

@@ -108,18 +108,18 @@ class MoveAction < Action
     left_melee_range
   end
 
-  def apply!
+  def apply!(battle)
     @result.each do |item|
       case (item[:type])
       when :move
         EventManager.received_event({event: :move, source: item[:source], position: item[:position], path: item[:path] })
         item[:map].move_to!(item[:source], *item[:position])
         if as_dash && as_bonus_action
-          item[:battle].entity_state_for(item[:source])[:bonus_action] -= 1
+          battle.entity_state_for(item[:source])[:bonus_action] -= 1
         elsif as_dash
-          item[:battle].entity_state_for(item[:source])[:action] -= 1
+          battle.entity_state_for(item[:source])[:action] -= 1
         else
-          item[:battle].entity_state_for(item[:source])[:movement] -= item[:battle].map.movement_cost(item[:source], item[:path], item[:battle]) if item[:battle]
+          battle.entity_state_for(item[:source])[:movement] -= battle.map.movement_cost(item[:source], item[:path], battle) if battle
         end
       end
     end

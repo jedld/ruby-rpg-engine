@@ -17,7 +17,7 @@ class Action
     action_type.to_s.humanize
   end
 
-  def apply!
+  def apply!(battle)
   end
 
   def resolve(session, map, opts = {})

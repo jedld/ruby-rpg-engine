@@ -53,7 +53,7 @@ class AttackAction < Action
     action.build_map
   end
 
-  def apply!
+  def apply!(battle)
     @result.each do |item|
       case (item[:type])
       when :damage
@@ -77,13 +77,13 @@ class AttackAction < Action
       item[:source].deduct_item(item.dig(:npc_action, :ammo), 1) if item[:npc_action] && item[:npc_action][:ammo]
 
       if as_reaction
-        item[:battle].entity_state_for(item[:source])[:reaction] -= 1
+        battle.entity_state_for(item[:source])[:reaction] -= 1
       else
-        item[:battle].entity_state_for(item[:source])[:action] -= 1
+        battle.entity_state_for(item[:source])[:action] -= 1
       end
 
       # dismiss help actions
-      item[:battle].dismiss_help_for(item[:target])
+      battle.dismiss_help_for(item[:target])
     end
   end
 

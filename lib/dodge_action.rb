@@ -26,18 +26,18 @@ class DodgeAction < Action
     self
   end
 
-  def apply!
+  def apply!(battle)
     @result.each do |item|
       case (item[:type])
       when :dodge
         EventManager.received_event({source: item[:source], event: :dodge })
-        item[:source].dodging!(item[:battle])
+        item[:source].dodging!(battle)
       end
 
       if as_bonus_action
-        item[:battle].entity_state_for(item[:source])[:bonus_action] -= 1
+        battle.entity_state_for(item[:source])[:bonus_action] -= 1
       else
-        item[:battle].entity_state_for(item[:source])[:action] -= 1
+        battle.entity_state_for(item[:source])[:action] -= 1
       end
     end
   end
