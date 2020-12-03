@@ -73,50 +73,15 @@ def start_battle(chosen_characters, chosen_enemies)
           menu.choice "End", :end
           menu.choice "Stop Battle", :stop
         end
+
         break if action == :end
         return if action == :stop
 
-        case action.action_type
-        when :attack
-          action.target = command_line.attack_ui(entity, action)
-          battle.action!(action)
-          battle.commit(action)
-        when :help
-          target = @prompt.select("#{entity.name} targets") do |menu|
-            battle.valid_targets_for(entity, action).each do |target|
-              menu.choice target.name, target
-            end
-            menu.choice "Back", nil
-          end
+        action = command_line.action_ui(action, entity)
+        next if action.nil?
 
-          next if target == "Back"
-
-          action.target = target
-          battle.action!(action)
-          battle.commit(action)
-        when :dodge, :disengage, :disengage_bonus
-          battle.action!(action)
-          battle.commit(action)
-        when :move
-
-          move_path = command_line.move_ui
-          next if move_path.nil?
-
-          action.move_path = move_path
-          battle.action!(action)
-          battle.commit(action)
-        when :dash, :dash_bonus
-          move_path = command_line.move_ui(as_dash: true)
-          next if move_path.nil?
-
-          action.move_path = move_path
-          action.as_dash = true
-          battle.action!(action)
-          battle.commit(action)
-        else
-          battle.action!(action)
-          battle.commit(action)
-        end
+        battle.action!(action)
+        battle.commit(action)
       end while true
     end
   end

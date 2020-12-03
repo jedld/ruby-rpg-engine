@@ -1,8 +1,9 @@
 class CommandlineUI
-  attr_reader :battle, :map, :entity
+  attr_reader :battle, :map, :entity, :session
 
   def initialize(battle, map, entity)
     @battle = battle
+    @session = battle.session
     @map = map
     @entity = entity
     @prompt = TTY::Prompt.new
@@ -105,15 +106,43 @@ class CommandlineUI
       elsif movement == "r"
         path = [map.position_of(entity)]
         next
+      elsif movement == "\e"
+        return nil
       else
         next
       end
 
       if path.size > 1 && new_path == path[path.size - 2]
         path.pop
-      elsif map.valid_position?(*new_path) && map.movement_cost(entity, path + [new_path]) <= (as_dash ? entity.speed : entity.available_movement(battle))
+      elsif map.passable?(entity, *new_path, battle) && map.movement_cost(entity, path + [new_path]) <= (as_dash ? entity.speed : entity.available_movement(battle))
         path << new_path
       end
-    end while movement != "x"
+    end while true
+  end
+
+  def action_ui(action, entity)
+    cont = action.build_map
+    begin
+      param = cont.param&.map { |p|
+        case (p[:type])
+        when :movement
+          move_path = move_ui
+          return nil if move_path.nil?
+
+          move_path
+        when :target, :select_target
+          target = attack_ui(entity, action)
+          return nil if target.nil?
+
+          target
+        when :select_weapon
+          action.using ? action.using : action.npc_action
+        else
+          raise "unknown #{p[:type]}"
+        end
+      }
+      cont = cont.next.call(*param)
+    end while !param.nil?
+    @action = cont
   end
 end

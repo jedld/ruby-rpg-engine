@@ -200,6 +200,24 @@ module Entity
     end
   end
 
+  def size_identifier
+    square_size = size.to_sym
+    case(square_size)
+    when :small
+      1
+    when :medium
+      2
+    when :large
+      3
+    when :huge
+      4
+    when :gargantuan
+      5
+    else
+      raise "invalid size #{square_size}"
+    end
+  end
+
   def int_mod
     modifier_table(@ability_scores.fetch(:int))
   end

@@ -175,7 +175,9 @@ class BattleMap
     if pos_x >= @base_map.size || pos_x < 0 || pos_y >= @base_map[0].size || pos_y < 0
       return false
     end # check for out of bounds
+
     return false if @base_map[pos_x][pos_y] == '#'
+    return false if @tokens[pos_x][pos_y] != nil
 
     true
   end
@@ -205,15 +207,17 @@ class BattleMap
         return false if @base_map[pos_x + ofs_x][pos_y + ofs_y] == '#'
 
         if battle && @tokens[pos_x + ofs_x][pos_y + ofs_y]
+          location_entity = @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity]
+
           source_state = battle.entity_state_for(entity)
           source_group = source_state[:group]
-          location_state = battle.entity_state_for(@tokens[pos_x + ofs_x][pos_y + ofs_y][:entity])
+          location_state = battle.entity_state_for(location_entity)
           next if @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity] == entity
 
           location_group = location_state[:group]
           next if location_group.nil?
           next if location_group == source_group
-          return false if location_group != source_group
+          return false if location_group != source_group && (location_entity.size_identifier - entity.size_identifier).abs < 2
         end
       end
     end
