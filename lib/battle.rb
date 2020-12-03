@@ -1,6 +1,6 @@
 class Battle
   attr_accessor :combat_order, :round
-  attr_reader :map, :entities, :session, :battle_log
+  attr_reader :map, :entities, :session, :battle_log, :started
 
   def initialize(session, map)
     @session = session
@@ -9,6 +9,7 @@ class Battle
     @battle_field_events = {}
     @battle_log = []
     @combat_order = []
+    @late_comers = []
     @current_turn_index = 0
     @round = 0
     @map = map
@@ -20,6 +21,8 @@ class Battle
   end
 
   def add(entity, group, position: nil, token: nil)
+    return if @entities[entity]
+
     raise "entity cannot be nil" if entity.nil?
 
     @entities[entity] = {
@@ -34,6 +37,12 @@ class Battle
 
     @groups[group] ||= Set.new
     @groups[group].add(entity)
+
+    # battle already ongoing...
+    if started
+      @late_comers << entity
+      @entities[entity][:initiative] = entity.initiative!
+    end
 
     return if position.nil?
 
@@ -119,6 +128,7 @@ class Battle
       entity
     end
 
+    @started = true
     @combat_order = @combat_order.sort_by { |a| @entities[a][:initiative] }.reverse
   end
 
@@ -138,6 +148,14 @@ class Battle
       if @current_turn_index >= @combat_order.length
         @current_turn_index = 0
         @round += 1
+
+        # top of the round
+
+        @combat_order += @late_comers
+        @late_comers.clear
+        @combat_order = @combat_order.sort_by { |a| @entities[a][:initiative] }.reverse
+
+        EventManager.received_event({ source: self, event: :top_of_the_round, round: @round, target: current_turn })
 
         return if !max_rounds.nil? && @round > max_rounds
       end

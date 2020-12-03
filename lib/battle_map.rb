@@ -49,7 +49,7 @@ class BattleMap
   def place(pos_x, pos_y, entity, token = nil)
     raise 'entity param is required' if entity.nil?
 
-    entity_data = { entity: entity, token: token || entity.name.first }
+    entity_data = { entity: entity, token: token || entity.name&.first }
     @tokens[pos_x][pos_y] = entity_data
     @entities[entity] = [pos_x, pos_y]
 

@@ -5,8 +5,9 @@ RSpec.describe Battle do
       @map = BattleMap.new(session, "fixtures/battle_sim")
       @battle = Battle.new(session, @map)
       @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
-      @npc = Npc.new(:goblin)
-      @npc2 = Npc.new(:goblin)
+      @npc = Npc.new(:goblin, name: 'a')
+      @npc2 = Npc.new(:goblin, name: 'b')
+      @npc3 = Npc.new(:ogre, name: 'c')
       @battle.add(@fighter, :a, position: :spawn_point_1, token: "G")
       @battle.add(@npc, :b, position: :spawn_point_2, token: "g")
       @battle.add(@npc2, :b, position: :spawn_point_3, token: "O")
@@ -57,6 +58,10 @@ RSpec.describe Battle do
       expect(@npc.dead?).to be
       action = @battle.action(@npc2, :attack, target: @fighter, npc_action: @npc2.npc_actions[1])
       @battle.commit(action)
+
+      @battle.add(@npc3, :c, position: [0, 0])
+
+      expect(@battle.combat_order.map(&:name)).to eq(["a", "b", "Gomerin"])
     end
   end
 end
