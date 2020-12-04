@@ -83,7 +83,7 @@ RSpec.describe AttackAction do
     end
   end
 
-  context "other sizes thest" do
+  context "other sizes test" do
     before do
       @battle_map = BattleMap.new(session, "fixtures/battle_sim_3")
       @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
@@ -101,6 +101,36 @@ RSpec.describe AttackAction do
         "······#\n" +
         "G·····#\n" +
         "·······\n")
+    end
+  end
+
+  context "other objects" do
+    before do
+      @battle_map = BattleMap.new(session, "fixtures/battle_sim_objects")
+      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
+      @battle_map.place(0, 5, @fighter, "G")
+    end
+
+    it "renders door objects correctly" do
+      expect(@battle_map.render(line_of_sight: @fighter)).to eq("       \n" +
+        "       \n" +
+        "       \n" +
+        "       \n" +
+        "#=#    \n" +
+        "G·····#\n" +
+        "##     \n")
+
+        door = @battle_map.object_at(1, 4)
+        door.open!
+
+        expect(@battle_map.render(line_of_sight: @fighter)).to eq("       \n" +
+          "       \n" +
+          "  o    \n" +
+          " ·#    \n" +
+          "#-#    \n" +
+          "G·····#\n" +
+          "##     \n")
+
     end
   end
 end

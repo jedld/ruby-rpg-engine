@@ -1,0 +1,18 @@
+wooden_door:
+  default_ac: 15
+  max_hp: 18
+  hp_die: 4d8
+  color: brown
+  interactable: true
+  item_class: ItemLibrary::DoorObject
+  token:
+  - =
+barrel:
+  default_ac: 15
+  max_hp: 18
+  hp_die: 4d8
+  color: brown
+  interactable: true
+  cover: half
+  token:
+  - o

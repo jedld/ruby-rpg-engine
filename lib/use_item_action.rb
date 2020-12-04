@@ -1,11 +1,8 @@
-require "lib/item_library/base_item"
-require "lib/item_library/healing_potion"
 class UseItemAction < Action
   attr_accessor :target, :target_item
   def self.can?(entity, battle)
     battle.nil? || entity.total_actions(battle).positive?
   end
-
 
   def self.build(session, source)
     action = UseItemAction.new(session, source, :attack)

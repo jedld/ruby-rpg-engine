@@ -21,6 +21,11 @@ require "lib/npc"
 require "lib/ai_controller/path_compute"
 require "lib/ai_controller/standard"
 
+require "lib/item_library/base_item"
+require "lib/item_library/healing_potion"
+require "lib/item_library/object"
+require "lib/item_library/door_object"
+
 class Session
   def load_characters
     files = Dir[File.join(File.dirname(__FILE__), "..", "characters", "*.yml")]
@@ -46,5 +51,12 @@ class Session
   def self.load_equipment(item)
     @equipment ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "equipment.yml")).deep_symbolize_keys!
     @equipment[item.to_sym]
+  end
+
+  def self.load_object(object_name)
+    @objects ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "objects.yml")).deep_symbolize_keys!
+    raise "cannot find #{object_name}" unless @objects.key?(object_name.to_sym)
+
+    @objects[object_name.to_sym]
   end
 end

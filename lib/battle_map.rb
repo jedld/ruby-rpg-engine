@@ -29,6 +29,28 @@ class BattleMap
       @size[1].times.map { nil }
     end
 
+    @objects = @size[0].times.map do |pos_x|
+      @size[1].times.map { |pos_y|
+        token = @base_map[pos_x][pos_y]
+        case token
+        when '#'
+          nil
+        when '.'
+          nil
+        else
+          object_meta = @legend[token.to_sym]
+          raise "unknown object token #{token}" if object_meta.nil?
+
+          object_info = Session.load_object(object_meta[:type])
+          if object_info[:item_class]
+            object_info[:item_class].constantize.new(object_meta)
+          else
+            ItemLibrary::Object.new(object_meta)
+          end
+        end
+      }
+    end
+
     if @meta_map
       @meta_map.each_with_index do |meta_row, column_index|
         meta_row.each_with_index do |token, row_index|
@@ -45,6 +67,10 @@ class BattleMap
   end
 
   attr_reader :size
+
+  def object_at(pos_x, pos_y)
+    @objects[pos_x][pos_y]
+  end
 
   def place(pos_x, pos_y, entity, token = nil)
     raise 'entity param is required' if entity.nil?
@@ -244,10 +270,12 @@ class BattleMap
   def opaque?(pos_x, pos_y)
     case (@base_map[pos_x][pos_y])
     when '#'
-      return true
+      true
+    when '.'
+      false
+    else
+      object_at(pos_x, pos_y).opaque?
     end
-
-    false
   end
 
   def line_of_sight?(pos1_x, pos1_y, pos2_x, pos2_y, distance = nil)
@@ -266,14 +294,17 @@ class BattleMap
       m = (pos2_y - pos1_y).to_f / (pos2_x - pos1_x).to_f
       if m == 0
         scanner = pos2_x > pos1_x ? (pos1_x...pos2_x) : (pos2_x...pos1_x)
+
         scanner.each_with_index do |x, index|
           return false if !distance.nil? && index > distance
           next if (x == pos1_x) || (x == pos2_x)
-          return false if @base_map[x][pos2_y] == '#'
+          return false if opaque?(x, pos2_y)
         end
+
         true
       else
         scanner = pos2_x > pos1_x ? (pos1_x...pos2_x) : (pos2_x...pos1_x)
+
         b = pos1_y - m * pos1_x
         step = m.abs > 1 ? 1 / m.abs : m.abs
 
@@ -282,7 +313,7 @@ class BattleMap
 
           return false if !distance.nil? && index > distance
           next if (x.round == pos1_x && y == pos1_y) || (x.round == pos2_x && y == pos2_y)
-          return false if @base_map[x.round][y] == '#'
+          return false if opaque?(x.round, y)
         end
         true
       end
@@ -300,8 +331,14 @@ class BattleMap
   end
 
   def render_position(c, col_index, row_index, path: [], line_of_sight: nil)
-    c = '·'.colorize(:light_black) if c == '.'
-    c = '#' if c == '#'
+    c = case c
+    when '.'
+      '·'.colorize(:light_black)
+    when '#'
+      '#'
+    else
+      object_at(col_index, row_index).token.presence || c
+    end
 
     if !path.empty?
       return 'X' if path[0] == [col_index, row_index]
