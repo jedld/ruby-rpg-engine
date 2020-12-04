@@ -7,9 +7,9 @@ class DisengageAction < Action
 
   def build_map
     OpenStruct.new({
-      param: nil,
-      next: ->() { self },
-    })
+                     param: nil,
+                     next: -> { self }
+                   })
   end
 
   def self.build(session, source)
@@ -21,7 +21,7 @@ class DisengageAction < Action
     @result = [{
       source: @source,
       type: :disengage,
-      battle: opts[:battle],
+      battle: opts[:battle]
     }]
     self
   end
@@ -30,7 +30,7 @@ class DisengageAction < Action
     @result.each do |item|
       case (item[:type])
       when :disengage
-        EventManager.received_event({source: item[:source], event: :disengage })
+        EventManager.received_event({ source: item[:source], event: :disengage })
         item[:source].disengage!(battle)
       end
 

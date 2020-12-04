@@ -10,7 +10,7 @@ class PlayerCharacter
     @properties = properties.deep_symbolize_keys!
     @ability_scores = @properties[:ability]
     @equipped = @properties[:equipped]
-    @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), "..", "races", "#{@properties[:race]}.yml")).deep_symbolize_keys!
+    @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', 'races', "#{@properties[:race]}.yml")).deep_symbolize_keys!
     @inventory = {}
     @properties[:inventory]&.each do |inventory|
       @inventory[inventory[:type]] ||= OpenStruct.new({ type: inventory[:type], qty: 0 })
@@ -23,7 +23,7 @@ class PlayerCharacter
     @class_properties = @properties[:classes].map do |klass, level|
       send(:"#{klass}_level=", level)
       send(:"initialize_#{klass}")
-      [klass.to_sym, YAML.load_file(File.join(File.dirname(__FILE__), "..", "char_classes", "#{klass}.yml")).deep_symbolize_keys!]
+      [klass.to_sym, YAML.load_file(File.join(File.dirname(__FILE__), '..', 'char_classes', "#{klass}.yml")).deep_symbolize_keys!]
     end.to_h
   end
 
@@ -88,15 +88,15 @@ class PlayerCharacter
   end
 
   def perception_proficient?
-    @properties[:skills].include?("perception")
+    @properties[:skills].include?('perception')
   end
 
   def investigation_proficient?
-    @properties[:skills].include?("investigation")
+    @properties[:skills].include?('investigation')
   end
 
   def insight_proficient?
-    @properties[:skills].include?("insight")
+    @properties[:skills].include?('insight')
   end
 
   def to_h
@@ -110,13 +110,13 @@ class PlayerCharacter
         con: @ability_scores.fetch(:con),
         int: @ability_scores.fetch(:int),
         wis: @ability_scores.fetch(:wis),
-        cha: @ability_scores.fetch(:cha),
+        cha: @ability_scores.fetch(:cha)
       },
       passive: {
         perception: passive_perception,
         investigation: passive_investigation,
-        insight: passive_insight,
-      },
+        insight: passive_insight
+      }
     }
   end
 
@@ -124,14 +124,14 @@ class PlayerCharacter
     @properties[:equipped].map do |item|
       weapon_detail = Session.load_weapon(item)
       next if weapon_detail.nil?
-      next unless weapon_detail[:type] == "melee_attack"
+      next unless weapon_detail[:type] == 'melee_attack'
 
       weapon_detail[:range]
     end.compact.max
   end
 
   def available_actions(session, battle = nil)
-    %i[attack move dash dash_bonus dodge help disengage disengage_bonus use_item].map { |type|
+    %i[attack move dash dash_bonus dodge help disengage disengage_bonus use_item interact].map do |type|
       next unless "#{type.to_s.camelize}Action".constantize.can?(self, battle)
 
       case type
@@ -175,20 +175,19 @@ class PlayerCharacter
         action.as_dash = true
         action
       when :use_item
-        action = UseItemAction.new(session, self, type)
-        action
+        UseItemAction.new(session, self, type)
+      when :interact
+        InteractAction.new(session, self, type)
       else
         Action.new(session, self, type)
       end
-    }.compact.flatten + c_class.keys.map { |c| send(:"special_actions_for_#{c}", session, battle) }.flatten
+    end.compact.flatten + c_class.keys.map { |c| send(:"special_actions_for_#{c}", session, battle) }.flatten
   end
 
   def attack_roll_mod(weapon)
     modifier = attack_ability_mod(weapon)
 
-    if proficient_with_weapon?(weapon)
-      modifier += proficiency_bonus
-    end
+    modifier += proficiency_bonus if proficient_with_weapon?(weapon)
 
     modifier
   end
@@ -240,7 +239,7 @@ class PlayerCharacter
   end
 
   def equipped_ac
-    @equipments ||= YAML.load_file(File.join(File.dirname(__FILE__), "..", "items", "equipment.yml")).deep_symbolize_keys!
+    @equipments ||= YAML.load_file(File.join(File.dirname(__FILE__), '..', 'items', 'equipment.yml')).deep_symbolize_keys!
 
     equipped_meta = @equipped.map { |e| @equipments[e.to_sym] }.compact
     armor = equipped_meta.detect do |equipment|

@@ -152,6 +152,28 @@ class CommandlineUI
           return nil if item == :back
 
           item
+        when :select_object
+          item = @prompt.select("#{entity.name} interact with") do |menu|
+            entity.usable_objects(map).each do |d|
+              menu.choice "#{d.name}", d
+            end
+            menu.choice "Back", :back
+          end
+
+          return nil if item == :back
+
+          item
+        when :interact
+          object_action = @prompt.select("#{entity.name} will") do |menu|
+            p[:target].available_actions.each do |d|
+              menu.choice d.to_s.humanize, d
+            end
+            menu.choice "Back", :back
+          end
+
+          return nil if item == :back
+
+          object_action
         else
           raise "unknown #{p[:type]}"
         end

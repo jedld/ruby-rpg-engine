@@ -1,4 +1,5 @@
 wooden_door:
+  name: Wooden Door
   default_ac: 15
   max_hp: 18
   hp_die: 4d8
@@ -8,6 +9,7 @@ wooden_door:
   token:
   - =
 barrel:
+  name: Barrel
   default_ac: 15
   max_hp: 18
   hp_die: 4d8

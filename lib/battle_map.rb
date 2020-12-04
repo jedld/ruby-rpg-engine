@@ -1,19 +1,19 @@
 class BattleMap
-  attr_reader :spawn_points, :size
+  attr_reader :spawn_points, :size, :interactable_objects
 
   def initialize(session, map_file)
     @session = session
     @map_file = map_file
     @spawn_points = {}
     @entities = {}
+    @interactable_objects = {}
 
     @properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', "#{map_file}.yml")).deep_symbolize_keys!
 
     # terrain layer
     @base_map = @properties.dig(:map, :base).map do |lines|
-                  lines.each_char.map.to_a
-                end.transpose
-
+      lines.each_char.map.to_a
+    end.transpose
 
     # meta layer
     if @properties.dig(:map, :meta)
@@ -30,7 +30,7 @@ class BattleMap
     end
 
     @objects = @size[0].times.map do |pos_x|
-      @size[1].times.map { |pos_y|
+      @size[1].times.map do |pos_y|
         token = @base_map[pos_x][pos_y]
         case token
         when '#'
@@ -42,13 +42,16 @@ class BattleMap
           raise "unknown object token #{token}" if object_meta.nil?
 
           object_info = Session.load_object(object_meta[:type])
-          if object_info[:item_class]
-            object_info[:item_class].constantize.new(object_meta)
-          else
-            ItemLibrary::Object.new(object_meta)
-          end
+          obj = if object_info[:item_class]
+                  object_info[:item_class].constantize.new(object_meta)
+                else
+                  ItemLibrary::Object.new(object_meta)
+                end
+
+          @interactable_objects[obj] = [pos_x, pos_y]
+          obj
         end
-      }
+      end
     end
 
     if @meta_map
@@ -70,6 +73,15 @@ class BattleMap
 
   def object_at(pos_x, pos_y)
     @objects[pos_x][pos_y]
+  end
+
+  def objects_near(entity)
+    target_squares = entity.melee_squares(self, @entities[entity])
+    objects = []
+    @interactable_objects.each do |object, position|
+      objects << object if !object.available_actions.empty? && target_squares.include?(position)
+    end
+    objects
   end
 
   def place(pos_x, pos_y, entity, token = nil)
@@ -203,7 +215,7 @@ class BattleMap
     end # check for out of bounds
 
     return false if @base_map[pos_x][pos_y] == '#'
-    return false if @tokens[pos_x][pos_y] != nil
+    return false unless @tokens[pos_x][pos_y].nil?
 
     true
   end
@@ -232,18 +244,20 @@ class BattleMap
 
         return false if @base_map[pos_x + ofs_x][pos_y + ofs_y] == '#'
 
-        if battle && @tokens[pos_x + ofs_x][pos_y + ofs_y]
-          location_entity = @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity]
+        next unless battle && @tokens[pos_x + ofs_x][pos_y + ofs_y]
 
-          source_state = battle.entity_state_for(entity)
-          source_group = source_state[:group]
-          location_state = battle.entity_state_for(location_entity)
-          next if @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity] == entity
+        location_entity = @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity]
 
-          location_group = location_state[:group]
-          next if location_group.nil?
-          next if location_group == source_group
-          return false if location_group != source_group && (location_entity.size_identifier - entity.size_identifier).abs < 2
+        source_state = battle.entity_state_for(entity)
+        source_group = source_state[:group]
+        location_state = battle.entity_state_for(location_entity)
+        next if @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity] == entity
+
+        location_group = location_state[:group]
+        next if location_group.nil?
+        next if location_group == source_group
+        if location_group != source_group && (location_entity.size_identifier - entity.size_identifier).abs < 2
+          return false
         end
       end
     end
@@ -260,7 +274,7 @@ class BattleMap
   end
 
   def difficult_terrain?(entity, pos_x, pos_y, _battle = nil)
-    return false if @tokens[pos_x][pos_y] &&  @tokens[pos_x][pos_y][:entity] == entity
+    return false if @tokens[pos_x][pos_y] && @tokens[pos_x][pos_y][:entity] == entity
     return true if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
 
     false
@@ -332,13 +346,13 @@ class BattleMap
 
   def render_position(c, col_index, row_index, path: [], line_of_sight: nil)
     c = case c
-    when '.'
-      '·'.colorize(:light_black)
-    when '#'
-      '#'
-    else
-      object_at(col_index, row_index).token.presence || c
-    end
+        when '.'
+          '·'.colorize(:light_black)
+        when '#'
+          '#'
+        else
+          object_at(col_index, row_index).token.presence || c
+        end
 
     if !path.empty?
       return 'X' if path[0] == [col_index, row_index]
@@ -358,7 +372,6 @@ class BattleMap
   def render(line_of_sight: nil, path: [], select_pos: nil)
     @base_map.transpose.each_with_index.map do |row, row_index|
       row.each_with_index.map do |c, col_index|
-
         display = render_position(c, col_index, row_index, path: path, line_of_sight: line_of_sight)
         if select_pos && select_pos == [col_index, row_index]
           display.colorize(color: :black, background: :white)

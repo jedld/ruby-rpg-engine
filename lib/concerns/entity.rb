@@ -11,7 +11,6 @@ module Entity
     dmg = damage_params[:damage].result
     dmg += damage_params[:sneak_attack].result unless damage_params[:sneak_attack].nil?
 
-
     dmg = (dmg / 2.to_f).floor if resistant_to?(damage_params[:damage_type])
     @hp -= dmg
 
@@ -67,13 +66,13 @@ module Entity
     false
   end
 
-  def locate_melee_positions(map, target_position, battle = nil)
+  def melee_squares(map, target_position)
     result = []
     step = melee_distance / 5
     cur_x, cur_y = target_position
     (-step..step).each do |x_off|
       (-step..step).each do |y_off|
-        next if x_off == 0 && y_off == 0
+        next if x_off.zero? && y_off.zero?
 
         # adjust melee position based on token size
         adjusted_x_off = x_off
@@ -85,6 +84,33 @@ module Entity
         position = [cur_x + adjusted_x_off, cur_y + adjusted_y_off]
 
         next if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
+
+        result << position
+      end
+    end
+    result
+  end
+
+  def locate_melee_positions(map, target_position, battle = nil)
+    result = []
+    step = melee_distance / 5
+    cur_x, cur_y = target_position
+    (-step..step).each do |x_off|
+      (-step..step).each do |y_off|
+        next if x_off.zero? && y_off.zero?
+
+        # adjust melee position based on token size
+        adjusted_x_off = x_off
+        adjusted_y_off = y_off
+
+        adjusted_x_off -= token_size - 1 if x_off < 0
+        adjusted_y_off -= token_size - 1 if y_off < 0
+
+        position = [cur_x + adjusted_x_off, cur_y + adjusted_y_off]
+
+        if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
+          next
+        end
         next unless map.placeable?(self, *position, battle)
 
         result << position
@@ -140,9 +166,7 @@ module Entity
 
   def help?(battle, target)
     entity_state = battle.entity_state_for(target)
-    if entity_state[:target_effect]&.key?(self)
-      return entity_state[:target_effect][self] == :help
-    end
+    return entity_state[:target_effect][self] == :help if entity_state[:target_effect]&.key?(self)
 
     false
   end
@@ -191,7 +215,7 @@ module Entity
 
   def token_size
     square_size = size.to_sym
-    case(square_size)
+    case square_size
     when :small
       1
     when :medium
@@ -207,7 +231,7 @@ module Entity
 
   def size_identifier
     square_size = size.to_sym
-    case(square_size)
+    case square_size
     when :small
       1
     when :medium
@@ -263,6 +287,10 @@ module Entity
 
       { name: k, label: item_details[:name] || k, item: item_details, qty: v.qty, consumable: item_details[:consumable] }
     end.compact
+  end
+
+  def usable_objects(map)
+    map.objects_near(self)
   end
 
   protected
