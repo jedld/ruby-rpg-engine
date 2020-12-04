@@ -1,5 +1,7 @@
 module AiController
   class Standard
+    include MovementHelper
+
     attr_reader :battle_data
     def initialize
       @battle_data = {}
@@ -48,17 +50,7 @@ module AiController
       hiding_spots = @battle_data[battle][entity][:hiding_spots]
       investigate_location = @battle_data[battle][entity][:investigate_location]
 
-      objects_around_me = battle.map.look(entity)
-
-      my_group = battle.entity_state_for(entity)[:group]
-
-      objects_around_me.each do |object, location|
-        state = battle.entity_state_for(object)
-        next unless state
-        next unless object.concious?
-
-        enemy_positions[object] = location if state[:group] != my_group
-      end
+      observe_enemies(battle, entity, enemy_positions)
 
       available_actions = entity.available_actions(@session)
 
@@ -78,50 +70,66 @@ module AiController
       end
 
       # movement planner
-      if entity.has_action?(battle) && valid_actions.empty?
-        # look for enemy
-        if !enemy_positions.empty?
-          path_compute = PathCompute.new(battle, battle.map, entity)
-          start_x, start_y = battle.map.position_of(entity)
-          to_enemy = enemy_positions.map do |k, v|
-            melee_positions = entity.locate_melee_positions(battle.map, v)
-            shortest_path = nil
-            shortest_length = 1_000_000
+      if entity.has_action?(battle) && valid_actions.empty? && !enemy_positions.empty?
+        path_compute = PathCompute.new(battle, battle.map, entity)
+        start_x, start_y = battle.map.position_of(entity)
+        to_enemy = enemy_positions.map do |k, v|
+          melee_positions = entity.locate_melee_positions(battle.map, v, battle)
+          shortest_path = nil
+          shortest_length = 1_000_000
 
-            melee_positions.each do |positions|
-              path = path_compute.compute_path(start_x, start_y, *positions)
-              next if path.nil?
+          melee_positions.each do |positions|
+            path = path_compute.compute_path(start_x, start_y, *positions)
+            next if path.nil?
 
-              path = path.take(entity.available_movement(battle) + 1)
-              next if path.length == 1 # no route
-
-              movement_cost = battle.map.movement_cost(entity, path, battle)
-              if movement_cost < shortest_length
-                shortest_path = path
-                shortest_length = path.size
-              end
+            movement_cost = battle.map.movement_cost(entity, path, battle)
+            if movement_cost < shortest_length
+              shortest_path = path
+              shortest_length = path.size
             end
-            [k, shortest_path]
-          end.compact.to_h
-
-          to_enemy.each do |_, path|
-            next if path.nil? || path.empty?
-
-            move_action = MoveAction.new(battle.session, entity, :move)
-            if entity.available_movement(battle).zero?
-              move_action.as_dash = true
-            end
-            move_action.move_path = path
-            valid_actions << move_action
           end
+          [k, shortest_path]
+        end.compact.to_h
+
+        to_enemy.each do |_, path|
+          next if path.nil? || path.empty?
+
+          move_action = MoveAction.new(battle.session, entity, :move)
+          if entity.available_movement(battle).zero?
+            move_action.as_dash = true
+            path = compute_actual_moves(entity, path, battle.map, battle, entity.speed)
+          else
+            move_budget = entity.available_movement(battle)
+            path = compute_actual_moves(entity, path, battle.map, battle, move_budget)
+          end
+
+          next if path.size.zero? || path.size == 1
+
+          move_action.move_path = path
+          valid_actions << move_action
         end
       end
 
-      if entity.has_action?(battle)
-        valid_actions << DodgeAction.new(battle.session, entity, :dodge)
-      end
+      valid_actions << DodgeAction.new(battle.session, entity, :dodge) if entity.has_action?(battle)
 
       return valid_actions.first unless valid_actions.empty?
+    end
+
+    protected
+
+    # gain information about enemies in a fair and realistic way (e.g. using line of sight)
+    def observe_enemies(battle, entity, enemy_positions = {})
+      objects_around_me = battle.map.look(entity)
+
+      my_group = battle.entity_state_for(entity)[:group]
+
+      objects_around_me.each do |object, location|
+        state = battle.entity_state_for(object)
+        next unless state
+        next unless object.concious?
+
+        enemy_positions[object] = location if state[:group] != my_group
+      end
     end
   end
 end

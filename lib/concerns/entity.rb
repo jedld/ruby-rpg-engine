@@ -67,7 +67,7 @@ module Entity
     false
   end
 
-  def locate_melee_positions(map, target_position)
+  def locate_melee_positions(map, target_position, battle = nil)
     result = []
     step = melee_distance / 5
     cur_x, cur_y = target_position
@@ -85,7 +85,7 @@ module Entity
         position = [cur_x + adjusted_x_off, cur_y + adjusted_y_off]
 
         next if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
-        next unless map.passable?(self, *position)
+        next unless map.placeable?(self, *position, battle)
 
         result << position
       end
@@ -261,7 +261,7 @@ module Entity
       next unless item_details[:usable]
       next if item_details[:consumable] && v.qty.zero?
 
-      { name: k, label: item_details[:name] || k, item: item_details }
+      { name: k, label: item_details[:name] || k, item: item_details, qty: v.qty, consumable: item_details[:consumable] }
     end.compact
   end
 

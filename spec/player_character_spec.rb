@@ -58,7 +58,9 @@ RSpec.describe PlayerCharacter do
                                                      type: 'potion',
                                                      usable: true },
                                              label: 'Potion of Healing',
-                                             name: 'healing_potion' }])
+                                             name: 'healing_potion',
+                                             consumable: true,
+                                             qty: 1 }])
     end
   end
 end

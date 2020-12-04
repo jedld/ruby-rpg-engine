@@ -139,8 +139,12 @@ class CommandlineUI
           action.using || action.npc_action
         when :select_item
           item = @prompt.select("#{entity.name} use item") do |menu|
-            entity.usable_items.each do |item|
-              menu.choice item[:label], item[:name]
+            entity.usable_items.each do |d|
+              if d[:consumable]
+                menu.choice "#{d[:label].colorize(:blue)} (#{d[:qty]})", d[:name]
+              else
+                menu.choice "#{d[:label].colorize(:blue)}", d[:name]
+              end
             end
             menu.choice "Back", :back
           end

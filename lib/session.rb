@@ -1,6 +1,7 @@
 require "colorize"
 require "lib/die_roll"
 require "lib/concerns/entity"
+require "lib/concerns/movement_helper"
 require "lib/action"
 require "lib/concerns/fighter_class"
 require "lib/concerns/rogue_class"
