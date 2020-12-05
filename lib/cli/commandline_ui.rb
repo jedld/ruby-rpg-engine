@@ -59,7 +59,7 @@ class CommandlineUI
     selected = []
     initial_pos ||= map.position_of(entity)
     new_pos = nil
-    begin
+    loop do
       puts "\e[H\e[2J"
       puts ' '
       puts map.render(line_of_sight: entity, select_pos: initial_pos)
@@ -92,8 +92,8 @@ class CommandlineUI
 
       initial_pos = new_pos
 
-
-    end while movement != 'x'
+      break unless movement != 'x'
+    end
 
     selected.compact.map { |e| map.thing_at(*e) }
   end
@@ -136,6 +136,8 @@ class CommandlineUI
         next
       end
 
+      next if new_path[0].negative? || new_path[0] >= map.size[0] || new_path[1].negative? || new_path[1] >= map.size[1]
+
       if path.size > 1 && new_path == path[path.size - 2]
         path.pop
       elsif map.passable?(entity, *new_path, battle) && map.movement_cost(entity, path + [new_path]) <= (options[:as_dash] ? entity.speed : entity.available_movement(battle))
@@ -158,7 +160,8 @@ class CommandlineUI
         when :target, :select_target
           targets = attack_ui(entity, action, p)
           return nil if targets.nil? || targets.empty?
-            targets.first
+
+          targets.first
         when :select_weapon
           action.using || action.npc_action
         when :select_item
