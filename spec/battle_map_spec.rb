@@ -86,10 +86,14 @@ RSpec.describe AttackAction do
   context "other sizes test" do
     before do
       @battle_map = BattleMap.new(session, "fixtures/battle_sim_3")
+      @battle = Battle.new(session, @battle_map)
       @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
       @npc = Npc.new(:ogre, name: "grok")
+      @goblin = Npc.new(:goblin, name: "dave")
       @battle_map.place(0, 5, @fighter, "G")
       @battle_map.place(0, 1, @npc)
+      @battle.add(@fighter, :a)
+      @battle.add(@npc, :b)
     end
 
     it "renders token sizes correctly" do
@@ -101,6 +105,13 @@ RSpec.describe AttackAction do
         "······#\n" +
         "G·····#\n" +
         "·······\n")
+    end
+
+    specify "#placeable?" do
+      @battle.add(@goblin, :b)
+      @battle_map.place(1, 5, @goblin, "g")
+      puts @battle_map.render
+      expect(@battle_map.placeable?(@npc, 1, 4)).to_not be
     end
   end
 

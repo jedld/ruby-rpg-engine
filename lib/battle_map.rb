@@ -275,7 +275,7 @@ class BattleMap
   def placeable?(entity, pos_x, pos_y, battle = nil)
     return false unless passable?(entity, pos_x, pos_y, battle)
 
-    entity_squares(entity).each do |pos|
+    entity_squares_at_pos(entity, pos_x, pos_y).each do |pos|
       p_x, p_y = pos
       next if @tokens[p_x][p_y] && @tokens[p_x][p_y][:entity] == entity
       return false if @tokens[p_x][p_y] && !@tokens[p_x][p_y][:entity].dead?
