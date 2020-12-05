@@ -109,8 +109,8 @@ class BattleMap
   end
 
   def distance(entity1, entity2)
-    raise "entity 1 param cannot be nil" if entity1.nil?
-    raise "entity 2 param cannot be nil" if entity2.nil?
+    raise 'entity 1 param cannot be nil' if entity1.nil?
+    raise 'entity 2 param cannot be nil' if entity2.nil?
 
     # entity 1 squares
     entity_1_sq = entity_squares(entity1)
@@ -246,19 +246,23 @@ class BattleMap
   def passable?(entity, pos_x, pos_y, battle = nil)
     (0...entity.token_size).each do |ofs_x|
       (0...entity.token_size).each do |ofs_y|
-        return false if pos_x + ofs_x >= @size[0]
-        return false if pos_y + ofs_y >= @size[1]
+        relative_x = pos_x + ofs_x
+        relative_y = pos_y + ofs_y
 
-        return false if @base_map[pos_x + ofs_x][pos_y + ofs_y] == '#'
+        return false if relative_x >= @size[0]
+        return false if relative_y >= @size[1]
 
-        next unless battle && @tokens[pos_x + ofs_x][pos_y + ofs_y]
+        return false if @base_map[relative_x][relative_y] == '#'
+        return false if object_at(relative_x, relative_y) && !object_at(relative_x, relative_y).passable?
 
-        location_entity = @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity]
+        next unless battle && @tokens[relative_x][relative_y]
+
+        location_entity = @tokens[relative_x][relative_y][:entity]
 
         source_state = battle.entity_state_for(entity)
         source_group = source_state[:group]
         location_state = battle.entity_state_for(location_entity)
-        next if @tokens[pos_x + ofs_x][pos_y + ofs_y][:entity] == entity
+        next if @tokens[relative_x][relative_y][:entity] == entity
 
         location_group = location_state[:group]
         next if location_group.nil?
@@ -371,7 +375,12 @@ class BattleMap
       return '+' if path.include?([col_index, row_index])
       return ' ' if line_of_sight && !line_of_sight?(path.last[0], path.last[1], col_index, row_index)
     else
-      return ' ' if line_of_sight && !line_of_sight_for?(line_of_sight, col_index, row_index)
+      has_line_of_sight = if line_of_sight.is_a?(Array)
+                            line_of_sight.detect { |l| line_of_sight_for?(l, col_index, row_index) }
+                          elsif line_of_sight
+                            line_of_sight_for?(line_of_sight, col_index, row_index)
+                          end
+      return ' ' if line_of_sight && !has_line_of_sight
     end
 
     # render map layer

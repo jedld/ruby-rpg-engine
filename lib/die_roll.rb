@@ -31,12 +31,12 @@ class DieRoll
 
   def result
     sum = if @advantage
-      @rolls.map { |r| r.max }.sum
-    elsif @disadvantage
-      @rolls.map { |r| r.min }.sum
-    else
-      @rolls.sum
-    end
+            @rolls.map { |r| r.max }.sum
+          elsif @disadvantage
+            @rolls.map { |r| r.min }.sum
+          else
+            @rolls.sum
+          end
 
     sum + @modifier
   end
@@ -54,19 +54,19 @@ class DieRoll
   def to_s
     rolls = @rolls.map do |r|
       if @advantage
-        r.map { |i|
+        r.map do |i|
           i == r.max ? color_roll(i) : i.to_s.colorize(:gray)
-        }.join(' | ')
+        end.join(' | ')
       elsif @disadvantage
-        r.map { |i|
+        r.map do |i|
           i == r.min ? color_roll(i) : i.to_s.colorize(:gray)
-        }.join(' | ')
+        end.join(' | ')
       else
         color_roll(r)
       end
     end
 
-    if (@modifier!=0)
+    if @modifier != 0
       "(#{rolls.join(' + ')}) + #{@modifier}"
     else
       "(#{rolls.join(' + ')})"
@@ -75,11 +75,18 @@ class DieRoll
 
   def self.numeric?(c)
     return true if c =~ /\A\d+\Z/
-    true if Float(c) rescue false
+
+    begin
+      true if Float(c)
+    rescue StandardError
+      false
+    end
   end
 
   def ==(other_object)
-    return true if other_object.rolls == @rolls && other_object.modifier == @modifier && other_object.die_sides == @die_sides
+    if other_object.rolls == @rolls && other_object.modifier == @modifier && other_object.die_sides == @die_sides
+      return true
+    end
 
     false
   end
@@ -89,9 +96,9 @@ class DieRoll
     number_of_die = 1
     die_sides = 20
 
-    die_count_str = ""
-    die_type_str = ""
-    modifier_str = ""
+    die_count_str = ''
+    die_type_str = ''
+    modifier_str = ''
     modifier_op = ''
     roll_str.strip.each_char do |c|
       case state
@@ -100,6 +107,8 @@ class DieRoll
           die_count_str << c
         elsif c == 'd'
           state = :die_type
+        elsif c == '+'
+          state = :modifier
         end
       when :die_type
         next if c == ' '
@@ -115,25 +124,24 @@ class DieRoll
       when :modifier
         next if c == ' '
 
-        if numeric?(c)
-          modifier_str << c
-        end
+        modifier_str << c if numeric?(c)
       end
     end
 
     if state == :initial
       modifier_str = die_count_str
-      die_count_str = "0"
+      die_count_str = '0'
     end
 
     number_of_die = die_count_str.blank? ? 1 : die_count_str.to_i
+
+    return DieRoll.new([number_of_die], "#{modifier_op}#{modifier_str}".to_i, 0) if die_type_str.blank?
+
     die_sides = die_type_str.to_i
 
-    if crit
-      number_of_die *= 2
-    end
+    number_of_die *= 2 if crit
 
-    rolls = if (advantage || disadvantage)
+    rolls = if advantage || disadvantage
               number_of_die.times.map { [(1..die_sides).to_a.sample, (1..die_sides).to_a.sample] }
             else
               number_of_die.times.map { (1..die_sides).to_a.sample }

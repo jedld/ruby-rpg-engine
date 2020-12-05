@@ -105,7 +105,7 @@ class CommandlineUI
       puts "movement #{map.movement_cost(entity, path).to_s.colorize(:green)}ft."
       puts ' '
       puts map.render(line_of_sight: entity, path: path)
-      movement = @prompt.keypress(' (wsad) - movement, x - confirm path, r - reset')
+      movement = @prompt.keypress(' (wsadx) - movement, (qezc) diagonals, space/enter - confirm path, r - reset')
 
       if movement == 'w'
         new_path = [path.last[0], path.last[1] - 1]
@@ -113,9 +113,9 @@ class CommandlineUI
         new_path = [path.last[0] - 1, path.last[1]]
       elsif movement == 'd'
         new_path = [path.last[0] + 1, path.last[1]]
-      elsif movement == 's'
+      elsif movement == 's' || movement == 'x'
         new_path = [path.last[0], path.last[1] + 1]
-      elsif movement == 'x'
+      elsif movement == ' ' || movment == '\r'
         next unless map.placeable?(entity, *path.last, battle)
 
         return path

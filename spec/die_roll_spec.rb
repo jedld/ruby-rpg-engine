@@ -29,6 +29,10 @@ RSpec.describe DieRoll do
       end
     end
 
+    specify "no die rolls" do
+      expect(DieRoll.roll("1+1").result).to eq(2)
+    end
+
     specify "critical rolls" do
       100.times do
         expect(DieRoll.roll("1d6", crit: true).result).to be_between 2, 12

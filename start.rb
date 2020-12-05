@@ -59,7 +59,7 @@ def start_battle(chosen_characters, chosen_enemies)
         battle.action!(action)
         battle.commit(action)
       end while !action.nil?
-      puts map.render(line_of_sight: chosen_characters.first)
+      puts map.render(line_of_sight: chosen_characters)
       @prompt.keypress("Press space or enter to continue", keys: [:space, :return])
     else
       begin

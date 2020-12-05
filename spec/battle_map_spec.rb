@@ -141,7 +141,12 @@ RSpec.describe AttackAction do
           "#-#    \n" +
           "G·····#\n" +
           "##     \n")
+    end
 
+    specify "#passable?" do
+      door = @battle_map.object_at(1, 4)
+      door.close!
+      expect(@battle_map.passable?(@fighter, 1,4)).to_not be
     end
   end
 end
