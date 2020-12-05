@@ -121,14 +121,15 @@ module AiController
     def observe_enemies(battle, entity, enemy_positions = {})
       objects_around_me = battle.map.look(entity)
 
-      my_group = battle.entity_state_for(entity)[:group]
+      my_group = battle.entity_group_for(entity)
 
       objects_around_me.each do |object, location|
-        state = battle.entity_state_for(object)
-        next unless state
+        group = battle.entity_group_for(object)
+        next if group == :none
+        next unless group
         next unless object.concious?
 
-        enemy_positions[object] = location if state[:group] != my_group
+        enemy_positions[object] = location if group != my_group
       end
     end
   end

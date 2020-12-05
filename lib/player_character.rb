@@ -2,9 +2,8 @@ class PlayerCharacter
   include Entity
   include RogueClass
   include FighterClass
-  include HealthFlavor
 
-  attr_accessor :hp, :statuses, :other_counters, :resistances
+  attr_accessor :hp, :other_counters, :resistances
 
   def initialize(properties)
     @properties = properties.deep_symbolize_keys!
@@ -226,6 +225,10 @@ class PlayerCharacter
 
   def npc?
     false
+  end
+
+  def describe_health
+    ""
   end
 
   private

@@ -1,14 +1,12 @@
 module ItemLibrary
-  attr_reader :state
-
   class DoorObject < Object
-    def initialize(properties = {})
-      @state = properties[:state]&.to_sym || :closed
-      @name = properties[:name]
+    attr_reader :state
+    def opaque?
+      closed? && !dead?
     end
 
-    def opaque?
-      closed?
+    def passable?
+      opened? || dead?
     end
 
     def closed?
@@ -28,6 +26,8 @@ module ItemLibrary
     end
 
     def token
+      return '`' if dead?
+
       opened? ? '-' : '='
     end
 
@@ -54,6 +54,12 @@ module ItemLibrary
       elsif result[:action] == :close && opened?
         close!
       end
+    end
+
+    protected
+
+    def setup_other_attributes
+      @state = @properties[:state]&.to_sym || :closed
     end
   end
 end

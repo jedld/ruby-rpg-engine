@@ -1,5 +1,5 @@
 module Entity
-  attr_accessor :entity_uid
+  attr_accessor :entity_uid, :statuses
 
   def heal!(amt)
     prev_hp = @hp
@@ -161,6 +161,8 @@ module Entity
 
   def dodge?(battle)
     entity_state = battle.entity_state_for(self)
+    return false unless entity_state
+
     entity_state[:statuses]&.include?(:dodge)
   end
 

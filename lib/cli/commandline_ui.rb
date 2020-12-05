@@ -10,100 +10,124 @@ class CommandlineUI
   end
 
   def attack_ui(entity, action, options = {})
+    selected_targets = []
+
     target = @prompt.select("#{entity.name} targets") do |menu|
       battle.valid_targets_for(entity, action, options).each do |target|
         menu.choice target.name, target
       end
-      menu.choice "Manual"
-      menu.choice "Back", nil
+      menu.choice 'Manual'
+      menu.choice 'Back', nil
     end
 
-    return nil if target == "Back"
+    return nil if target == 'Back'
 
-    if target == "Manual"
-      target = target_ui(validation: -> (selected) {
-        selected_entity = map.entity_at(*selected)
+    if target == 'Manual'
+      targets = target_ui(validation: lambda { |selected|
+        selected_entities = map.thing_at(*selected)
 
-        return false unless selected_entity
+        return false if selected_entities.empty?
 
-        battle.valid_targets_for(entity, action, options).include?(selected_entity)
+        selected_entities.detect do |selected_entity|
+          battle.valid_targets_for(entity, action, options.merge(include_objects: true)).include?(selected_entity)
+        end
       })
-      target = target&.first
+
+      if targets.size > (options[:num_select].presence || 1)
+        loop do
+          target = @prompt.select('multiple targets at location(s) please select specific targets') do |menu|
+            targets.each do |t|
+              menu.choice t.name.to_s, t
+            end
+          end
+          selected_targets << target
+          break unless selected_targets.size < options[:num_select]
+        end
+      else
+        selected_targets = targets
+      end
 
       return nil if target.nil?
+    else
+      selected_targets << target
     end
 
-    target
+    selected_targets.flatten
   end
 
   def target_ui(initial_pos: nil, num_select: 1, validation: nil)
     selected = []
-    initial_pos = initial_pos || map.position_of(entity)
+    initial_pos ||= map.position_of(entity)
+    new_pos = nil
     begin
       puts "\e[H\e[2J"
-      puts " "
+      puts ' '
       puts map.render(line_of_sight: entity, select_pos: initial_pos)
-      @prompt.say("#{map.entity_at(*initial_pos)&.name}")
-      movement = @prompt.keypress(" (wsad) - movement, x - select, r - reset")
+      @prompt.say(map.thing_at(*initial_pos).map(&:name).join(',').to_s)
+      movement = @prompt.keypress(' (wsad) - movement, x - select, r - reset')
 
-      if movement == "w"
+      if movement == 'w'
         new_pos = [initial_pos[0], initial_pos[1] - 1]
-      elsif movement == "a"
+      elsif movement == 'a'
         new_pos = [initial_pos[0] - 1, initial_pos[1]]
-      elsif movement == "d"
+      elsif movement == 'd'
         new_pos = [initial_pos[0] + 1, initial_pos[1]]
-      elsif movement == "s"
+      elsif movement == 's'
         new_pos = [initial_pos[0], initial_pos[1] + 1]
-      elsif movement == "x"
+      elsif movement == 'x' || movement == ' '
         next if validation && !validation.call(new_pos)
 
         selected << initial_pos
-      elsif movement == "r"
+      elsif movement == 'r'
         new_pos = map.position_of(entity)
         next
+      elsif movement == "\e"
+        return []
       else
         next
       end
 
       next if new_pos.nil?
-      next if !map.line_of_sight_for?(entity, *new_pos)
-
+      next unless map.line_of_sight_for?(entity, *new_pos)
 
       initial_pos = new_pos
-    end while movement != "x"
 
-    selected.map { |e| map.entity_at(*e)}
+
+    end while movement != 'x'
+
+    selected.compact.map { |e| map.thing_at(*e) }
   end
 
   def move_ui(options = {})
     path = [map.position_of(entity)]
-    begin
+    loop do
       puts "\e[H\e[2J"
       puts "movement #{map.movement_cost(entity, path).to_s.colorize(:green)}ft."
-      puts " "
+      puts ' '
       puts map.render(line_of_sight: entity, path: path)
-      movement = @prompt.keypress(" (wsad) - movement, x - confirm path, r - reset")
+      movement = @prompt.keypress(' (wsad) - movement, x - confirm path, r - reset')
 
-      if movement == "w"
+      if movement == 'w'
         new_path = [path.last[0], path.last[1] - 1]
-      elsif movement == "a"
+      elsif movement == 'a'
         new_path = [path.last[0] - 1, path.last[1]]
-      elsif movement == "d"
+      elsif movement == 'd'
         new_path = [path.last[0] + 1, path.last[1]]
-      elsif movement == "s"
+      elsif movement == 's'
         new_path = [path.last[0], path.last[1] + 1]
-      elsif movement == "x"
-        next if !map.placeable?(entity, *path.last, battle)
+      elsif movement == 'x'
+        next unless map.placeable?(entity, *path.last, battle)
+
         return path
-      elsif movement == "q"
-        new_path = [path.last[0]-1, path.last[1] - 1]
+      elsif movement == 'q'
+        new_path = [path.last[0] - 1, path.last[1] - 1]
       elsif movement == 'e'
-        new_path = [path.last[0]+1, path.last[1] - 1]
+        new_path = [path.last[0] + 1, path.last[1] - 1]
       elsif movement == 'z'
-        new_path = [path.last[0]-1, path.last[1] + 1]
+        new_path = [path.last[0] - 1, path.last[1] + 1]
       elsif movement == 'c'
-        new_path = [path.last[0]+1, path.last[1] + 1]
-      elsif movement == "r"
+        new_path = [path.last[0] + 1, path.last[1] + 1]
+      elsif movement == 'r'
         path = [map.position_of(entity)]
         next
       elsif movement == "\e"
@@ -117,13 +141,14 @@ class CommandlineUI
       elsif map.passable?(entity, *new_path, battle) && map.movement_cost(entity, path + [new_path]) <= (options[:as_dash] ? entity.speed : entity.available_movement(battle))
         path << new_path
       end
-    end while true
+      break unless true
+    end
   end
 
   def action_ui(action, entity)
     cont = action.build_map
-    begin
-      param = cont.param&.map { |p|
+    loop do
+      param = cont.param&.map do |p|
         case (p[:type])
         when :movement
           move_path = move_ui(p)
@@ -131,10 +156,9 @@ class CommandlineUI
 
           move_path
         when :target, :select_target
-          target = attack_ui(entity, action, p)
-          return nil if target.nil?
-
-          target
+          targets = attack_ui(entity, action, p)
+          return nil if targets.nil? || targets.empty?
+            targets.first
         when :select_weapon
           action.using || action.npc_action
         when :select_item
@@ -143,10 +167,10 @@ class CommandlineUI
               if d[:consumable]
                 menu.choice "#{d[:label].colorize(:blue)} (#{d[:qty]})", d[:name]
               else
-                menu.choice "#{d[:label].colorize(:blue)}", d[:name]
+                menu.choice d[:label].colorize(:blue).to_s, d[:name]
               end
             end
-            menu.choice "Back", :back
+            menu.choice 'Back', :back
           end
 
           return nil if item == :back
@@ -155,9 +179,9 @@ class CommandlineUI
         when :select_object
           item = @prompt.select("#{entity.name} interact with") do |menu|
             entity.usable_objects(map).each do |d|
-              menu.choice "#{d.name}", d
+              menu.choice d.name.humanize.to_s, d
             end
-            menu.choice "Back", :back
+            menu.choice 'Back', :back
           end
 
           return nil if item == :back
@@ -168,7 +192,7 @@ class CommandlineUI
             p[:target].available_actions.each do |d|
               menu.choice d.to_s.humanize, d
             end
-            menu.choice "Back", :back
+            menu.choice 'Back', :back
           end
 
           return nil if item == :back
@@ -177,9 +201,10 @@ class CommandlineUI
         else
           raise "unknown #{p[:type]}"
         end
-      }
+      end
       cont = cont.next.call(*param)
-    end while !param.nil?
+      break if param.nil?
+    end
     @action = cont
   end
 end

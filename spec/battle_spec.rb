@@ -64,4 +64,28 @@ RSpec.describe Battle do
       expect(@battle.combat_order.map(&:name)).to eq(["a", "b", "Gomerin"])
     end
   end
+
+  context "#valid_targets_for" do
+    before do
+      @battle_map = BattleMap.new(session, "fixtures/battle_sim_objects")
+      @battle = Battle.new(session, @battle_map)
+      @fighter = PlayerCharacter.load(File.join("fixtures", "high_elf_fighter.yml"))
+      @npc = Npc.new(:goblin, name: 'a')
+      @battle_map.place(0, 5, @fighter, "G")
+      @battle.add(@fighter, :a)
+      @door = @battle_map.object_at(1,4)
+    end
+
+    it "shows all valid targets for attack action" do
+      action = AttackAction.new(session, @fighter, :attack)
+      action.using = 'vicious_rapier'
+      puts @battle_map.render
+      expect(@battle.valid_targets_for(@fighter, action)).to eq([])
+      @battle.add(@npc, :b, position: [1, 5])
+      puts @battle_map.render
+      expect(@battle.valid_targets_for(@fighter, action)).to eq([@npc])
+      expect(@battle.valid_targets_for(@fighter, action, include_objects: true)).to eq([@npc, @door])
+    end
+  end
+
 end

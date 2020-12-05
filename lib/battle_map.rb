@@ -43,9 +43,9 @@ class BattleMap
 
           object_info = Session.load_object(object_meta[:type])
           obj = if object_info[:item_class]
-                  object_info[:item_class].constantize.new(object_meta)
+                  object_info[:item_class].constantize.new(object_meta.merge(object_info))
                 else
-                  ItemLibrary::Object.new(object_meta)
+                  ItemLibrary::Object.new(object_meta.merge(object_info))
                 end
 
           @interactable_objects[obj] = [pos_x, pos_y]
@@ -109,6 +109,9 @@ class BattleMap
   end
 
   def distance(entity1, entity2)
+    raise "entity 1 param cannot be nil" if entity1.nil?
+    raise "entity 2 param cannot be nil" if entity2.nil?
+
     # entity 1 squares
     entity_1_sq = entity_squares(entity1)
     entity_2_sq = entity_squares(entity2)
@@ -123,7 +126,7 @@ class BattleMap
   end
 
   def entity_squares(entity)
-    pos1_x, pos1_y = @entities[entity]
+    pos1_x, pos1_y = entity_or_object_pos(entity)
     entity_1_squares = []
     (0...entity.token_size).each do |ofs_x|
       (0...entity.token_size).each do |ofs_y|
@@ -163,7 +166,7 @@ class BattleMap
   end
 
   def line_of_sight_for_ex?(entity, entity2, distance = nil)
-    raise 'cannot find entity' if @entities[entity].nil?
+    raise 'cannot find entity' if @entities[entity].nil? && @interactable_objects[entity].nil?
 
     entity_1_squares = entity_squares(entity)
     entity_2_squares = entity_squares(entity2)
@@ -187,6 +190,10 @@ class BattleMap
     return nil if entity_data.nil?
 
     entity_data[:entity]
+  end
+
+  def thing_at(pos_x, pos_y)
+    [entity_at(pos_x, pos_y), object_at(pos_x, pos_y)].compact
   end
 
   def move_to!(entity, pos_x, pos_y)
@@ -267,8 +274,13 @@ class BattleMap
 
   def placeable?(entity, pos_x, pos_y, battle = nil)
     return false unless passable?(entity, pos_x, pos_y, battle)
-    return false if @tokens[pos_x][pos_y] && !@tokens[pos_x][pos_y][:entity].dead?
-    return false if @base_map[pos_x][pos_y] != '.'
+
+    entity_squares(entity).each do |pos|
+      p_x, p_y = pos
+      next if @tokens[p_x][p_y] && @tokens[p_x][p_y][:entity] == entity
+      return false if @tokens[p_x][p_y] && !@tokens[p_x][p_y][:entity].dead?
+      return false if object_at(p_x, p_y) && !object_at(p_x, p_y)&.passable?
+    end
 
     true
   end
@@ -380,5 +392,11 @@ class BattleMap
         end
       end.join
     end.join("\n") + "\n"
+  end
+
+  protected
+
+  def entity_or_object_pos(thing)
+    thing.is_a?(ItemLibrary::Object) ? @interactable_objects[thing] : @entities[thing]
   end
 end

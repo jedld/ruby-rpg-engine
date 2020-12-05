@@ -4,7 +4,7 @@ class Npc
   include Entity
   include HealthFlavor
 
-  attr_accessor :hp, :statuses, :resistances, :npc_actions
+  attr_accessor :hp, :resistances, :npc_actions
 
   def initialize(type, opt = {})
     @properties = YAML.load_file(File.join('npcs', "#{type}.yml")).deep_symbolize_keys!

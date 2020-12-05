@@ -55,6 +55,9 @@ RSpec.describe AiController::PathCompute do
         "······#\n" +
         "·······\n")
         expect(@path_compute.compute_path(3, 4, 4, 5)).to eq([[3, 4], [4, 5]])
+        path_back = @path_compute.compute_path(0, 4, 0, 1)
+        expect(path_back).to eq([[0, 4], [1, 4], [2, 4], [3, 4], [4, 3], [4, 2], [3, 1], [2, 1], [1, 1], [0, 1]])
+        
     end
 
     context "no path" do

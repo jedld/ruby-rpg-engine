@@ -42,15 +42,13 @@ class MoveAction < Action
 
     movement_budget = if as_dash
                         @source.speed / 5
-                      else @source.available_movement(battle)
-                           @source.available_movement(battle)
+                      else
+                        @source.available_movement(battle)
                       end
 
     actual_moves = compute_actual_moves(@source, current_moves, map, battle, movement_budget)
 
-    actual_moves.pop if actual_moves.last && !map.placeable?(@source, *actual_moves.last, battle)
-
-    binding.pry if actual_moves.size < 2
+    actual_moves.pop while actual_moves.last && !map.placeable?(@source, *actual_moves.last, battle)
 
     if battle && !@source.disengage?(battle)
       opportunity_attacks = opportunity_attack_list(actual_moves, battle, map)
@@ -109,7 +107,7 @@ class MoveAction < Action
         end
 
         EventManager.received_event({ event: :move, source: item[:source], position: item[:position], path: item[:path],
-          as_dash: as_dash, as_bonus: as_bonus_action })
+                                      as_dash: as_dash, as_bonus: as_bonus_action })
       end
     end
   end

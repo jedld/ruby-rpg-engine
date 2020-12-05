@@ -23,7 +23,7 @@ class Battle
   def add(entity, group, position: nil, token: nil)
     return if @entities[entity]
 
-    raise "entity cannot be nil" if entity.nil?
+    raise 'entity cannot be nil' if entity.nil?
 
     @entities[entity] = {
       group: group,
@@ -46,11 +46,16 @@ class Battle
 
     return if position.nil?
 
-    position.is_a?(Array) ?@map.place(*position, entity, token) :  @map.place_at_spawn_point(position, entity, token)
+    position.is_a?(Array) ? @map.place(*position, entity, token) : @map.place_at_spawn_point(position, entity, token)
   end
 
   def entity_state_for(entity)
     @entities[entity]
+  end
+
+  def entity_group_for(entity)
+    return :none unless @entities[entity]
+    @entities[entity][:group]
   end
 
   def dismiss_help_actions_for(source)
@@ -60,14 +65,14 @@ class Battle
   end
 
   def help_with?(target)
-    if @entities[target]
-      return @entities[target][:target_effect].values.include?(:help)
-    end
+    return @entities[target][:target_effect].values.include?(:help) if @entities[target]
 
     false
   end
 
   def dismiss_help_for(target)
+    return unless @entities[target]
+
     @entities[target][:target_effect].delete_if { |_k, v| v == :help }
   end
 
@@ -88,11 +93,13 @@ class Battle
 
   # Targets that make sense for a given action
   def valid_targets_for(entity, action, options = {})
+    raise 'not an action' unless action.is_a?(Action)
+
     target_types = options[:target_types]&.map(&:to_sym) || [:enemies]
     entity_group = @entities[entity][:group]
     attack_range = if action.action_type == :help
                      5
-                   elsif  action.action_type == :attack
+                   elsif action.action_type == :attack
                      if action.npc_action
                        action.npc_action[:range_max].presence || action.npc_action[:range]
                      elsif action.using
@@ -103,7 +110,9 @@ class Battle
                      options[:range]
                    end
 
-    @entities.map do |k, prop|
+    raise 'attack range cannot be nil' if attack_range.nil?
+
+    targets = @entities.map do |k, prop|
       next if !target_types.include?(:self) && k == entity
       next if !target_types.include?(:allies) && prop[:group] == entity_group && k != entity
       next if !target_types.include?(:enemies) && prop[:group] != entity_group
@@ -113,6 +122,18 @@ class Battle
 
       k
     end.compact
+
+    if options[:include_objects]
+      targets += @map.interactable_objects.map do |object, _position|
+        next if object.dead?
+        next if !target_types.include?(:ignore_los) && !@map.line_of_sight_for_ex?(entity, object)
+        next if @map.distance(object, entity) * 5 > attack_range
+
+        object
+      end.compact
+    end
+
+    targets
   end
 
   def opponents_of?(entity)
@@ -143,7 +164,7 @@ class Battle
   end
 
   def while_active(max_rounds = nil, &block)
-    begin
+    loop do
       EventManager.received_event({ source: self, event: :start_of_round, target: current_turn })
       if current_turn.concious?
         current_turn.reset_turn!(self)
@@ -165,13 +186,14 @@ class Battle
 
         return if !max_rounds.nil? && @round > max_rounds
       end
-    end while (!battle_ends?)
+      break if battle_ends?
+    end
   end
 
   def enemy_in_melee_range?(source, exclude = [])
     objects_around_me = map.look(source)
 
-    my_group = entity_state_for(source)[:group]
+    my_group = entity_group_for(source)
 
     objects_around_me.detect do |object, _|
       next if exclude.include?(object)
@@ -180,7 +202,7 @@ class Battle
       next unless state
       next unless object.concious?
 
-      return true if (state[:group] != my_group && (map.distance(source, object) <= (object.melee_distance / 5)))
+      return true if state[:group] != my_group && (map.distance(source, object) <= (object.melee_distance / 5))
     end
 
     false
@@ -205,9 +227,10 @@ class Battle
 
   def commit(action)
     return if action.nil?
+
     # check_action_serialization(action)
     action.apply!(self)
-    case(action.action_type)
+    case action.action_type
     when :move
       trigger_event!(:movement, action.source, move_path: action.move_path)
     end
