@@ -40,7 +40,7 @@ RSpec.describe AttackAction do
     action = AttackAction.build(session, @fighter).next.call(@npc).next.call('unarmed_attack').next.call()
     @battle.action!(action)
     @battle.commit(action)
-    expect(@npc.hp).to eq(46)
+    expect(@npc.hp).to eq(55)
   end
 
   specify "range disadvantage" do
