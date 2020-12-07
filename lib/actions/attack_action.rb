@@ -64,7 +64,7 @@ class AttackAction < Action
                                       damage_roll: item[:damage],
                                       sneak_attack: item[:sneak_attack],
                                       value: item[:damage].result + (item[:sneak_attack]&.result.presence || 0) })
-        item[:target].take_damage!(item)
+        item[:target].take_damage!(item, battle)
       when :miss
         EventManager.received_event({ attack_roll: item[:attack_roll],
                                       attack_name: item[:attack_name],

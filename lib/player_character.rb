@@ -11,6 +11,7 @@ class PlayerCharacter
     @equipped = @properties[:equipped]
     @race_properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', 'races', "#{@properties[:race]}.yml")).deep_symbolize_keys!
     @inventory = {}
+    @color = @properties[:color]
     @properties[:inventory]&.each do |inventory|
       @inventory[inventory[:type]] ||= OpenStruct.new({ type: inventory[:type], qty: 0 })
       @inventory[inventory[:type]].qty += inventory[:qty]

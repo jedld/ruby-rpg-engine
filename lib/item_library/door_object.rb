@@ -28,10 +28,27 @@ module ItemLibrary
     def token
       return '`' if dead?
 
-      opened? ? '-' : '='
+      pos_x, pos_y = position
+      t = if map.wall?(pos_x - 1, pos_y) || map.wall?(pos_x + 1, pos_y)
+            opened? ? '-' : '='
+          else
+            opened? ? '|' : '║'
+          end
+
+      [t]
+    end
+
+    def token_opened
+      @properties[:token_open].presence || '-'
+    end
+
+    def token_closed
+      @properties[:token_closed].presence || '='
     end
 
     def available_actions
+      return [] if someone_blocking_the_doorway?
+
       opened? ? [:close] : [:open]
     end
 
@@ -57,6 +74,12 @@ module ItemLibrary
     end
 
     protected
+
+    def someone_blocking_the_doorway?
+      !!map.entity_at(*position)
+    end
+
+    def on_take_damage(battle, damage_params); end
 
     def setup_other_attributes
       @state = @properties[:state]&.to_sym || :closed

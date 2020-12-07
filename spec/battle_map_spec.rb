@@ -1,4 +1,4 @@
-RSpec.describe AttackAction do
+RSpec.describe BattleMap do
   let(:session) { Session.new }
   context "map 1" do
     before do
@@ -14,7 +14,7 @@ RSpec.describe AttackAction do
     end
 
     specify "#render" do
-      expect(@battle_map.render).to eq "····#·\n" +
+      expect(@battle_map.render).to eq "g···#·\n" +
                                       "G··##·\n" +
                                       "····#·\n" +
                                       "······\n" +
@@ -22,7 +22,7 @@ RSpec.describe AttackAction do
                                       "······\n"
 
       @battle_map.place(2, 3, @npc, "X")
-      expect(@battle_map.render(line_of_sight: @npc)).to eq "···   \n" +
+      expect(@battle_map.render(line_of_sight: @npc)).to eq "g··   \n" +
                                                             "G··## \n" +
                                                             "····# \n" +
                                                             "··g···\n" +
@@ -33,7 +33,7 @@ RSpec.describe AttackAction do
     context "#place" do
       specify "place tokens in the batlefield" do
         @battle_map.place(3, 3, @npc, "g")
-        expect(@battle_map.render).to eq "····#·\n" +
+        expect(@battle_map.render).to eq "g···#·\n" +
                                         "G··##·\n" +
                                         "····#·\n" +
                                         "···g··\n" +
@@ -52,7 +52,7 @@ RSpec.describe AttackAction do
       expect(@battle_map.valid_position?(6, 6)).to_not be
       expect(@battle_map.valid_position?(-1, 4)).to_not be
       expect(@battle_map.valid_position?(1, 4)).to_not be
-      expect(@battle_map.valid_position?(0, 0)).to be
+      expect(@battle_map.valid_position?(1, 0)).to be
     end
 
     specify "#line_of_sight?" do

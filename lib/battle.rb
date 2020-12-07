@@ -49,6 +49,10 @@ class Battle
     position.is_a?(Array) ? @map.place(*position, entity, token) : @map.place_at_spawn_point(position, entity, token)
   end
 
+  def in_battle?(entity)
+    @entities.key?(entity)
+  end
+
   def entity_state_for(entity)
     @entities[entity]
   end
@@ -170,6 +174,8 @@ class Battle
         current_turn.reset_turn!(self)
         block.call(current_turn)
       end
+
+      trigger_event!(:end_of_round, self, target: current_turn)
 
       @current_turn_index += 1
       if @current_turn_index >= @combat_order.length

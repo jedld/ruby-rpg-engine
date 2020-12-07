@@ -1,5 +1,5 @@
 class BattleMap
-  attr_reader :spawn_points, :size, :interactable_objects
+  attr_reader :base_map, :spawn_points, :size, :interactable_objects, :unaware_npcs
 
   def initialize(session, map_file)
     @session = session
@@ -7,6 +7,7 @@ class BattleMap
     @spawn_points = {}
     @entities = {}
     @interactable_objects = {}
+    @unaware_npcs = []
 
     @properties = YAML.load_file(File.join(File.dirname(__FILE__), '..', "#{map_file}.yml")).deep_symbolize_keys!
 
@@ -43,9 +44,9 @@ class BattleMap
 
           object_info = Session.load_object(object_meta[:type])
           obj = if object_info[:item_class]
-                  object_info[:item_class].constantize.new(object_meta.merge(object_info))
+                  object_info[:item_class].constantize.new(self, object_meta.merge(object_info))
                 else
-                  ItemLibrary::Object.new(object_meta.merge(object_info))
+                  ItemLibrary::Object.new(self, object_meta.merge(object_info))
                 end
 
           @interactable_objects[obj] = [pos_x, pos_y]
@@ -59,6 +60,11 @@ class BattleMap
         meta_row.each_with_index do |token, row_index|
           token_type = @legend.dig(token.to_sym, :type)
           case token_type
+          when 'npc'
+            npc_meta = @legend.dig(token.to_sym)
+            entity = Npc.new(npc_meta[:sub_type].to_sym, name: npc_meta[:name], overrides: npc_meta[:overrides])
+            @unaware_npcs << entity
+            place(column_index, row_index, entity)
           when 'spawn_point'
             @spawn_points[@legend.dig(token.to_sym, :name)] = {
               location: [column_index, row_index]
@@ -70,6 +76,15 @@ class BattleMap
   end
 
   attr_reader :size
+
+  def wall?(pos_x, pos_y)
+    return true if pos_x.negative? || pos_y.negative?
+    return true if pos_x >= size[0] || pos_y >= size[1]
+
+    return true if base_map[pos_x][pos_y] == '#'
+
+    false
+  end
 
   def object_at(pos_x, pos_y)
     @objects[pos_x][pos_y]
@@ -182,7 +197,7 @@ class BattleMap
   end
 
   def position_of(entity)
-    @entities[entity]
+    entity.is_a?(ItemLibrary::Object) ? interactable_objects[entity] : @entities[entity]
   end
 
   def entity_at(pos_x, pos_y)
@@ -352,12 +367,24 @@ class BattleMap
 
   def npc_token(pos_x, pos_y)
     entity = @tokens[pos_x][pos_y]
-    if entity[:entity].token
-      m_x, m_y = @entities[entity[:entity]]
-      entity[:entity].token[pos_y - m_y][pos_x - m_x]
-    else
-      @tokens[pos_x][pos_y][:token]
-    end
+    color = (entity[:entity]&.color.presence || :white).to_sym
+    token = if entity[:entity].token
+              m_x, m_y = @entities[entity[:entity]]
+              entity[:entity].token[pos_y - m_y][pos_x - m_x]
+            else
+              @tokens[pos_x][pos_y][:token]
+            end
+    token.colorize(color)
+  end
+
+  def object_token(pos_x, pos_y)
+    object_meta = object_at(pos_x, pos_y)
+    m_x, m_y = @interactable_objects[object_meta]
+    color = (object_meta.color.presence || :white).to_sym
+
+    return nil unless object_meta.token
+
+    object_meta.token[pos_y - m_y][pos_x - m_x].colorize(color)
   end
 
   def render_position(c, col_index, row_index, path: [], line_of_sight: nil)
@@ -367,7 +394,7 @@ class BattleMap
         when '#'
           '#'
         else
-          object_at(col_index, row_index).token.presence || c
+          object_token(col_index, row_index) || c
         end
 
     if !path.empty?

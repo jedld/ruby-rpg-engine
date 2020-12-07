@@ -8,7 +8,9 @@ class Npc
 
   def initialize(type, opt = {})
     @properties = YAML.load_file(File.join('npcs', "#{type}.yml")).deep_symbolize_keys!
+    @properties.merge!(opt[:overrides].presence || {})
     @ability_scores = @properties[:ability]
+    @color = @properties[:color]
     @inventory = @properties[:default_inventory].map do |inventory|
       [inventory[:type], OpenStruct.new({ qty: inventory[:qty] })]
     end.to_h
@@ -41,9 +43,11 @@ class Npc
     @properties[:token]
   end
 
-  def max_hp
-    @max_hp
+  def name
+    @name
   end
+
+  attr_reader :max_hp
 
   def npc?
     true

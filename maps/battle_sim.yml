@@ -34,3 +34,9 @@ legend:
   D:
     name: spawn_point_4
     type: spawn_point
+  g:
+    name: Krizzit
+    type: npc
+    sub_type: goblin
+    overrides:
+      hp: 40

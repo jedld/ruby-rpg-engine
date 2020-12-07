@@ -9,7 +9,7 @@ map:
     - .##...
     - ......
   meta:
-    - .....C
+    - g....C
     - ......
     - ......
     - ..A...
@@ -25,3 +25,9 @@ legend:
   C:
     name: spawn_point_3
     type: spawn_point
+  g:
+    name: Krizzit
+    type: npc
+    sub_type: goblin
+    overrides:
+      hp: 40

@@ -2,15 +2,24 @@ module ItemLibrary
   class Object
     include Entity
 
-    attr_accessor :hp, :statuses, :resistances, :name
+    attr_accessor :hp, :statuses, :resistances, :name, :map
 
-    def initialize(properties = {})
+    def initialize(map, properties)
       @name = properties[:name]
+      @map = map
       @statuses = Set.new
       @properties = properties
       @resistances = properties[:resistances].presence || []
       setup_other_attributes
       @hp = DieRoll.roll(properties[:hp_die] || properties[:max_hp]).result
+    end
+
+    def position
+      map.position_of(self)
+    end
+
+    def color
+      @properties[:color]
     end
 
     def armor_class

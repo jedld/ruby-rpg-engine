@@ -1,5 +1,5 @@
 module Entity
-  attr_accessor :entity_uid, :statuses
+  attr_accessor :entity_uid, :statuses, :color
 
   def heal!(amt)
     prev_hp = @hp
@@ -7,7 +7,7 @@ module Entity
     EventManager.received_event({ source: self, event: :heal, previous: prev_hp, new: @hp, value: amt })
   end
 
-  def take_damage!(damage_params)
+  def take_damage!(damage_params, battle = nil)
     dmg = damage_params[:damage].result
     dmg += damage_params[:sneak_attack].result unless damage_params[:sneak_attack].nil?
 
@@ -20,6 +20,10 @@ module Entity
       npc? ? dead! : unconcious!
     end
     @hp = 0 if @hp <= 0
+
+    if battle
+      on_take_damage(battle, damage_params)
+    end
 
     EventManager.received_event({ source: self, event: :damage, value: dmg })
   end
@@ -173,6 +177,14 @@ module Entity
     false
   end
 
+  # check if current entity can see target at a certain location
+  def can_see?(cur_pos_x, cur_pos_y, target_entity, pos_x, pos_y, battle)
+    return false unless battle.map.line_of_sight?(cur_pos_x, cur_pos_y, pos_x, pos_y)
+
+    #TODO, check invisiblity etc, range
+    true
+  end
+
   def help!(battle, target)
     target_state = battle.entity_state_for(target)
     entity_state = battle.entity_state_for(self)
@@ -296,6 +308,9 @@ module Entity
   end
 
   protected
+
+  def on_take_damage(battle, damage_params)
+  end
 
   def modifier_table(value)
     mod_table = [[1, 1, -5],
