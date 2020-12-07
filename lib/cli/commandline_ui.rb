@@ -115,7 +115,7 @@ class CommandlineUI
         new_path = [path.last[0] + 1, path.last[1]]
       elsif movement == 's' || movement == 'x'
         new_path = [path.last[0], path.last[1] + 1]
-      elsif movement == ' ' || movment == '\r'
+      elsif movement == ' ' || movement == '\r'
         next unless map.placeable?(entity, *path.last, battle)
 
         return path
@@ -201,6 +201,12 @@ class CommandlineUI
           return nil if item == :back
 
           object_action
+        when :show_inventory
+          @prompt.select("#{entity.name}'s Inventory") do |menu|
+            entity.inventory.each do |item|
+              menu.choice "#{item.label.call} x #{item.qty}", item.name
+            end
+          end
         else
           raise "unknown #{p[:type]}"
         end

@@ -32,6 +32,7 @@ class Battle
       reaction: 0,
       movement: 0,
       statuses: Set.new,
+      free_object_interaction: 0,
       target_effect: {}
     }
 
@@ -59,6 +60,7 @@ class Battle
 
   def entity_group_for(entity)
     return :none unless @entities[entity]
+
     @entities[entity][:group]
   end
 
@@ -149,6 +151,15 @@ class Battle
       opponents << k  if !k.dead? && state[:group] != source_group
     end
     opponents
+  end
+
+  # consume action resource and return if something changed
+  def consume!(entity, resource, qty)
+    current_qty = entity_state_for(entity)[resource.to_sym]
+    new_qty = [0, current_qty - qty].max
+    entity_state_for(entity)[resource.to_sym] = new_qty
+
+    current_qty != new_qty
   end
 
   def start

@@ -74,7 +74,7 @@ class AttackAction < Action
 
       # handle ammo
 
-      item[:source].deduct_item(item.dig(:npc_action, :ammo), 1) if item[:npc_action] && item[:npc_action][:ammo]
+      item[:source].deduct_item(item[:ammo], 1) if item[:ammo]
 
       if as_reaction
         battle.entity_state_for(item[:source])[:reaction] -= 1
@@ -115,15 +115,18 @@ class AttackAction < Action
     attack_name = nil
     damage_roll = nil
     sneak_attack_roll = nil
+    ammo_type = nil
 
     if npc_action
       weapon = npc_action
       attack_name = npc_action[:name]
       attack_mod = npc_action[:attack]
       damage_roll = npc_action[:damage_die]
+      ammo_type = npc_action[:ammo]
     else
       weapon = Session.load_weapon(using.to_sym)
       attack_name = weapon[:name]
+      ammo_type = weapon[:ammo]
       attack_mod = @source.attack_roll_mod(weapon)
       damage_roll = damage_modifier(weapon)
     end
@@ -166,6 +169,7 @@ class AttackAction < Action
                   hit?: hit,
                   damage_type: weapon[:damage_type],
                   damage: damage,
+                  ammo: ammo_type,
                   npc_action: npc_action
                 }]
               else
@@ -176,6 +180,7 @@ class AttackAction < Action
                   battle: battle,
                   type: :miss,
                   attack_roll: attack_roll,
+                  ammo: ammo_type,
                   npc_action: npc_action
                 }]
               end

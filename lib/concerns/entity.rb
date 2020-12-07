@@ -141,7 +141,8 @@ module Entity
                           action: 1,
                           bonus_action: 1,
                           reaction: 1,
-                          movement: speed
+                          movement: speed,
+                          free_object_interaction: 1
                         })
     entity_state[:statuses].delete(:dodge)
     entity_state[:statuses].delete(:disengage)
@@ -201,6 +202,12 @@ module Entity
 
   def total_actions(battle)
     battle.entity_state_for(self)[:action]
+  end
+
+  def free_object_interaction?(battle)
+    return true unless battle
+
+    (battle.entity_state_for(self)[:free_object_interaction].presence || 0).positive?
   end
 
   def total_bonus_actions(battle)
@@ -280,16 +287,16 @@ module Entity
   end
 
   def deduct_item(ammo_type, amount = 1)
-    return if @inventory[ammo_type].nil?
+    return if @inventory[ammo_type.to_sym].nil?
 
-    qty = @inventory[ammo_type][:qty]
-    @inventory[ammo_type][:qty] = qty - amount
+    qty = @inventory[ammo_type.to_sym][:qty]
+    @inventory[ammo_type.to_sym][:qty] = qty - amount
   end
 
   def item_count(ammo_type)
-    return 0 if @inventory[ammo_type].nil?
+    return 0 if @inventory[ammo_type.to_sym].nil?
 
-    @inventory[ammo_type][:qty]
+    @inventory[ammo_type.to_sym][:qty]
   end
 
   def usable_items
@@ -305,6 +312,16 @@ module Entity
 
   def usable_objects(map)
     map.objects_near(self)
+  end
+
+  def inventory
+    @inventory.map do |k, v|
+      OpenStruct.new(
+        name: k.to_sym,
+        label: ->() { v[:label].presence || k.to_s.humanize },
+        qty: v[:qty]
+      )
+    end
   end
 
   protected

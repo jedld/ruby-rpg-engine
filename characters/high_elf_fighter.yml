@@ -42,3 +42,6 @@ inventory:
   qty: 20
 - type: healing_potion
   qty: 1
+- type: wooden_door_key
+  label: Key to a wooden door
+  qty: 1

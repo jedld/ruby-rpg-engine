@@ -2,7 +2,7 @@ class InteractAction < Action
   attr_accessor :target, :object_action
 
   def self.can?(entity, battle)
-    battle.nil? || entity.total_actions(battle).positive?
+    battle.nil? || entity.total_actions(battle).positive? || entity.free_object_interaction?(battle)
   end
 
   def self.build(session, source)
@@ -51,19 +51,21 @@ class InteractAction < Action
       map: map,
       battle: battle,
       type: :interact
-    }.merge(target.resolve(object_action))
+    }.merge(target.resolve(@source, object_action))
     @result = [result_payload]
     self
   end
 
   def apply!(battle)
     @result.each do |item|
+      entity = item[:source]
       case (item[:type])
       when :interact
-        EventManager.received_event({ event: :interact, source: item[:source], target: item[:target],
+        EventManager.received_event({ event: :interact, source: entity, target: item[:target],
                                       object_action: item[:object_action] })
-        item[:target].use!(item[:source], item)
-        battle.entity_state_for(item[:source])[:action] -= 1 if battle
+        item[:target].use!(entity, item)
+
+        battle&.consume!(entity, :free_object_interaction, 1) || battle&.consume!(entity, :action, 1)
       end
     end
   end

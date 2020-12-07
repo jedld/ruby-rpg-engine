@@ -13,8 +13,8 @@ class PlayerCharacter
     @inventory = {}
     @color = @properties[:color]
     @properties[:inventory]&.each do |inventory|
-      @inventory[inventory[:type]] ||= OpenStruct.new({ type: inventory[:type], qty: 0 })
-      @inventory[inventory[:type]].qty += inventory[:qty]
+      @inventory[inventory[:type].to_sym] ||= OpenStruct.new({ type: inventory[:type], qty: 0 })
+      @inventory[inventory[:type].to_sym].qty += inventory[:qty]
     end
     @statuses = Set.new
     @resistances = []
@@ -131,7 +131,7 @@ class PlayerCharacter
   end
 
   def available_actions(session, battle = nil)
-    %i[attack move dash dash_bonus dodge help disengage disengage_bonus use_item interact].map do |type|
+    %i[attack move dash dash_bonus dodge help disengage disengage_bonus use_item interact inventory].map do |type|
       next unless "#{type.to_s.camelize}Action".constantize.can?(self, battle)
 
       case type
@@ -141,6 +141,7 @@ class PlayerCharacter
           weapon_detail = Session.load_weapon(item)
           next if weapon_detail.nil?
           next unless %w[ranged_attack melee_attack].include?(weapon_detail[:type])
+          next if weapon_detail[:ammo] && !item_count(weapon_detail[:ammo]).positive?
 
           action = AttackAction.new(session, self, :attack)
           action.using = item
@@ -178,6 +179,8 @@ class PlayerCharacter
         UseItemAction.new(session, self, type)
       when :interact
         InteractAction.new(session, self, type)
+      when :inventory
+        InventoryAction.new(session, self, type)
       else
         Action.new(session, self, type)
       end

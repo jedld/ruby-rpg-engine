@@ -12,7 +12,7 @@ class Npc
     @ability_scores = @properties[:ability]
     @color = @properties[:color]
     @inventory = @properties[:default_inventory].map do |inventory|
-      [inventory[:type], OpenStruct.new({ qty: inventory[:qty] })]
+      [inventory[:type].to_sym, OpenStruct.new({ qty: inventory[:qty] })]
     end.to_h
     @npc_actions = @properties[:actions]
     @opt = opt
