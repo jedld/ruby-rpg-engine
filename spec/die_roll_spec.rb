@@ -29,6 +29,12 @@ RSpec.describe DieRoll do
       end
     end
 
+    specify "addition operator" do
+      sum_of_rolls = DieRoll.roll("2d8") + DieRoll.roll("1d6")
+      expect(sum_of_rolls.result).to eq(13)
+      expect(sum_of_rolls.to_s).to eq("(4 + 8) + (1)")
+    end
+
     specify "no die rolls" do
       expect(DieRoll.roll("1+1").result).to eq(2)
     end

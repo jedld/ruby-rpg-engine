@@ -1,4 +1,38 @@
 class DieRoll
+  class DieRolls
+    attr_accessor :rolls
+
+    def initialize(rolls = [])
+      @rolls = rolls
+    end
+
+    def add_to_front(die_roll)
+      if die_roll.is_a?(DieRoll)
+        @rolls.unshift(die_roll)
+      elsif die_roll.is_a?(DieRolls)
+        @rolls = die_roll.rolls + @rolls
+      end
+    end
+
+    def +(die_roll)
+      if die_roll.is_a?(DieRoll)
+        @rolls << die_roll
+      elsif die_roll.is_a?(DieRolls)
+        @rolls += die_roll.rolls
+      end
+    end
+
+    def result
+      @rolls.inject(0) { |sum, roll|
+        sum += roll.result
+      }
+    end
+
+    def to_s
+      @rolls.map(&:to_s).join(' + ')
+    end
+  end
+
   attr_reader :rolls, :modifier, :die_sides
 
   def initialize(rolls, modifier, die_sides = 20, advantage: false, disadvantage: false)
@@ -89,6 +123,15 @@ class DieRoll
     end
 
     false
+  end
+
+  def +(die_roll)
+    if die_roll.is_a?(DieRolls)
+      die_roll.add_to_front(self)
+      die_roll
+    else
+      DieRolls.new([self, die_roll])
+    end
   end
 
   def self.roll(roll_str, crit: false, disadvantage: false, advantage: false)
