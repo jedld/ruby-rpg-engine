@@ -44,6 +44,11 @@ class InteractAction < Action
 
   def resolve(_session, map = nil, opts = {})
     battle = opts[:battle]
+
+    result = target.resolve(@source, object_action)
+
+    return [] if result.nil?
+
     result_payload = {
       source: @source,
       target: target,
@@ -51,7 +56,7 @@ class InteractAction < Action
       map: map,
       battle: battle,
       type: :interact
-    }.merge(target.resolve(@source, object_action))
+    }.merge(result)
     @result = [result_payload]
     self
   end
@@ -64,8 +69,11 @@ class InteractAction < Action
         EventManager.received_event({ event: :interact, source: entity, target: item[:target],
                                       object_action: item[:object_action] })
         item[:target].use!(entity, item)
-
-        battle&.consume!(entity, :free_object_interaction, 1) || battle&.consume!(entity, :action, 1)
+        if item[:cost] == :action
+          battle&.consume!(entity, :action, 1)
+        else
+          battle&.consume!(entity, :free_object_interaction, 1) || battle&.consume!(entity, :action, 1)
+        end
       end
     end
   end

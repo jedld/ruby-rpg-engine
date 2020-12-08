@@ -181,7 +181,7 @@ class CommandlineUI
           item
         when :select_object
           item = @prompt.select("#{entity.name} interact with") do |menu|
-            entity.usable_objects(map).each do |d|
+            entity.usable_objects(map, battle).each do |d|
               menu.choice d.name.humanize.to_s, d
             end
             menu.choice 'Back', :back
@@ -192,7 +192,7 @@ class CommandlineUI
           item
         when :interact
           object_action = @prompt.select("#{entity.name} will") do |menu|
-            p[:target].available_actions.each do |d|
+            p[:target].available_actions(entity).each do |d|
               menu.choice d.to_s.humanize, d
             end
             menu.choice 'Back', :back

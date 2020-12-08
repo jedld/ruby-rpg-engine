@@ -23,9 +23,19 @@ class DieRoll
     end
 
     def result
-      @rolls.inject(0) { |sum, roll|
+      @rolls.inject(0) do |sum, roll|
         sum += roll.result
-      }
+      end
+    end
+
+    def ==(other)
+      return false if other.rolls.size != @rolls.size
+
+      @rolls.each_with_index do |roll, index|
+        return false if other.rolls[index] != roll
+      end
+
+      true
     end
 
     def to_s
@@ -134,9 +144,11 @@ class DieRoll
     end
   end
 
+  # Rolls the dice, details on dice rolls and its values are preserved
+  # @param roll_str [String]
+  # @return [DieRoll]
   def self.roll(roll_str, crit: false, disadvantage: false, advantage: false)
     state = :initial
-    number_of_die = 1
     die_sides = 20
 
     die_count_str = ''

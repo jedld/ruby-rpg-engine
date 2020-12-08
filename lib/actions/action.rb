@@ -9,6 +9,10 @@ class Action
     @opts = opts
   end
 
+  def name
+    @action_type.to_s
+  end
+
   def to_s
     @action_type.to_s.humanize
   end

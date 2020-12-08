@@ -1,5 +1,20 @@
 module ItemLibrary
   class Object
+    class InvalidInteractionAction < StandardError
+      attr_reader :action, :valid_actions
+
+      # @param action [Symbol]
+      # @param valid_actions [Array]
+      def initialize(action, valid_actions = [])
+        @action = action
+        @valid_actions = valid_actions
+      end
+
+      def message
+        "Invalid action specified #{action}. should be in #{valid_actions.join(',')}"
+      end
+    end
+
     include Entity
 
     attr_accessor :hp, :statuses, :resistances, :name, :map
@@ -37,7 +52,7 @@ module ItemLibrary
       @properties[:size] || :medium
     end
 
-    def available_actions
+    def available_actions(entity, battle)
       []
     end
 

@@ -37,6 +37,12 @@ class EventManager
     EventManager.register_event_listener([:help], ->(event) { puts "#{event[:source].name&.colorize(:blue)} is helping to attack #{event[:target].name&.colorize(:red)}" })
     EventManager.register_event_listener([:second_wind], ->(event) { puts SecondWindAction.describe(event) })
     EventManager.register_event_listener([:heal], ->(event) { puts "#{event[:source].name&.colorize(:blue)} heals for #{event[:value]}hp" })
-    EventManager.register_event_listener([:object_interaction], ->(event) { puts event[:reason] })
+    EventManager.register_event_listener([:object_interaction], lambda { |event|
+                                                                  if event[:roll]
+                                                                    puts "#{event[:roll]} = #{event[:roll].result} -> #{event[:reason]}"
+                                                                  else
+                                                                    puts (event[:reason]).to_s
+                                                                  end
+                                                                })
   end
 end

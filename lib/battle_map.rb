@@ -90,11 +90,11 @@ class BattleMap
     @objects[pos_x][pos_y]
   end
 
-  def objects_near(entity)
+  def objects_near(entity, battle = nil)
     target_squares = entity.melee_squares(self, @entities[entity])
     objects = []
     @interactable_objects.each do |object, position|
-      objects << object if !object.available_actions.empty? && target_squares.include?(position)
+      objects << object if !object.available_actions(entity, battle).empty? && target_squares.include?(position)
     end
     objects
   end

@@ -24,6 +24,7 @@ RSpec.describe Npc do
 
     specify "#available_actions" do
       expect(@npc.available_actions(session).size).to eq 3
+      expect(@npc.available_actions(session).map(&:name)).to eq ["attack", "attack", "end"]
     end
   end
 end

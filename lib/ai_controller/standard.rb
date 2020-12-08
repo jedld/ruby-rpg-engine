@@ -76,7 +76,7 @@ module AiController
       # generate available targets
       valid_actions = []
 
-      if entity.has_action?(battle)
+      if entity.action?(battle)
         available_actions.select { |a| a.action_type == :attack }.each do |action|
           next unless action.npc_action
 
@@ -89,7 +89,7 @@ module AiController
       end
 
       # movement planner
-      if entity.has_action?(battle) && valid_actions.empty? && !enemy_positions.empty?
+      if entity.action?(battle) && valid_actions.empty? && !enemy_positions.empty?
         valid_actions += generate_moves_for_positions(battle, entity, enemy_positions, use_dash: true)
       end
 
@@ -106,7 +106,7 @@ module AiController
         valid_actions += generate_moves_for_positions(battle, entity, investigate_location)
       end
 
-      valid_actions << DodgeAction.new(battle.session, entity, :dodge) if entity.has_action?(battle)
+      valid_actions << DodgeAction.new(battle.session, entity, :dodge) if entity.action?(battle)
 
       return valid_actions.first unless valid_actions.empty?
     end

@@ -37,7 +37,7 @@ RSpec.describe PlayerCharacter do
     end
 
     specify '#available_actions' do
-      expect(@fighter.available_actions(session).map(&:to_s)).to eq ['Attack', 'Attack', 'Attack', 'Move', 'Use item', 'Interact', 'Second wind']
+      expect(@fighter.available_actions(session).map(&:to_s)).to eq ['Attack', 'Attack', 'Attack', 'Move', 'Use item', 'Interact', 'Inventory', 'Second wind']
     end
 
     specify '#to_h' do

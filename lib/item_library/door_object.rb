@@ -59,15 +59,28 @@ module ItemLibrary
       @properties[:token_closed].presence || '='
     end
 
-    def available_actions
-      return [:unlock] if locked?
+    # Returns available interaction with this object
+    # @param entity [PlayerCharacter]
+    # @return [Array]
+    def available_actions(entity, battle = nil)
+      if locked?
+        if entity.action?(battle) && entity.item_count('thieves_tools').positive? && entity.proficient?('thieves_tools')
+          return %i[unlock lockpick]
+        end
+
+        return [:unlock]
+      end
 
       return [] if someone_blocking_the_doorway?
 
       opened? ? [:close] : %i[open lock]
     end
 
+    # @param entity [Entity]
+    # @param action [InteractAction]
     def resolve(entity, action)
+      return if action.nil?
+
       case action
       when :open
         if !locked?
@@ -83,6 +96,16 @@ module ItemLibrary
         {
           action: action
         }
+      when :lockpick
+        proficiency_mod = entity.dex_mod + entity.proficiency_bonus
+        lock_pick_roll = DieRoll.roll("1d20+#{proficiency_mod}")
+
+        if lock_pick_roll.result >= lockpick_dc
+          { action: :lockpick_success, roll: lock_pick_roll, cost: :action }
+        else
+          lockpick_broken = DieRoll.roll('1d4')
+          { action: :lockpick_fail, roll: lock_pick_roll, lockpick_broken: lockpick_broken, cost: :action }
+        end
       when :unlock
         entity.item_count(:"#{key_name}").positive? ? { action: :unlock } : { action: :unlock_failed }
       when :lock
@@ -90,25 +113,51 @@ module ItemLibrary
       end
     end
 
+    # @param entity [Entity]
+    # @param result [Hash]
     def use!(entity, result)
-      if result[:action] == :open && closed?
-        open!
-      elsif result[:action] == :close && opened? && someone_blocking_the_doorway?
-        EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :close_failed, result: :failed, reason: 'Cannot close door since something is in the doorway')
-      elsif result[:action] == :close && opened?
+      case (result[:action])
+      when :open
+        open! if closed?
+      when :close
+        return unless opened?
+        if someone_blocking_the_doorway?
+          return EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :close_failed, result: :failed, reason: 'Cannot close door since something is in the doorway')
+        end
+
         close!
-        EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :close, result: :success, reason: 'Door closed.')
-      elsif result[:action] == :unlock && locked?
+      when :lockpick_success
+        return unless locked?
+
+        unlock!
+        EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :unlock, result: :success, lockpick: true, roll: result[:roll], reason: 'Door unlocked using lockpick.')
+      when :lockpick_fail
+        return unless locked?
+
+        if result[:lockpick_broken].result == 1
+          EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :unlock, result: :failed, roll: result[:roll], reason: 'Lockpicking failed and the theives tools are now broken')
+        else
+          EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :unlock, result: :failed, roll: result[:roll], reason: 'Lockpicking failed.')
+        end
+      when :unlock
+        return unless locked?
+
         unlock!
         EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :unlock, result: :success, reason: 'Door unlocked.')
-      elsif result[:action] == :lock && unlocked?
+      when :lock
+        return unless unlocked?
+
         lock!
         EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :lock, result: :success, reason: 'Door locked.')
-      elsif result[:action] == :door_locked
+      when :door_locked
         EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :open_failed, result: :failed, reason: 'Cannot open door since door is locked.')
-      elsif result[:action] == :unlock_failed
+      when :unlock_failed
         EventManager.received_event(source: self, user: entity, event: :object_interaction, sub_type: :unlock_failed, result: :failed, reason: 'Correct Key missing.')
       end
+    end
+
+    def lockpick_dc
+      (@properties[:lockpick_dc].presence || 10)
     end
 
     protected

@@ -21,9 +21,7 @@ module Entity
     end
     @hp = 0 if @hp <= 0
 
-    if battle
-      on_take_damage(battle, damage_params)
-    end
+    on_take_damage(battle, damage_params) if battle
 
     EventManager.received_event({ source: self, event: :damage, value: dmg })
   end
@@ -87,7 +85,9 @@ module Entity
 
         position = [cur_x + adjusted_x_off, cur_y + adjusted_y_off]
 
-        next if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
+        if position[0].negative? || position[0] >= map.size[0] || position[1].negative? || position[1] >= map.size[1]
+          next
+        end
 
         result << position
       end
@@ -179,10 +179,10 @@ module Entity
   end
 
   # check if current entity can see target at a certain location
-  def can_see?(cur_pos_x, cur_pos_y, target_entity, pos_x, pos_y, battle)
+  def can_see?(cur_pos_x, cur_pos_y, _target_entity, pos_x, pos_y, battle)
     return false unless battle.map.line_of_sight?(cur_pos_x, cur_pos_y, pos_x, pos_y)
 
-    #TODO, check invisiblity etc, range
+    # TODO, check invisiblity etc, range
     true
   end
 
@@ -196,7 +196,11 @@ module Entity
                                          end
   end
 
-  def has_action?(battle)
+  # Checks if an entity still has an action available
+  # @param battle [Battle]
+  def action?(battle = nil)
+    return true if battle.nil?
+
     (battle.entity_state_for(self)[:action].presence || 0).positive?
   end
 
@@ -293,6 +297,9 @@ module Entity
     @inventory[ammo_type.to_sym][:qty] = qty - amount
   end
 
+  # Retrieves the item count of an item in the entities inventory
+  # @param ammo_type [Symbol]
+  # @return [Number]
   def item_count(ammo_type)
     return 0 if @inventory[ammo_type.to_sym].nil?
 
@@ -306,28 +313,41 @@ module Entity
       next unless item_details[:usable]
       next if item_details[:consumable] && v.qty.zero?
 
-      { name: k, label: item_details[:name] || k, item: item_details, qty: v.qty, consumable: item_details[:consumable] }
+      { name: k.to_s, label: item_details[:name] || k, item: item_details, qty: v.qty, consumable: item_details[:consumable] }
     end.compact
   end
 
-  def usable_objects(map)
-    map.objects_near(self)
+  # Show usable objects near the entity
+  # @param map [BattleMap]
+  # @param battle [Battle]
+  # @return [Array[ItemLibrary::Object]]
+  def usable_objects(map, battle)
+    map.objects_near(self, battle)
   end
 
   def inventory
     @inventory.map do |k, v|
       OpenStruct.new(
         name: k.to_sym,
-        label: ->() { v[:label].presence || k.to_s.humanize },
+        label: -> { v[:label].presence || k.to_s.humanize },
         qty: v[:qty]
       )
     end
   end
 
+  def proficient?(prof)
+    @properties[:skills]&.include?(prof.to_s) ||
+      @properties[:tools]&.include?(prof.to_s)
+  end
+
+  # return [Integer]
+  def proficiency_bonus
+    @properties[:proficiency_bonus].presence || 2
+  end
+
   protected
 
-  def on_take_damage(battle, damage_params)
-  end
+  def on_take_damage(battle, damage_params); end
 
   def modifier_table(value)
     mod_table = [[1, 1, -5],

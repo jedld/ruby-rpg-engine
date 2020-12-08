@@ -66,7 +66,7 @@ class Npc
       if type == :attack
         # check all equipped and create attack for each
         npc_actions.map do |npc_action|
-          next if npc_action[:ammo] && (@inventory[npc_action[:ammo]]&.qty.presence || 0) <= 0
+          next if npc_action[:ammo] && item_count(npc_action[:ammo]) <= 0
 
           action = AttackAction.new(session, self, :attack)
           action.npc_action = npc_action
