@@ -27,4 +27,15 @@ RSpec.describe Npc do
       expect(@npc.available_actions(session).map(&:name)).to eq ["attack", "attack", "end"]
     end
   end
+
+  context "owlbear npc" do
+    before do
+      @npc = Npc.new(:owlbear, name: 'Grunt')
+    end
+
+    specify "#available actions" do
+      expect(@npc.available_actions(session).size).to eq 3
+      expect(@npc.available_actions(session).map(&:name)).to eq ["attack", "attack", "end"]
+    end
+  end
 end

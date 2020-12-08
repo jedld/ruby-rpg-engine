@@ -82,7 +82,7 @@ class CommandlineUI
         new_pos = [initial_pos[0] + 1, initial_pos[1]]
       elsif movement == 's'
         new_pos = [initial_pos[0], initial_pos[1] + 1]
-      elsif movement == 'x' || movement == ' '
+      elsif ['x', ' '].include? movement
         next if validation && !validation.call(new_pos)
 
         selected << initial_pos

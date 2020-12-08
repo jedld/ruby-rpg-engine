@@ -7,6 +7,7 @@ require 'lib/actions/action'
 require 'lib/concerns/fighter_class'
 require 'lib/concerns/rogue_class'
 require 'lib/actions/attack_action'
+require 'lib/actions/multiattack_action'
 require 'lib/actions/dodge_action'
 require 'lib/actions/help_action'
 require 'lib/actions/disengage_action'
@@ -20,6 +21,7 @@ require 'lib/utils/ray_tracer'
 require 'lib/battle_map'
 require 'lib/event_manager'
 require 'lib/concerns/health_flavor'
+require 'lib/concerns/multiattack'
 require 'lib/player_character'
 require 'lib/npc'
 require 'lib/ai_controller/path_compute'
@@ -42,8 +44,10 @@ class Session
   end
 
   def load_npcs
-    %w[goblin ogre].map do |kind|
-      Npc.new(kind, rand_life: true)
+    files = Dir[File.join(File.dirname(__FILE__), '..', 'npcs', '*.yml')]
+    files.map do |fname|
+      npc_name = File.basename(fname, ".yml")
+      Npc.new(npc_name, rand_life: true)
     end
   end
 

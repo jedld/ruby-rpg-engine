@@ -3,6 +3,7 @@ require 'random_name_generator'
 class Npc
   include Entity
   include HealthFlavor
+  prepend Multiattack
 
   attr_accessor :hp, :resistances, :npc_actions
 
@@ -23,6 +24,8 @@ class Npc
              RandomNameGenerator.new(RandomNameGenerator::GOBLIN).compose(1)
            when 'ogre'
              %w[Guzar Irth Grukurg Zoduk].sample(1).first
+           else
+             type.to_s.humanize
            end
     @name = opt.fetch(:name, name)
     entity_uid = SecureRandom.uuid
@@ -43,9 +46,7 @@ class Npc
     @properties[:token]
   end
 
-  def name
-    @name
-  end
+  attr_reader :name
 
   attr_reader :max_hp
 
@@ -61,17 +62,29 @@ class Npc
     @properties[:speed]
   end
 
-  def available_actions(session, _battle = nil)
+  def available_actions(session, battle = nil)
     %i[attack end].map do |type|
       if type == :attack
         # check all equipped and create attack for each
-        npc_actions.map do |npc_action|
+        actions = []
+        if class_feature?('multiattack') && MultiattackAction.can?(self, battle)
+          action = MultiattackAction.new(session, self, :multiattack)
+          actions += [
+            action
+          ]
+        end
+
+        actions += npc_actions.map do |npc_action|
           next if npc_action[:ammo] && item_count(npc_action[:ammo]) <= 0
+          next unless AttackAction.can?(self, battle)
 
           action = AttackAction.new(session, self, :attack)
+
           action.npc_action = npc_action
           action
         end.compact
+
+        actions
       else
         Action.new(session, self, type)
       end
