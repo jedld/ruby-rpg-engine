@@ -61,6 +61,10 @@ module AiController
       })
     end
 
+    # Tells AI to compute moves for an entity
+    # @param entity [Entity] The entity to compute moves for
+    # @param battle [Battle] An instance of the current battle
+    # @return [Array]
     def move_for(entity, battle)
       initialize_battle_data(battle, entity)
 
@@ -158,6 +162,8 @@ module AiController
     end
 
     # gain information about enemies in a fair and realistic way (e.g. using line of sight)
+    # @param battle [Battle]
+    # @param entity [Entity]
     def observe_enemies(battle, entity, enemy_positions = {})
       objects_around_me = battle.map.look(entity)
 

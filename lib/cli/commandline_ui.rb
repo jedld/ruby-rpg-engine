@@ -1,6 +1,10 @@
 class CommandlineUI
   attr_reader :battle, :map, :entity, :session
 
+  # Creates an instance of a commandline UI helper
+  # @param battle [Battle]
+  # @param map [BattleMap]
+  # @param entity [Entity]
   def initialize(battle, map, entity)
     @battle = battle
     @session = battle.session
@@ -9,11 +13,15 @@ class CommandlineUI
     @prompt = TTY::Prompt.new
   end
 
+  # Create a attack target selection CLI UI
+  # @param entity [Entity]
+  # @param action [Action]
+  # @param options [Hash]
   def attack_ui(entity, action, options = {})
     selected_targets = []
 
     target = @prompt.select("#{entity.name} targets") do |menu|
-      battle.valid_targets_for(entity, action, options).each do |target|
+      battle.valid_targets_for(entity, action, target_types: options[:target_types], range: options[:range]).each do |target|
         menu.choice target.name, target
       end
       menu.choice 'Manual'
@@ -29,7 +37,7 @@ class CommandlineUI
         return false if selected_entities.empty?
 
         selected_entities.detect do |selected_entity|
-          battle.valid_targets_for(entity, action, options.merge(include_objects: true)).include?(selected_entity)
+          battle.valid_targets_for(entity, action, target_types: options[:target_types], range: options[:range], include_objects: true).include?(selected_entity)
         end
       })
 
@@ -64,7 +72,7 @@ class CommandlineUI
       puts ' '
       puts map.render(line_of_sight: entity, select_pos: initial_pos)
       @prompt.say(map.thing_at(*initial_pos).map(&:name).join(',').to_s)
-      movement = @prompt.keypress(' (wsad) - movement, x - select, r - reset')
+      movement = @prompt.keypress('ESC- back, (wsad) - movement, x,space - select, r - reset')
 
       if movement == 'w'
         new_pos = [initial_pos[0], initial_pos[1] - 1]

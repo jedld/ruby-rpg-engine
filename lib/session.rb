@@ -1,6 +1,7 @@
 require 'colorize'
 require 'lib/die_roll'
 require 'lib/concerns/entity'
+require 'lib/item_library/object'
 require 'lib/concerns/movement_helper'
 require 'lib/actions/action'
 require 'lib/concerns/fighter_class'
@@ -26,7 +27,7 @@ require 'lib/ai_controller/standard'
 
 require 'lib/item_library/base_item'
 require 'lib/item_library/healing_potion'
-require 'lib/item_library/object'
+
 require 'lib/item_library/door_object'
 
 class Session

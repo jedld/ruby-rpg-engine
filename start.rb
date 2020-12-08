@@ -1,16 +1,15 @@
-require "rubygems"
-require "bundler/setup"
-require "tty-prompt"
-require "json"
-require "pry-byebug"
-require "active_support"
-require "active_support/core_ext"
-
+require 'rubygems'
+require 'bundler/setup'
+require 'tty-prompt'
+require 'json'
+require 'pry-byebug'
+require 'active_support'
+require 'active_support/core_ext'
 
 $LOAD_PATH << File.dirname(__FILE__)
 
-require "lib/session"
-require "lib/cli/commandline_ui"
+require 'lib/session'
+require 'lib/cli/commandline_ui'
 
 @prompt = TTY::Prompt.new
 @session = Session.new
@@ -18,8 +17,11 @@ require "lib/cli/commandline_ui"
 # event handlers
 EventManager.standard_cli
 
+# Starts a battle
+# @param chosen_characters [Array]
+# @param chosen_enemies [Array]
 def start_battle(chosen_characters, chosen_enemies)
-  map = BattleMap.new(@session, "maps/battle_sim")
+  map = BattleMap.new(@session, 'maps/battle_sim')
   battle = Battle.new(@session, map)
   chosen_characters.each_with_index do |chosen_character, index|
     battle.add(chosen_character, :a, position: "spawn_point_#{index + 1}", token: chosen_character.name[0])
@@ -33,7 +35,7 @@ def start_battle(chosen_characters, chosen_enemies)
   end
 
   battle.start
-  puts "Combat Order:"
+  puts 'Combat Order:'
 
   battle.combat_order.each_with_index do |entity, index|
     puts "#{index + 1}. #{entity.name}"
@@ -42,12 +44,12 @@ def start_battle(chosen_characters, chosen_enemies)
   battle.while_active do |entity|
     command_line = CommandlineUI.new(battle, map, entity)
 
-    puts ""
+    puts ''
     puts "#{entity.name}'s turn"
-    puts "==============================="
+    puts '==============================='
     if entity.npc?
       cycles = 0
-      begin
+      loop do
         cycles += 1
         action = controller.move_for(entity, battle)
 
@@ -58,11 +60,12 @@ def start_battle(chosen_characters, chosen_enemies)
 
         battle.action!(action)
         battle.commit(action)
-      end while !action.nil?
+        break if action.nil?
+      end
       puts map.render(line_of_sight: chosen_characters)
-      @prompt.keypress("Press space or enter to continue", keys: [:space, :return])
+      @prompt.keypress('Press space or enter to continue', keys: %i[space return])
     else
-      begin
+      loop do
         puts map.render(line_of_sight: entity)
         puts "#{entity.hp}/#{entity.max_hp} actions: #{entity.total_actions(battle)} bonus action: #{entity.total_bonus_actions(battle)}, movement: #{entity.available_movement(battle)}"
 
@@ -70,8 +73,8 @@ def start_battle(chosen_characters, chosen_enemies)
           entity.available_actions(@session, battle).each do |action|
             menu.choice action.label, action
           end
-          menu.choice "End", :end
-          menu.choice "Stop Battle", :stop
+          menu.choice 'End', :end
+          menu.choice 'Stop Battle', :stop
         end
 
         break if action == :end
@@ -82,22 +85,23 @@ def start_battle(chosen_characters, chosen_enemies)
 
         battle.action!(action)
         battle.commit(action)
-      end while true
+        break unless true
+      end
     end
   end
 
-  puts "------------"
+  puts '------------'
   puts "battle ended in #{battle.round + 1} rounds."
 end
 
 def training_dummy
-  chosen_characters = @prompt.multi_select("Select Character") do |menu|
+  chosen_characters = @prompt.multi_select('Select Character') do |menu|
     @session.load_characters.each do |character|
       menu.choice character.name, character
     end
   end
 
-  chosen_enemies = @prompt.multi_select("Select NPC") do |menu|
+  chosen_enemies = @prompt.multi_select('Select NPC') do |menu|
     @session.load_npcs.each do |character|
       menu.choice "#{character.name} (#{character.kind})", character
     end
@@ -108,25 +112,27 @@ end
 
 def dice_roller
   dice_roll_str = nil
-  begin
-    dice_roll_str = @prompt.ask("Dice Roll (ex. d20, d8+1) (a) > ")
+  loop do
+    dice_roll_str = @prompt.ask('Dice Roll (ex. d20, d8+1) (a) > ')
     dieRoll = DieRoll.roll dice_roll_str
-    puts "#{dieRoll.to_s} = #{dieRoll.result}"
-  end while dice_roll_str != "q"
+    puts "#{dieRoll} = #{dieRoll.result}"
+    break unless dice_roll_str != 'q'
+  end
 end
 
 def start
-  begin
-    answer = @prompt.select("Welcome to Wizards and Goblins (DnD 5e Adventure Engine)") do |menu|
+  loop do
+    answer = @prompt.select('Welcome to Wizards and Goblins (DnD 5e Adventure Engine)') do |menu|
       # menu.choice 'New Adventure ...', 1
-      menu.choice "Dice Roller", 1
-      menu.choice "Battle Simulator", 2
-      menu.choice "Exit", 3
+      menu.choice 'Dice Roller', 1
+      menu.choice 'Battle Simulator', 2
+      menu.choice 'Exit', 3
     end
     exit(1) if answer == 3
     dice_roller if answer == 1
     training_dummy if answer == 2
-  end while true
+    break unless true
+  end
 end
 
 start

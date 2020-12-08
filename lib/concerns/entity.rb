@@ -299,7 +299,7 @@ module Entity
 
   # Retrieves the item count of an item in the entities inventory
   # @param ammo_type [Symbol]
-  # @return [Number]
+  # @return [Integer]
   def item_count(ammo_type)
     return 0 if @inventory[ammo_type.to_sym].nil?
 
@@ -320,7 +320,7 @@ module Entity
   # Show usable objects near the entity
   # @param map [BattleMap]
   # @param battle [Battle]
-  # @return [Array[ItemLibrary::Object]]
+  # @return [Array]
   def usable_objects(map, battle)
     map.objects_near(self, battle)
   end

@@ -2,6 +2,9 @@ class Battle
   attr_accessor :combat_order, :round
   attr_reader :map, :entities, :session, :battle_log, :started
 
+  # Create an instance of a battle
+  # @param session [Session]
+  # @param map [BattleMap]
   def initialize(session, map)
     @session = session
     @entities = {}
@@ -20,6 +23,11 @@ class Battle
     @battle_field_events[event.to_sym] << handler
   end
 
+  # Adds an entity to the battle
+  # @param entity [Entity] The entity to add to the battle
+  # @param group [Symbol] A symbol denoting which group this entity belongs to
+  # @param position [Array, Symbol] Starting location in the map can be a position or a spawn point
+  # @param token [String, Symbol] The token to use
   def add(entity, group, position: nil, token: nil)
     return if @entities[entity]
 
@@ -98,10 +106,13 @@ class Battle
   end
 
   # Targets that make sense for a given action
-  def valid_targets_for(entity, action, options = {})
+  # @param entity [Entity]
+  # @param action [Action]
+  # @return [Entity]
+  def valid_targets_for(entity, action, target_types: [:enemies], range: nil, include_objects: false)
     raise 'not an action' unless action.is_a?(Action)
 
-    target_types = options[:target_types]&.map(&:to_sym) || [:enemies]
+    target_types = target_types&.map(&:to_sym) || [:enemies]
     entity_group = @entities[entity][:group]
     attack_range = if action.action_type == :help
                      5
@@ -113,7 +124,7 @@ class Battle
                        weapon[:range_max].presence || weapon[:range]
                      end
                    else
-                     options[:range]
+                     range
                    end
 
     raise 'attack range cannot be nil' if attack_range.nil?
@@ -129,7 +140,7 @@ class Battle
       k
     end.compact
 
-    if options[:include_objects]
+    if include_objects
       targets += @map.interactable_objects.map do |object, _position|
         next if object.dead?
         next if !target_types.include?(:ignore_los) && !@map.line_of_sight_for_ex?(entity, object)

@@ -86,6 +86,9 @@ class BattleMap
     false
   end
 
+  # Get object at map location
+  # @param pos_x [Integer]
+  # @param pos_y [Integer]
   def object_at(pos_x, pos_y)
     @objects[pos_x][pos_y]
   end
@@ -123,6 +126,10 @@ class BattleMap
     puts "place #{entity.name} at #{pos_x}, #{pos_y}"
   end
 
+  # Computes the distance between two entities
+  # @param entity1 [Entity]
+  # @param entity2 [Entity]
+  # @result [Integer]
   def distance(entity1, entity2)
     raise 'entity 1 param cannot be nil' if entity1.nil?
     raise 'entity 2 param cannot be nil' if entity2.nil?
@@ -140,6 +147,9 @@ class BattleMap
     end.flatten.min
   end
 
+  # Get all the location of the squares occupied by said entity (e.g. for large, huge creatures)
+  # @param entity [Entity]
+  # @return [Array]
   def entity_squares(entity)
     pos1_x, pos1_y = entity_or_object_pos(entity)
     entity_1_squares = []
@@ -151,6 +161,12 @@ class BattleMap
     entity_1_squares
   end
 
+  # Get all the location of the squares occupied by said entity (e.g. for large, huge creatures)
+  # and use specified entity location instead of current location on the map
+  # @param entity [Entity]
+  # @param pos1_x [Integer]
+  # @param pos1_y [Integer]
+  # @return [Array]
   def entity_squares_at_pos(entity, pos1_x, pos1_y)
     entity_1_squares = []
     (0...entity.token_size).each do |ofs_x|
@@ -162,6 +178,8 @@ class BattleMap
   end
 
   # Entity to look around
+  # @param entity [Entity] The entity to look around his line of sight
+  # @return [Hash] entities in line of sight
   def look(entity, distance = nil)
     @entities.map do |k, v|
       next if k == entity
@@ -173,6 +191,12 @@ class BattleMap
     end.compact.to_h
   end
 
+  # Compute if entity is in line of sight
+  # @param entity [Entity]
+  # @param pos2_x [Integer]
+  # @param pos2_y [Integer]
+  # @param distance [Integer]
+  # @return [TrueClass, FalseClass]
   def line_of_sight_for?(entity, pos2_x, pos2_y, distance = nil)
     raise 'cannot find entity' if @entities[entity].nil?
 
@@ -200,6 +224,9 @@ class BattleMap
     entity.is_a?(ItemLibrary::Object) ? interactable_objects[entity] : @entities[entity]
   end
 
+  # Get entity at map location
+  # @param pos_x [Integer]
+  # @param pos_y [Integer]
   def entity_at(pos_x, pos_y)
     entity_data = @tokens[pos_x][pos_y]
     return nil if entity_data.nil?
@@ -207,6 +234,9 @@ class BattleMap
     entity_data[:entity]
   end
 
+  # Get entity or object at map location
+  # @param pos_x [Integer]
+  # @param pos_y [Integer]
   def thing_at(pos_x, pos_y)
     [entity_at(pos_x, pos_y), object_at(pos_x, pos_y)].compact
   end
