@@ -14,7 +14,7 @@ dark_vision: 60
 token:
   - \/
   - └┘
-color: brown
+color: light_magenta
 ability:
   str: 20
   dex: 12

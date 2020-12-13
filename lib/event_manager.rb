@@ -30,7 +30,7 @@ class EventManager
       puts "#{event[:as_reaction] ? 'Opportunity Attack: ' : ''} #{event[:source].name&.colorize(:blue)} attacked #{event[:target].name} with #{event[:attack_name]} to Hit: #{event[:attack_roll].to_s.colorize(:green)} for #{damage_str} damage."
     })
     EventManager.register_event_listener([:damage], ->(event) { puts "#{event[:source].name} #{event[:source].describe_health}" })
-    EventManager.register_event_listener([:miss], ->(event) { puts "#{event[:as_reaction] ? 'Opportunity Attack: ' : ''} rolled #{event[:attack_roll]} ... #{event[:source].name&.colorize(:blue)} missed his attack #{event[:attack_name]} on #{event[:target].name}" })
+    EventManager.register_event_listener([:miss], ->(event) { puts "#{event[:as_reaction] ? 'Opportunity Attack: ' : ''} rolled #{event[:attack_roll]} ... #{event[:source].name&.colorize(:blue)} missed his attack #{event[:attack_name].colorize(:red)} on #{event[:target].name.colorize(:green)}" })
     EventManager.register_event_listener([:initiative], ->(event) { puts "#{event[:source].name&.colorize(:blue)} rolled a #{event[:roll]} = (#{event[:value]}) with dex tie break for initiative." })
     EventManager.register_event_listener([:move], ->(event) { puts "#{event[:source].name&.colorize(:blue)} moved #{(event[:path].size - 1) * 5}ft." })
     EventManager.register_event_listener([:dodge], ->(event) { puts "#{event[:source].name&.colorize(:blue)} takes the dodge action." })

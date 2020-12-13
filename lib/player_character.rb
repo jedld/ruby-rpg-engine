@@ -2,6 +2,7 @@ class PlayerCharacter
   include Entity
   include RogueClass
   include FighterClass
+  include Multiattack
 
   attr_accessor :hp, :other_counters, :resistances
 
@@ -232,7 +233,7 @@ class PlayerCharacter
   end
 
   def describe_health
-    ""
+    ''
   end
 
   private

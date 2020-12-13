@@ -75,25 +75,23 @@ module AiController
       enemy_positions = {}
       observe_enemies(battle, entity, enemy_positions)
 
-      available_actions = entity.available_actions(@session)
+      available_actions = entity.available_actions(@session, battle)
 
       # generate available targets
       valid_actions = []
 
-      if entity.action?(battle)
-        available_actions.select { |a| a.action_type == :attack }.each do |action|
-          next unless action.npc_action
+      available_actions.select { |a| a.action_type == :attack }.each do |action|
+        next unless action.npc_action
 
-          valid_targets = battle.valid_targets_for(entity, action)
-          unless valid_targets.first.nil?
-            action.target = valid_targets.first
-            valid_actions << action
-          end
+        valid_targets = battle.valid_targets_for(entity, action)
+        unless valid_targets.first.nil?
+          action.target = valid_targets.first
+          valid_actions << action
         end
       end
 
       # movement planner
-      if entity.action?(battle) && valid_actions.empty? && !enemy_positions.empty?
+      if valid_actions.empty? && !enemy_positions.empty?
         valid_actions += generate_moves_for_positions(battle, entity, enemy_positions, use_dash: true)
       end
 
