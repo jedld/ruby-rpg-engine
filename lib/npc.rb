@@ -3,7 +3,7 @@ require 'random_name_generator'
 class Npc
   include Entity
   include HealthFlavor
-  prepend Multiattack
+  include Multiattack
 
   attr_accessor :hp, :resistances, :npc_actions
 
@@ -67,16 +67,10 @@ class Npc
       if type == :attack
         # check all equipped and create attack for each
         actions = []
-        if class_feature?('multiattack') && MultiattackAction.can?(self, battle)
-          action = MultiattackAction.new(session, self, :multiattack)
-          actions += [
-            action
-          ]
-        end
 
         actions += npc_actions.map do |npc_action|
           next if npc_action[:ammo] && item_count(npc_action[:ammo]) <= 0
-          next unless AttackAction.can?(self, battle)
+          next unless AttackAction.can?(self, battle, npc_action: npc_action)
 
           action = AttackAction.new(session, self, :attack)
 
@@ -104,6 +98,8 @@ class Npc
   private
 
   def setup_attributes
+    super
+
     @max_hp = @opt[:rand_life] ? DieRoll.roll(@properties[:hp_die]).result : @properties[:max_hp]
     @hp = @max_hp
   end

@@ -54,6 +54,7 @@ class Battle
     end
 
     return if position.nil?
+    return if @map.nil?
 
     position.is_a?(Array) ? @map.place(*position, entity, token) : @map.place_at_spawn_point(position, entity, token)
   end
@@ -62,6 +63,8 @@ class Battle
     @entities.key?(entity)
   end
 
+  # @param entity [Entity]
+  # @return [Hash]
   def entity_state_for(entity)
     @entities[entity]
   end

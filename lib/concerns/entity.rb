@@ -135,6 +135,8 @@ module Entity
     value
   end
 
+  # @param battle [Battle]
+  # @return [Hash]
   def reset_turn!(battle)
     entity_state = battle.entity_state_for(self)
     entity_state.merge!({
@@ -147,6 +149,8 @@ module Entity
     entity_state[:statuses].delete(:dodge)
     entity_state[:statuses].delete(:disengage)
     battle.dismiss_help_actions_for(self)
+
+    entity_state
   end
 
   def dodging!(battle)
@@ -346,6 +350,9 @@ module Entity
   end
 
   protected
+
+  def setup_attributes
+  end
 
   def on_take_damage(battle, damage_params); end
 

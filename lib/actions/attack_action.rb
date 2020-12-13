@@ -2,8 +2,8 @@ class AttackAction < Action
   attr_accessor :target, :using, :npc_action, :as_reaction
   attr_reader :advantage_mod
 
-  def self.can?(entity, battle)
-    battle.nil? || entity.total_actions(battle).positive?
+  def self.can?(entity, battle, options = {})
+    battle.nil? || entity.total_actions(battle).positive? || entity.multiattack?(battle, options[:npc_action])
   end
 
   def to_s
@@ -80,6 +80,14 @@ class AttackAction < Action
         battle.entity_state_for(item[:source])[:reaction] -= 1
       else
         battle.entity_state_for(item[:source])[:action] -= 1
+      end
+
+      # handle multiattacks
+      battle.entity_state_for(item[:source])[:multiattack]&.each do |_group, attacks|
+        if attacks.include?(item[:attack_name])
+          attacks.delete(item[:attack_name])
+          item[:source].clear_multiattack!(battle) if attacks.empty?
+        end
       end
 
       # dismiss help actions
