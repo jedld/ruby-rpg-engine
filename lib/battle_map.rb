@@ -1,6 +1,9 @@
 class BattleMap
   attr_reader :base_map, :spawn_points, :size, :interactable_objects, :unaware_npcs
 
+  # Initializes a new instance of BattleMap class
+  # @param session [Session] the current game session
+  # @param map_file [String] the name of the map file to load
   def initialize(session, map_file)
     @session = session
     @map_file = map_file
@@ -105,7 +108,7 @@ class BattleMap
   def place(pos_x, pos_y, entity, token = nil)
     raise 'entity param is required' if entity.nil?
 
-    entity_data = { entity: entity, token: token || entity.name&.first }
+    entity_data = { entity: entity, token: token || entity.name}
     @tokens[pos_x][pos_y] = entity_data
     @entities[entity] = [pos_x, pos_y]
 
@@ -458,6 +461,16 @@ class BattleMap
         end
       end.join
     end.join("\n") + "\n"
+  end
+
+  def render_custom(line_of_sight: nil, path: [], select_pos: nil)
+    @base_map.transpose.each_with_index.collect do |row, row_index|
+      row.each_with_index.collect do |c, col_index|
+        entity = entity_at(col_index, row_index)
+
+        { entity: entity.token_image }  if entity
+      end
+    end
   end
 
   protected

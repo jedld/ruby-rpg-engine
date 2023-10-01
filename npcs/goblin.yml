@@ -7,6 +7,7 @@ size: small
 race:
 - humanoid
 - goblinoid
+token_image: token_goblin.png
 alignment: neutral_evil
 default_ac: 15
 max_hp: 7

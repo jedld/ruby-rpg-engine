@@ -27,6 +27,7 @@ legend:
     type: spawn_point
   g:
     name: Krizzit
+    token_image: token_goblin.png
     type: npc
     sub_type: goblin
     overrides:

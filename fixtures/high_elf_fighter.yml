@@ -6,6 +6,7 @@ classes:
 level: 7
 hit_die: inherit
 max_hp: 67
+token_image: gomerin.png
 ability:
   str: 12
   dex: 20

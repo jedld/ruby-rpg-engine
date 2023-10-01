@@ -46,6 +46,10 @@ class Npc
     @properties[:token]
   end
 
+  def token_image
+    @properties[:token_image]
+  end
+
   attr_reader :name
 
   attr_reader :max_hp

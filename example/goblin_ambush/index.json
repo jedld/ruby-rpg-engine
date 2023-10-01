@@ -1,0 +1,7 @@
+{
+  "tile_size" : 75,
+  "height" : 17,
+  "width" : 22,
+  "background" : "goblin_ambush.png",
+  "map" : "battle_sim"
+}

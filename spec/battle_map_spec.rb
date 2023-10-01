@@ -148,5 +148,9 @@ RSpec.describe BattleMap do
       door.close!
       expect(@battle_map.passable?(@fighter, 1,4)).to_not be
     end
+
+    specify "#render_custom" do
+      expect(@battle_map.render_custom).to eq([])
+    end
   end
 end

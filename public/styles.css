@@ -1,0 +1,32 @@
+.tiles-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1
+}
+
+.image-container {
+  z-index: 0;
+}
+
+.tile:hover {
+  border: 1px solid red;
+}
+
+.popover-menu {
+  background-color: blue;
+  color: white;
+  position: absolute;
+  z-index: 1;
+  padding: 2px;
+}
+
+.popover-menu ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.highlight {
+  color: white;
+  background-color: black;
+}

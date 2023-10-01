@@ -1,0 +1,18 @@
+- tiles.each_with_index do |layer, layer_index|
+  - layer.each_with_index do |row, row_index|
+    %div{:style => "display: flex;"}
+      - row.each_with_index do |tile, col_index|
+        .tile{:data => {:coords => {:x => col_index, :y => row_index}}}
+          - if tile.nil?
+            %div{:style => "position: relative;"}
+              %div{:style => "width: #{tile_size_px}px; height: #{tile_size_px}px;"}
+              %div{:class => "popover-menu", :style => "display: none;"}
+                %ul
+                  %li Info
+          - else
+            %div{:style => "position: relative;"}
+              %img{:src => "assets/#{tile[:entity]}", :style => "width: #{tile_size_px}px; height: #{tile_size_px}px;"}
+              %div{:class => "popover-menu", :style => "display: none;"}
+                %ul
+                  %li Info
+                  %li{ :data => {item: :move } } Move

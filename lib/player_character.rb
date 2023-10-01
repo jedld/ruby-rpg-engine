@@ -32,6 +32,10 @@ class PlayerCharacter
     @properties[:name]
   end
 
+  def token_image
+    @properties[:token_image]
+  end
+
   def max_hp
     @properties[:max_hp]
   end
