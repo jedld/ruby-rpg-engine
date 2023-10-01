@@ -2,8 +2,8 @@
   - layer.each_with_index do |row, row_index|
     %div{:style => "display: flex;"}
       - row.each_with_index do |tile, col_index|
-        .tile{:data => {:coords => {:x => col_index, :y => row_index}}}
-          - if tile.nil?
+        .tile{:data => {:coords => {:x => col_index, :y => row_index, difficult: tile[:difficult]}}}
+          - if tile[:entity].nil?
             %div{:style => "position: relative;"}
               %div{:style => "width: #{tile_size_px}px; height: #{tile_size_px}px;"}
               %div{:class => "popover-menu", :style => "display: none;"}

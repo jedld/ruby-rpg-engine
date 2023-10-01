@@ -30,7 +30,6 @@ $(document).ready(function() {
 
     switch (data.type) {
       case 'move':
-        debugger;
         refreshTileSet();
         break;
       case 'message':
@@ -52,6 +51,7 @@ $(document).ready(function() {
       var coordsy = $(this).data('coords-y');
       if (coordsx != source.x || coordsy != source.y) {
         moveMode = false
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ws.send(JSON.stringify({type: 'message', user: 'username', message: {action: "move", from: source, to: {x: coordsx, y: coordsy} }}));
       }
     } else {
@@ -60,14 +60,71 @@ $(document).ready(function() {
     }
   });
 
+  var moveMode = false;
+  var source = null;
+
+  var canvas = document.createElement('canvas');
+  canvas.width = document.documentElement.clientWidth;
+  canvas.height = document.documentElement.clientHeight;
+  canvas.style.top = '0px';
+  canvas.style.position = "absolute";
+  canvas.style.zIndex = 999;
+  canvas.style.pointerEvents = "none"; // Add this line
+  const body = document.getElementsByTagName("body")[0];
+  body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+
   $('.tiles-container').on('mouseover', '.tile', function() {
     var coordsx = $(this).data('coords-x');
     var coordsy = $(this).data('coords-y');
     $('#coords-box').html('<p>X: ' + coordsx + '</p><p>Y: ' + coordsy + '</p>');
+    if (moveMode) {
+      $.ajax({
+        url: '/path',
+        type: 'GET',
+        data: {from: source, to: {x: coordsx, y: coordsy}},
+        success: function(data) {
+          // data is of the form [[0,0],[1,1],[2,2]]
+          console.log('Path request successful:', data);
+          $('.highlighted').removeClass('highlighted'); 
+          // Highlight the squares returned by data
+
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.beginPath();
+          ctx.strokeStyle = 'red';
+          ctx.lineWidth = 5;
+          data.forEach(function(coords, index) {
+            var x = coords[0];
+            var y = coords[1];
+            var tile = $('.tile[data-coords-x="' + x + '"][data-coords-y="' + y + '"]');
+            var rect = tile[0].getBoundingClientRect();
+            var centerX = rect.left + rect.width / 2;
+            var centerY = rect.top + rect.height / 2;
+            if (index === 0) {
+              ctx.moveTo(centerX, centerY);
+            } else {
+              ctx.lineTo(centerX, centerY);
+            }
+            if (index === data.length - 1) {
+              var arrowSize = 10;
+              var angle = Math.atan2(centerY - prevY, centerX - prevX);
+              ctx.moveTo(centerX - arrowSize * Math.cos(angle - Math.PI / 6), centerY - arrowSize * Math.sin(angle - Math.PI / 6));
+              ctx.lineTo(centerX, centerY);
+              ctx.lineTo(centerX - arrowSize * Math.cos(angle + Math.PI / 6), centerY - arrowSize * Math.sin(angle + Math.PI / 6));
+            }
+            prevX = centerX;
+            prevY = centerY;
+          });
+          ctx.stroke();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error('Error requesting path:', textStatus, errorThrown);
+        }
+      });
+    }
   });
 
-  var moveMode = false;
-  var source = null;
 
   $('.tiles-container').on('click', '.popover-menu li', function() {
     // retrieve data attributes from the parent .tile element

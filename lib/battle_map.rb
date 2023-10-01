@@ -467,8 +467,14 @@ class BattleMap
     @base_map.transpose.each_with_index.collect do |row, row_index|
       row.each_with_index.collect do |c, col_index|
         entity = entity_at(col_index, row_index)
-
-        { entity: entity.token_image }  if entity
+        shared_attributes = {
+          difficult: difficult_terrain?(nil, col_index, row_index)
+        }
+        if entity
+          shared_attributes.merge({ entity: entity.token_image  })
+        else
+          shared_attributes
+        end
       end
     end
   end

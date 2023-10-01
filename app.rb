@@ -9,6 +9,7 @@ $LOAD_PATH << "."
 
 require 'active_support/core_ext/hash'
 require 'lib/session'
+
 require 'mini_magick'
 require 'json'
 
@@ -35,7 +36,9 @@ BACKGROUND = index_hash["background"]
 BATTLEMAP = index_hash["map"]
 
 session = Session.new
-set :map, BattleMap.new(session, File.join(LEVEL, BATTLEMAP))
+battlemap = BattleMap.new(session, File.join(LEVEL, BATTLEMAP))
+set :map, battlemap
+
 # @battle = Battle.new(session, @map)
 # @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.yml'))
 # @npc = Npc.new(:goblin, name: 'a')
@@ -61,6 +64,14 @@ get '/assets/:asset_name' do
     status 404
     "File not found: #{asset_name}"
   end
+end
+
+get '/path' do
+  content_type :json
+  source = params[:from]
+  destination = params[:to]
+  entity = settings.map.entity_at(source['x'].to_i, source['y'].to_i)
+  AiController::PathCompute.new(nil, settings.map, entity).compute_path(source['x'].to_i, source['y'].to_i, destination['x'].to_i, destination['y'].to_i).to_json
 end
 
 get '/' do
