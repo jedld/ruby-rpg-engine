@@ -150,7 +150,72 @@ RSpec.describe BattleMap do
     end
 
     specify "#render_custom" do
-      expect(@battle_map.render_custom).to eq([])
+      expect(@battle_map.render_custom).to eq(
+        [
+          [
+            { difficult: false },
+            { difficult: false },
+            { difficult: false },
+            { difficult: false },
+            { difficult: false },
+            { difficult: false },
+            { difficult: false }
+          ],
+        [
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false }
+        ],
+        [
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false }
+        ],
+        [
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false }
+        ],
+        [
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false }
+        ],
+        [
+          { difficult: true, entity: "gomerin.png" },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false }
+        ],
+        [
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false },
+          { difficult: false }
+        ]
+      ])
     end
   end
 end
