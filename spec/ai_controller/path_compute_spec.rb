@@ -1,6 +1,20 @@
 RSpec.describe AiController::PathCompute do
   let(:session) { Session.new }
 
+  context "large map" do
+    before do
+      String.disable_colorization true
+      @map = BattleMap.new(session, 'fixtures/path_finding_test')
+      @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.yml'))
+      @path_compute = AiController::PathCompute.new(nil, @map, @fighter)
+    end
+
+
+    specify 'compute' do
+      expect(@path_compute.compute_path(0, 0, 6, 6)).to eq([[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 4], [6, 4], [7, 5], [6, 6]])
+    end
+  end
+
   context "medium size" do
     before do
       String.disable_colorization true
