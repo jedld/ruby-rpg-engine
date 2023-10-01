@@ -471,7 +471,12 @@ class BattleMap
           difficult: difficult_terrain?(nil, col_index, row_index)
         }
         if entity
-          shared_attributes.merge({ entity: entity.token_image  })
+          m_x, m_y = @entities[entity]
+          attributes = shared_attributes.merge({ hp: entity.hp, max_hp: entity.max_hp, entity_size: entity.size  })
+          if (m_x == col_index) && (m_y == row_index)
+            attributes = attributes.merge(entity: entity.token_image)
+          end
+          attributes
         else
           shared_attributes
         end

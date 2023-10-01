@@ -4,15 +4,15 @@
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}
     %title My RPG Game
     %link{:href => "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css", :rel => "stylesheet"}
-    %link{:href => "/styles.css", :rel => "stylesheet"}
+    %link{:href => "/styles.css?salt=#{Time.now.to_i}", :rel => "stylesheet"}
     %script{:src => "https://code.jquery.com/jquery-3.2.1.min.js"}
     %script{:src => "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"}
-    %script{:src => "/engine.js"}
+    %script{:src => "/engine.js?salt=#{Time.now.to_i}"}
   %body
     %div#coords-box{:style => "position: fixed; top: 0; right: 0; background-color: white; padding: 10px; border: 1px solid black;"}
     %div.image-container
       %image{:src=>background_path, :style=>"overflow: scroll; height: #{background_height}px; width: #{background_width}px; object-fit: cover; object-position: top;"}
-    %div.tiles-container
+    %div.tiles-container{:data=>{:width=>background_width, :height=>background_height}}
       
                   
                 

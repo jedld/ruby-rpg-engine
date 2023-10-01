@@ -64,8 +64,8 @@ $(document).ready(function() {
   var source = null;
 
   var canvas = document.createElement('canvas');
-  canvas.width = document.documentElement.clientWidth;
-  canvas.height = document.documentElement.clientHeight;
+  canvas.width = $('.tiles-container').data('width');
+  canvas.height = $('.tiles-container').data('height');
   canvas.style.top = '0px';
   canvas.style.position = "absolute";
   canvas.style.zIndex = 999;
@@ -85,38 +85,46 @@ $(document).ready(function() {
         data: {from: source, to: {x: coordsx, y: coordsy}},
         success: function(data) {
           // data is of the form [[0,0],[1,1],[2,2]]
-          console.log('Path request successful:', data);
+          console.log('Path request successful:', data.path);
           $('.highlighted').removeClass('highlighted'); 
           // Highlight the squares returned by data
-
+          var cost = data.cost
+          var rect = canvas.getBoundingClientRect();
+          var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+          var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.beginPath();
           ctx.strokeStyle = 'red';
           ctx.lineWidth = 5;
-          data.forEach(function(coords, index) {
+          data.path.forEach(function(coords, index) {
             var x = coords[0];
             var y = coords[1];
             var tile = $('.tile[data-coords-x="' + x + '"][data-coords-y="' + y + '"]');
-            var rect = tile[0].getBoundingClientRect();
-            var centerX = rect.left + rect.width / 2;
-            var centerY = rect.top + rect.height / 2;
+            var tileRect = tile[0].getBoundingClientRect();
+            var centerX = tileRect.left + tileRect.width / 2 + scrollLeft;
+            var centerY = tileRect.top + tileRect.height / 2 + scrollTop;
+
             if (index === 0) {
               ctx.moveTo(centerX, centerY);
             } else {
               ctx.lineTo(centerX, centerY);
             }
-            if (index === data.length - 1) {
+            if (index === data.path.length - 1) {
               var arrowSize = 10;
               var angle = Math.atan2(centerY - prevY, centerX - prevX);
               ctx.moveTo(centerX - arrowSize * Math.cos(angle - Math.PI / 6), centerY - arrowSize * Math.sin(angle - Math.PI / 6));
               ctx.lineTo(centerX, centerY);
               ctx.lineTo(centerX - arrowSize * Math.cos(angle + Math.PI / 6), centerY - arrowSize * Math.sin(angle + Math.PI / 6));
+              ctx.font = "20px Arial";
+              ctx.fillStyle = "red";
+              ctx.fillText(cost + "ft", centerX, centerY  +  tileRect.height / 2);
             }
             prevX = centerX;
             prevY = centerY;
           });
           ctx.stroke();
+          
         },
         error: function(jqXHR, textStatus, errorThrown) {
           console.error('Error requesting path:', textStatus, errorThrown);

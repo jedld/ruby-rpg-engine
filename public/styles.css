@@ -5,6 +5,10 @@
   z-index: 1
 }
 
+.tile {
+  position: absolute
+}
+
 .image-container {
   z-index: 0;
 }

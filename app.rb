@@ -71,7 +71,9 @@ get '/path' do
   source = params[:from]
   destination = params[:to]
   entity = settings.map.entity_at(source['x'].to_i, source['y'].to_i)
-  AiController::PathCompute.new(nil, settings.map, entity).compute_path(source['x'].to_i, source['y'].to_i, destination['x'].to_i, destination['y'].to_i).to_json
+  path = AiController::PathCompute.new(nil, settings.map, entity).compute_path(source['x'].to_i, source['y'].to_i, destination['x'].to_i, destination['y'].to_i)
+  cost = settings.map.movement_cost(entity, path)
+  { path: path, cost: cost }.to_json
 end
 
 get '/' do

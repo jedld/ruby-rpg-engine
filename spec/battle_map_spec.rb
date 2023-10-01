@@ -198,7 +198,7 @@ RSpec.describe BattleMap do
           { difficult: false }
         ],
         [
-          { difficult: true, entity: "gomerin.png" },
+          { difficult: true, entity: "gomerin.png", :hp=>67, :max_hp=>67 },
           { difficult: false },
           { difficult: false },
           { difficult: false },

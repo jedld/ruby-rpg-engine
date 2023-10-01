@@ -7,6 +7,11 @@ module Entity
     EventManager.received_event({ source: self, event: :heal, previous: prev_hp, new: @hp, value: amt })
   end
 
+
+  def token_image
+    @properties[:token_image] || "#{@properties[:sub_type]}.png"
+  end
+
   def take_damage!(damage_params, battle = nil)
     dmg = damage_params[:damage].result
     dmg += damage_params[:sneak_attack].result unless damage_params[:sneak_attack].nil?

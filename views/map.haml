@@ -2,7 +2,7 @@
   - layer.each_with_index do |row, row_index|
     %div{:style => "display: flex;"}
       - row.each_with_index do |tile, col_index|
-        .tile{:data => {:coords => {:x => col_index, :y => row_index, difficult: tile[:difficult]}}}
+        .tile{:data => {:coords => {:x => col_index, :y => row_index, difficult: tile[:difficult]}}, :style => "top: #{row_index * tile_size_px}; left: #{col_index * tile_size_px}"}
           - if tile[:entity].nil?
             %div{:style => "position: relative;"}
               %div{:style => "width: #{tile_size_px}px; height: #{tile_size_px}px;"}
@@ -11,8 +11,15 @@
                   %li Info
           - else
             %div{:style => "position: relative;"}
-              %img{:src => "assets/#{tile[:entity]}", :style => "width: #{tile_size_px}px; height: #{tile_size_px}px;"}
+              - entity_size = tile[:entity_size]
+              - multiplier = 1
+              - multiplier = 2 if entity_size == "large"
+              - image_size_px = tile_size_px * multiplier
+              %img.npc{:src => "assets/#{tile[:entity]}", :style => "width: #{image_size_px}px; height: #{image_size_px}px;"}
               %div{:class => "popover-menu", :style => "display: none;"}
                 %ul
                   %li Info
                   %li{ :data => {item: :move } } Move
+              - health_width = tile[:hp]/tile[:max_hp] * image_size_px
+              %div{:style => "position: absolute; top: 0; left: 0; width: #{health_width}px; height: 5px; background-color: green;"}
+                  
