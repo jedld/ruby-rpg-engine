@@ -9,6 +9,7 @@ function playSound(url) {
 
 $(document).ready(function() {
   var active_background_sound = null;
+  var active_track_id = -1;
 
   var ws = new WebSocket('ws://' + window.location.host + '/event');
   function keepAlive(timeout = 5000) { 
@@ -59,7 +60,9 @@ $(document).ready(function() {
 
         active_background_sound = new Audio('/assets/' + url);
         active_background_sound.loop = true;
+        active_track_id = data.message.id;
         active_background_sound.play();
+        $('.volume-slider').val(active_background_sound.volume * 100);
         break;
       case 'stoptrack':
           if (active_background_sound) {
@@ -73,13 +76,37 @@ $(document).ready(function() {
             gainNode.addEventListener('ended', function() {
               active_background_sound.pause();
               active_background_sound = null;
+              active_track_id = -1;
             });
           }
-
+        break;
+      case 'volume':
+        console.log('volume ' + data.message.volume);
+        if (active_background_sound) {
+          active_background_sound.volume = data.message.volume / 100;
+          $('.volume-slider').val(data.message.volume, true);
+        }
         break;
     }
   };
 
+  // Listen for changes on the volume slider
+  $('.modal-content').on('input', '.volume-slider', function() {
+    if (active_background_sound) {
+      $.ajax({
+        url: '/volume',
+        type: 'POST',
+        data: { volume: $(this).val() },
+        success: function(data) {
+          console.log('Volume updated successfully');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error('Error updating volume:', textStatus, errorThrown);
+        }
+      });
+    }
+  });
+  
   // Use event delegation to handle popover menu clicks
   $('.tiles-container').on('click', '.tile', function() {
     if (moveMode) {
@@ -215,7 +242,7 @@ $(document).ready(function() {
   });
 
   $('#select-soundtrack').click(function() {
-    $.get('/tracks', function(data) {
+    $.get('/tracks', { track_id: active_track_id }, function(data) {
       $('.modal-content').html(data);
       $('#modal-1').modal('show');
     });
@@ -226,7 +253,7 @@ $(document).ready(function() {
     $.ajax({
       url: '/sound',
       type: 'POST',
-      data: {track_id: trackId},
+      data: {track_id: trackId },
       success: function(data) {
         console.log('Sound request successful:', data);
         $('#modal-1').modal('hide');

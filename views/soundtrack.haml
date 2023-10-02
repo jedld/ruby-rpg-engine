@@ -5,13 +5,17 @@
 %div.modal-body
   %div.radio
     %label
-      %input{:type => "radio", :name => "track_id", :value => -1}
+      %input{:type => "radio", :name => "track_id", :value => -1, :checked => (track_id < 0)}
       None
   - tracks.each do |track|
     %div.radio
       %label
-        %input{:type => "radio", :name => "track_id", :value => track.id}
+        %input{:type => "radio", :name => "track_id", :value => track.id, :checked => (track_id == track.id)}
         = track.name
+  - if track_id >= 0
+    %div.volume-controls
+      %label Volume:
+      %input{:type => "range", :min => 0, :max => 100, :value => 50, :class => "volume-slider"}  
 %div.modal-footer
   %button.btn.btn-default{"data-dismiss" => "modal", :type => "button"} Close
   %button.btn.btn-primary.play{:type => "button"} Play

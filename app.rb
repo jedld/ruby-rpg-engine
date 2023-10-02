@@ -59,18 +59,10 @@ end
 get '/assets/:asset_name' do
   asset_name = params[:asset_name]
   file_path = File.join(LEVEL, "assets", asset_name)
-
   if File.exist?(file_path)
-    stream do |out|
-      File.open(file_path, 'rb') do |file|
-        while chunk = file.read(1024)
-          out << chunk
-        end
-      end
-    end
+    file_contents = File.read(file_path)
   else
-    status 404
-    "File not found: #{asset_name}"
+    halt 404
   end
 end
 
@@ -125,7 +117,7 @@ get '/event' do
        logger.info("message #{data['message']}")
        if (data['message']['action'] == 'move')
         entity = settings.map.entity_at(data['message']['from']['x'], data['message']['from']['y'])
-        
+
         if (settings.map.placeable?(entity, data['message']['to']['x'], data['message']['to']['y']))
           settings.map.move_to!(entity, data['message']['to']['x'], data['message']['to']['y'])
           settings.sockets.each do |socket|
@@ -160,7 +152,7 @@ get "/tracks" do
   tracks = SOUNDTRACKS.each_with_index.collect do |track, index|
     OpenStruct.new({id: index, url: track['file'], name: track['name'] })
   end
-  haml :soundtrack, locals: { tracks: tracks }
+  haml :soundtrack, locals: { tracks: tracks, track_id: params[:track_id].to_i }
 end
 
 post "/sound" do
@@ -173,8 +165,17 @@ post "/sound" do
   else
     url = SOUNDTRACKS[track_id]['file']
     settings.sockets.each do |socket|
-      socket.send({type: 'track', message: { url: url }}.to_json)
+      socket.send({type: 'track', message: { url: url, id: track_id }}.to_json)
     end
+  end
+  { status: 'ok' }.to_json
+end
+
+post "/volume" do
+  content_type :json
+  volume = params[:volume].to_i
+  settings.sockets.each do |socket|
+    socket.send({type: 'volume', message: { volume: volume }}.to_json)
   end
   { status: 'ok' }.to_json
 end
