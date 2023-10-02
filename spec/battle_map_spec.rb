@@ -42,6 +42,12 @@ RSpec.describe BattleMap do
       end
     end
 
+    specify '#entity_by_uid' do
+      expect(@battle_map.entity_by_uid(@npc.entity_uid)).to be_nil
+      @battle_map.place(3, 3, @npc, "g")
+      expect(@battle_map.entity_by_uid(@npc.entity_uid)).to eq @npc
+    end
+
     # distance in squares
     specify "#distance" do
       @battle_map.place(3, 3, @npc, "g")

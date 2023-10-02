@@ -90,12 +90,12 @@ get '/' do
     tiles_dimenstion_height = HEIGHT * TILE_PX
     tiles_dimenstion_width = WIDTH * TILE_PX
 
-    haml :index, locals: { tiles: @my_2d_array, tile_size_px: TILE_PX, background_path: "assets/#{BACKGROUND}", background_width: tiles_dimenstion_width, background_height: tiles_dimenstion_height }
+    haml :index, locals: { tiles: @my_2d_array, tile_size_px: TILE_PX, background_path: "assets/#{BACKGROUND}", background_width: tiles_dimenstion_width, background_height: tiles_dimenstion_height, battle: settings.battle }
 end
 
 get '/update' do
   @my_2d_array = [settings.map.render_custom]
-  haml :map, locals: { tiles: @my_2d_array, tile_size_px: TILE_PX}
+  haml :map, locals: { tiles: @my_2d_array, tile_size_px: TILE_PX, is_setup: (params[:is_setup] == 'true')}
 end
 
 get '/event' do
@@ -178,4 +178,25 @@ post "/volume" do
     socket.send({type: 'volume', message: { volume: volume }}.to_json)
   end
   { status: 'ok' }.to_json
+end
+
+
+# sample request: {"battle_turn_order"=>{"0"=>{"id"=>"f437404e-52f9-40d2-b7d4-d6390d397d30", "group"=>"a"}, "1"=>{"id"=>"afe24663-a079-4390-9fbb-c12218b46f7b", "group"=>"a"}}}::1 - - [02/Oct/2023:19:26:41 +0800] "POST /battle HTTP/1.1" 2
+post "/battle" do
+  content_type :json
+  settings.battle = Battle.new(session, settings.map)
+  params[:battle_turn_order].values.each do |param_item|
+    entity = settings.map.entity_by_uid(param_item['id'])
+    settings.battle.add(entity, param_item['group'].to_sym)
+    entity.reset_turn!(settings.battle)
+  end
+  settings.battle.start
+  settings.sockets.each do |socket|
+    socket.send({type: 'initiative', message: { }}.to_json)
+  end
+  { status: 'ok' }.to_json
+end
+
+get "/turn_order" do
+  haml :battle, locals: { battle: settings.battle }
 end

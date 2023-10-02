@@ -484,6 +484,10 @@ class BattleMap
     end
   end
 
+  def entity_by_uid(uid)
+    @entities.keys.find { |entity| entity.entity_uid == uid }
+  end
+
   protected
 
   def entity_or_object_pos(thing)

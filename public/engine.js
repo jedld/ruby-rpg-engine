@@ -20,15 +20,29 @@ $(document).ready(function() {
   }
   
 
-  function refreshTileSet() {
+  function refreshTileSet(is_setup) {
     $.ajax({
       url: '/update',
       type: 'GET',
+      data: { is_setup: is_setup },
       success: function(data) {
         $('.tiles-container').html(data);
       },
       error: function(jqXHR, textStatus, errorThrown) {
         console.error('Error refreshing tiles container:', textStatus, errorThrown);
+      }
+    });
+  }
+
+  function refreshTurnOrder() {
+    $.ajax({
+      url: '/turn_order',
+      type: 'GET',
+      success: function(data) {
+        $('#turn-order').html(data);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error('Error refreshing turn order:', textStatus, errorThrown);
       }
     });
   }
@@ -87,6 +101,11 @@ $(document).ready(function() {
           $('.volume-slider').val(data.message.volume, true);
         }
         break;
+      case 'initiative':
+        console.log('initiative ' + data.message);
+        refreshTurnOrder();
+        $('#start-initiative').hide();
+        break;
     }
   };
 
@@ -126,6 +145,8 @@ $(document).ready(function() {
 
   var moveMode = false;
   var source = null;
+  var battle_setup = false;
+  var battle_entity_list = [];
 
   var canvas = document.createElement('canvas');
   canvas.width = $('.tiles-container').data('width');
@@ -226,20 +247,84 @@ $(document).ready(function() {
   })
 
   $('#start-battle').click(function() {
+    $('#battle-turn-order').fadeIn()
+    battle_setup = true
+    refreshTileSet(true)
+  });
+
+  $('#start-initiative').click(function() {
+    // Get the list of items in the battle turn order
+    const $turnOrderItems = $('.turn-order-item');
+    const battle_turn_order = $turnOrderItems.map(function() {
+      const id = $(this).data('id');
+      const group = $(this).find('.group-select').val();
+      return { id, group };
+    }).get();
+
+    // Call the POST /battle endpoint with the list of items in the battle turn order
     $.ajax({
-      url: '/start',
-      type: 'GET',
+      url: '/battle',
+      type: 'POST',
+      data: { battle_turn_order },
       success: function(data) {
-        console.log('Start request successful:', data);
-        $('#start-battle').toggle()
-        $('#modal-1').modal('show');
+        $('.add-to-turn-order').hide();
       },
       error: function(jqXHR, textStatus, errorThrown) {
-        console.error('Error requesting start:', textStatus, errorThrown);
+        console.error('Error requesting battle:', textStatus, errorThrown);
       }
     });
+  })
+  
+    $('.tiles-container').on('click', '.add-to-turn-order', function(event) {
+    const $this = $(this);
+    const { id, name } = $this.data();
 
-  });
+    const index = battle_entity_list.findIndex(entity => entity.id === id);
+
+    if (index === -1) {
+      battle_entity_list.push({ id, group: 'a', name });
+      $this.find('i.glyphicon').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+      $this.css('background-color', 'red');
+      
+      // Add name to turn order list
+      const $turnOrder = $('#turn-order');
+      const $newItem = $('<div data-id="'+ id +'">').addClass('turn-order-item').text(name);
+      const $removeButton = $('<button>').addClass('remove-turn-order-item').text('Remove');
+      const $groupSelect = $('<select>').addClass('group-select').append(
+        $('<option>').val('a').text('Group A'),
+        $('<option>').val('b').text('Group B'),
+        $('<option>').val('c').text('Group C')
+      );
+      const $turnOrderItem = $('<div>').addClass('turn-order-item').append(
+        $('<span>').addClass('name').text(name),
+        $groupSelect,
+        $removeButton
+      );
+      $newItem.append($groupSelect);
+      $newItem.append($removeButton);
+      $turnOrder.append($newItem);
+      
+    } else {
+      battle_entity_list.splice(index, 1);
+      $this.find('i.glyphicon').removeClass('glyphicon-minus').addClass('glyphicon-plus');
+      $this.css('background-color', 'green');
+      
+      // Remove name from turn order list
+      const $turnOrderItem = $('.turn-order-item').filter(function() {
+        return $(this).text() === name;
+      });
+      $turnOrderItem.remove();
+    }
+
+    event.stopPropagation();
+    });
+    
+    // Remove turn order item on button click
+    $('#turn-order').on('click', '.remove-turn-order-item', function() {
+      $(this).parent().remove();
+    });
+
+    
 
   $('#select-soundtrack').click(function() {
     $.get('/tracks', { track_id: active_track_id }, function(data) {
@@ -263,6 +348,34 @@ $(document).ready(function() {
       }
     });
   });
+
+
+$(function() {
+  var isDragging = false;
+  var lastX, lastY;
+
+  $('#battle-turn-order .header').mousedown(function(e) {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+
+  $(document).mousemove(function(e) {
+    if (isDragging) {
+      var deltaX = e.clientX - lastX;
+      var deltaY = e.clientY - lastY;
+      var offset = $('#battle-turn-order').offset();
+      $('#battle-turn-order').offset({
+        top: offset.top + deltaY,
+        left: offset.left + deltaX
+      });
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }
+  }).mouseup(function() {
+    isDragging = false;
+  });
+});
 
 });
 

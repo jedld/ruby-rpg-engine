@@ -31,6 +31,13 @@
           %div.modal-footer
             %button.btn.btn-default{"data-dismiss" => "modal", :type => "button"} Close
             %button.btn.btn-primary{:type => "button"} Save changes
-  
+    %div#battle-turn-order{ :style => "#{battle.nil? ? 'display: none' : ''}"}
+      %div.header{:style => "cursor: move; "} Battle Turn Order
+      - if !battle
+        %button#start-initiative.btn.btn-primary{:style => "margin-top: 20px;"} Roll Initiative!
+      %div#turn-order
+        - if battle
+          != haml :battle, :locals => {battle: battle}
+    
                   
                 

@@ -1,6 +1,6 @@
 class Battle
   attr_accessor :combat_order, :round
-  attr_reader :map, :entities, :session, :battle_log, :started
+  attr_reader :map, :entities, :session, :battle_log, :started, :current_turn_index
 
   # Create an instance of a battle
   # @param session [Session]

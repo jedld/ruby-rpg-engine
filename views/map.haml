@@ -11,13 +11,20 @@
                   %li Info
               %div{:class => "floating-text-bar", :style => "background-color: white; color: black;"}
                 = tile[:name]
+
           - else
             %div.entity{:style => "position: relative;", :data => {:id => tile[:id]}}
+
               - entity_size = tile[:entity_size]
               - multiplier = 1
               - multiplier = 2 if entity_size == "large"
               - image_size_px = tile_size_px * multiplier
+
               %img.npc{:src => "assets/#{tile[:entity]}", :style => "width: #{image_size_px}px; height: #{image_size_px}px;"}
+              - if is_setup
+                %button.btn.add-to-turn-order{:class => "button text-center", :style => "top: 7px; right: 0;", :data => {:id => tile[:id], :name => tile[:name]}}
+                  %i.glyphicon.glyphicon-plus
+
               %div{:class => "popover-menu", :style => "display: none;"}
                 %ul
                   %li Info

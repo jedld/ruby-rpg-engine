@@ -1,0 +1,9 @@
+%div.container
+  - battle.combat_order.each_with_index do |entity, index|
+    %div.turn-order-item.row.border-bottom{class: index == battle.current_turn_index ? 'bg-primary text-white' : ''}
+      %span.col-2
+        %img{src: "assets/#{entity.token_image}", style: "max-width: 50px;"}
+      %span.col-6
+        %span #{entity.name}
+      %span.col-4.text-right
+        %input.initiative-text{type: "text", value: battle.entities[entity][:initiative], name: "initiative[#{index}]", style: "max-width: 50px;"}
