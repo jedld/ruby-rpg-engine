@@ -7,7 +7,6 @@ module Entity
     EventManager.received_event({ source: self, event: :heal, previous: prev_hp, new: @hp, value: amt })
   end
 
-
   def token_image
     @properties[:token_image] || "#{@properties[:sub_type]}.png"
   end

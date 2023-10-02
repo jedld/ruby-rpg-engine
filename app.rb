@@ -34,10 +34,12 @@ HEIGHT = index_hash["height"].to_i
 WIDTH = index_hash["width"].to_i
 BACKGROUND = index_hash["background"]
 BATTLEMAP = index_hash["map"]
+SOUNDTRACKS = index_hash["soundtracks"]
 
 session = Session.new
 battlemap = BattleMap.new(session, File.join(LEVEL, BATTLEMAP))
 set :map, battlemap
+set :battle, nil
 
 # @battle = Battle.new(session, @map)
 # @fighter = PlayerCharacter.load(File.join('fixtures', 'high_elf_fighter.yml'))
@@ -59,7 +61,13 @@ get '/assets/:asset_name' do
   file_path = File.join(LEVEL, "assets", asset_name)
 
   if File.exist?(file_path)
-    send_file file_path
+    stream do |out|
+      File.open(file_path, 'rb') do |file|
+        while chunk = file.read(1024)
+          out << chunk
+        end
+      end
+    end
   else
     status 404
     "File not found: #{asset_name}"
@@ -71,9 +79,11 @@ get '/path' do
   source = params[:from]
   destination = params[:to]
   entity = settings.map.entity_at(source['x'].to_i, source['y'].to_i)
+
   path = AiController::PathCompute.new(nil, settings.map, entity).compute_path(source['x'].to_i, source['y'].to_i, destination['x'].to_i, destination['y'].to_i)
   cost = settings.map.movement_cost(entity, path)
-  { path: path, cost: cost }.to_json
+  placeable = settings.map.placeable?(entity, destination['x'].to_i, destination['y'].to_i)
+  { path: path, cost: cost, placeable: placeable }.to_json
 end
 
 get '/' do
@@ -115,9 +125,12 @@ get '/event' do
        logger.info("message #{data['message']}")
        if (data['message']['action'] == 'move')
         entity = settings.map.entity_at(data['message']['from']['x'], data['message']['from']['y'])
-        settings.map.move_to!(entity, data['message']['to']['x'], data['message']['to']['y'])
-        settings.sockets.each do |socket|
-          socket.send({type: 'move', message: {from: data['message']['from'], to: data['message']['to']}}.to_json)
+        
+        if (settings.map.placeable?(entity, data['message']['to']['x'], data['message']['to']['y']))
+          settings.map.move_to!(entity, data['message']['to']['x'], data['message']['to']['y'])
+          settings.sockets.each do |socket|
+            socket.send({type: 'move', message: {from: data['message']['from'], to: data['message']['to']}}.to_json)
+          end
         end
        end
       else
@@ -135,4 +148,33 @@ get '/event' do
     status 400
     "Websocket connection required"
   end
+end
+
+post "/start" do
+  settings.battle = Battle.new(session, settings.map)
+  content_type :json
+  { status: 'ok' }.to_json
+end
+
+get "/tracks" do
+  tracks = SOUNDTRACKS.each_with_index.collect do |track, index|
+    OpenStruct.new({id: index, url: track['file'], name: track['name'] })
+  end
+  haml :soundtrack, locals: { tracks: tracks }
+end
+
+post "/sound" do
+  content_type :json
+  track_id = params[:track_id].to_i
+  if track_id == -1
+    settings.sockets.each do |socket|
+      socket.send({type: 'stoptrack', message: { }}.to_json)
+    end
+  else
+    url = SOUNDTRACKS[track_id]['file']
+    settings.sockets.each do |socket|
+      socket.send({type: 'track', message: { url: url }}.to_json)
+    end
+  end
+  { status: 'ok' }.to_json
 end

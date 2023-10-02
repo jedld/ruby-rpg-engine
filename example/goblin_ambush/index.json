@@ -3,5 +3,11 @@
   "height" : 17,
   "width" : 22,
   "background" : "goblin_ambush.png",
-  "map" : "battle_sim"
+  "map" : "battle_sim",
+  "soundtracks" : [
+    {
+      "name" : "Goblin Ambush",
+      "file" : "goblin_ambush.mp3"
+    }
+  ]
 }

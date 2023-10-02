@@ -1,0 +1,17 @@
+%div.modal-header
+  %button.close{"aria-label" => "Close", :type => "button", "data-dismiss" => "modal"}
+    %span{"aria-hidden" => "true"} &times;
+  %h4.modal-title{:id => "myModalLabel"} Select Soundtrack
+%div.modal-body
+  %div.radio
+    %label
+      %input{:type => "radio", :name => "track_id", :value => -1}
+      None
+  - tracks.each do |track|
+    %div.radio
+      %label
+        %input{:type => "radio", :name => "track_id", :value => track.id}
+        = track.name
+%div.modal-footer
+  %button.btn.btn-default{"data-dismiss" => "modal", :type => "button"} Close
+  %button.btn.btn-primary.play{:type => "button"} Play

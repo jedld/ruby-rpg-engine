@@ -9,8 +9,10 @@
               %div{:class => "popover-menu", :style => "display: none;"}
                 %ul
                   %li Info
+              %div{:class => "floating-text-bar", :style => "background-color: white; color: black;"}
+                = tile[:name]
           - else
-            %div{:style => "position: relative;"}
+            %div.entity{:style => "position: relative;", :data => {:id => tile[:id]}}
               - entity_size = tile[:entity_size]
               - multiplier = 1
               - multiplier = 2 if entity_size == "large"
@@ -21,5 +23,9 @@
                   %li Info
                   %li{ :data => {item: :move } } Move
               - health_width = tile[:hp]/tile[:max_hp] * image_size_px
-              %div{:style => "position: absolute; top: 0; left: 0; width: #{health_width}px; height: 5px; background-color: green;"}
+              - color = tile[:hp]/tile[:max_hp] < 0.2 ? "red" : "green"
+              %div.health-bar{:style => "width: #{health_width}px; background-color: #{color};"}
+              - if tile[:name].presence
+                %div.nameplate
+                  = tile[:name]
                   

@@ -472,9 +472,9 @@ class BattleMap
         }
         if entity
           m_x, m_y = @entities[entity]
-          attributes = shared_attributes.merge({ hp: entity.hp, max_hp: entity.max_hp, entity_size: entity.size  })
+          attributes = shared_attributes.merge({id: entity.entity_uid,  hp: entity.hp, max_hp: entity.max_hp, entity_size: entity.size  })
           if (m_x == col_index) && (m_y == row_index)
-            attributes = attributes.merge(entity: entity.token_image)
+            attributes = attributes.merge(entity: entity.token_image, name: entity.name)
           end
           attributes
         else

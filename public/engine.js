@@ -1,4 +1,14 @@
+function command(command) {
+  ws.send(JSON.stringify({type: 'command', user: 'username', message: {action: "command", command: command }}));
+}
+
+function playSound(url) {
+  const audio = new Audio(url);
+  audio.play();
+}
+
 $(document).ready(function() {
+  var active_background_sound = null;
 
   var ws = new WebSocket('ws://' + window.location.host + '/event');
   function keepAlive(timeout = 5000) { 
@@ -39,6 +49,33 @@ $(document).ready(function() {
         break;
       case 'error':
         console.error(data.message);
+        break;
+      case 'track':
+        url = data.message.url;
+        if (active_background_sound) {
+          active_background_sound.pause();
+          active_background_sound = null;
+        }
+
+        active_background_sound = new Audio('/assets/' + url);
+        active_background_sound.loop = true;
+        active_background_sound.play();
+        break;
+      case 'stoptrack':
+          if (active_background_sound) {
+            const audioCtx = new AudioContext();
+            const source = audioCtx.createMediaElementSource(active_background_sound);
+            const gainNode = audioCtx.createGain();
+            source.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
+            gainNode.addEventListener('ended', function() {
+              active_background_sound.pause();
+              active_background_sound = null;
+            });
+          }
+
         break;
     }
   };
@@ -89,6 +126,7 @@ $(document).ready(function() {
           $('.highlighted').removeClass('highlighted'); 
           // Highlight the squares returned by data
           var cost = data.cost
+          var placeable = data.placeable
           var rect = canvas.getBoundingClientRect();
           var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
           var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -113,13 +151,21 @@ $(document).ready(function() {
             if (index === data.path.length - 1) {
               var arrowSize = 10;
               var angle = Math.atan2(centerY - prevY, centerX - prevX);
-              ctx.moveTo(centerX - arrowSize * Math.cos(angle - Math.PI / 6), centerY - arrowSize * Math.sin(angle - Math.PI / 6));
-              ctx.lineTo(centerX, centerY);
-              ctx.lineTo(centerX - arrowSize * Math.cos(angle + Math.PI / 6), centerY - arrowSize * Math.sin(angle + Math.PI / 6));
+              if (placeable) {
+                ctx.moveTo(centerX - arrowSize * Math.cos(angle - Math.PI / 6), centerY - arrowSize * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(centerX, centerY);
+                ctx.lineTo(centerX - arrowSize * Math.cos(angle + Math.PI / 6), centerY - arrowSize * Math.sin(angle + Math.PI / 6));
+              } else {
+                ctx.moveTo(centerX - arrowSize, centerY - arrowSize);
+                ctx.lineTo(centerX + arrowSize, centerY + arrowSize);
+                ctx.moveTo(centerX + arrowSize, centerY - arrowSize);
+                ctx.lineTo(centerX - arrowSize, centerY + arrowSize);
+              }
               ctx.font = "20px Arial";
               ctx.fillStyle = "red";
               ctx.fillText(cost + "ft", centerX, centerY  +  tileRect.height / 2);
             }
+            
             prevX = centerX;
             prevY = centerY;
           });
@@ -145,6 +191,50 @@ $(document).ready(function() {
       source = {x: coordsx, y: coordsy}
       $('.tiles-container .popover-menu').hide();
     }
+  });
+
+  //floating menu interaction
+  $('#expand-menu').click(function() {
+    $('#menu').toggle()
+  })
+
+  $('#start-battle').click(function() {
+    $.ajax({
+      url: '/start',
+      type: 'GET',
+      success: function(data) {
+        console.log('Start request successful:', data);
+        $('#start-battle').toggle()
+        $('#modal-1').modal('show');
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error('Error requesting start:', textStatus, errorThrown);
+      }
+    });
+
+  });
+
+  $('#select-soundtrack').click(function() {
+    $.get('/tracks', function(data) {
+      $('.modal-content').html(data);
+      $('#modal-1').modal('show');
+    });
+  });
+
+  $('.modal-content').on('click', '.play', function() {
+    var trackId = $('input[name="track_id"]:checked').val();
+    $.ajax({
+      url: '/sound',
+      type: 'POST',
+      data: {track_id: trackId},
+      success: function(data) {
+        console.log('Sound request successful:', data);
+        $('#modal-1').modal('hide');
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error('Error requesting sound:', textStatus, errorThrown);
+      }
+    });
   });
 
 });

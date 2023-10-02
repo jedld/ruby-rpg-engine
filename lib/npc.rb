@@ -28,7 +28,7 @@ class Npc
              type.to_s.humanize
            end
     @name = opt.fetch(:name, name)
-    entity_uid = SecureRandom.uuid
+    @entity_uid = SecureRandom.uuid
     setup_attributes
   end
 

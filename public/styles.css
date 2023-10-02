@@ -1,8 +1,38 @@
+#floating-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid black;
+  z-index: 3;
+}
+
+#floating-menu ul {
+  list-style: none;
+  padding-left: 0;
+}
+
 .tiles-container {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 1
+}
+
+.health-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 6px;
+  border: white 1px solid;
+}
+
+.nameplate {
+  position: absolute;
+  padding: 2px;
+  left: 0;
+  background-color: white; color: black;
 }
 
 .tile {
