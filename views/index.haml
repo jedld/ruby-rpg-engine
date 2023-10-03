@@ -2,18 +2,19 @@
   %head
     %meta{:charset => "utf-8"}
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}
-    %title My RPG Game
+    %title= title
     %link{:href => "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css", :rel => "stylesheet"}
     %link{:href => "/styles.css?salt=#{Time.now.to_i}", :rel => "stylesheet"}
     %script{:src => "https://code.jquery.com/jquery-3.2.1.min.js"}
     %script{:src => "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"}
     %script{:src => "/engine.js?salt=#{Time.now.to_i}"}
-  %body
+  %body{ :data => { soundtrack: soundtrack }}
     %div#floating-menu
       %button#expand-menu{:style => "float: right; width: 100%;"} +
       %div#menu{:style => "display: none;"}
         %ul
-          %li#start-battle Start Battle
+          %li#start-battle{ :style => "#{battle ? 'display: none' : ''}"} Start Battle
+          %li#end-battle{ :style => "#{!battle ? 'display: none' : ''}"} End Battle
           %li#console Open Console
           %li#select-soundtrack Sound Manager
     %div#coords-box{:style => "position: fixed; top: 0; right: 0; background-color: white; padding: 10px; border: 1px solid black;"}

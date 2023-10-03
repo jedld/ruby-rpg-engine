@@ -2,12 +2,26 @@
   "tile_size" : 75,
   "height" : 17,
   "width" : 22,
+  "title" : "The Goblin Ambush",
+  "login_background" : "goblin_ambush_login.png",
   "background" : "goblin_ambush.png",
   "map" : "battle_sim",
   "soundtracks" : [
     {
       "name" : "Goblin Ambush",
       "file" : "goblin_ambush.mp3"
+    }
+  ],
+  "logins" : [
+    {
+      "name" : "gomerin",
+      "password" : "gomerin",
+      "role" : ["player"]
+    },
+    {
+      "name" : "dm",
+      "password" : "admin",
+      "role" : ["dm"]
     }
   ]
 }

@@ -200,25 +200,40 @@ class Battle
         block.call(current_turn)
       end
 
-      trigger_event!(:end_of_round, self, target: current_turn)
-
-      @current_turn_index += 1
-      if @current_turn_index >= @combat_order.length
-        @current_turn_index = 0
-        @round += 1
-
-        # top of the round
-
-        @combat_order += @late_comers
-        @late_comers.clear
-        @combat_order = @combat_order.sort_by { |a| @entities[a][:initiative] }.reverse
-
-        EventManager.received_event({ source: self, event: :top_of_the_round, round: @round, target: current_turn })
-
-        return if !max_rounds.nil? && @round > max_rounds
-      end
+      end_turn
+      return if next_turn(max_rounds)
       break if battle_ends?
     end
+  end
+
+  def start_turn
+    EventManager.received_event({ source: self, event: :start_of_round, target: current_turn })
+    if current_turn.concious?
+      current_turn.reset_turn!(self)
+    end
+  end
+
+  def end_turn
+    trigger_event!(:end_of_round, self, target: current_turn)
+  end
+
+  def next_turn(max_rounds = nil)
+    @current_turn_index += 1
+    if @current_turn_index >= @combat_order.length
+      @current_turn_index = 0
+      @round += 1
+
+      # top of the round
+      @combat_order += @late_comers
+      @late_comers.clear
+      @combat_order = @combat_order.sort_by { |a| @entities[a][:initiative] }.reverse
+
+      EventManager.received_event({ source: self, event: :top_of_the_round, round: @round, target: current_turn })
+
+      return true if !max_rounds.nil? && @round > max_rounds
+    end
+
+    false
   end
 
   def enemy_in_melee_range?(source, exclude = [])

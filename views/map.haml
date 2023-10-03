@@ -20,7 +20,7 @@
               - multiplier = 2 if entity_size == "large"
               - image_size_px = tile_size_px * multiplier
 
-              %img.npc{:src => "assets/#{tile[:entity]}", :style => "width: #{image_size_px}px; height: #{image_size_px}px;"}
+              %img.npc{:src => "assets/#{tile[:entity]}", :style => "width: #{image_size_px}px; height: #{image_size_px}px;  opacity: #{tile[:dead] ? 0.3 : 1};"}
               - if is_setup
                 %button.btn.add-to-turn-order{:class => "button text-center", :style => "top: 7px; right: 0;", :data => {:id => tile[:id], :name => tile[:name]}}
                   %i.glyphicon.glyphicon-plus
@@ -29,10 +29,11 @@
                 %ul
                   %li Info
                   %li{ :data => {item: :move } } Move
-              - health_width = tile[:hp]/tile[:max_hp] * image_size_px
-              - color = tile[:hp]/tile[:max_hp] < 0.2 ? "red" : "green"
+              - health_width = (tile[:hp].to_f/tile[:max_hp].to_f) * image_size_px
+              - color = (tile[:hp].to_f/tile[:max_hp].to_f) < 0.2 ? "red" : "green"
               %div.health-bar{:style => "width: #{health_width}px; background-color: #{color};"}
               - if tile[:name].presence
                 %div.nameplate
                   = tile[:name]
+                  
                   

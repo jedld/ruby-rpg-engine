@@ -2,14 +2,25 @@ function command(command) {
   ws.send(JSON.stringify({type: 'command', user: 'username', message: {action: "command", command: command }}));
 }
 
-function playSound(url) {
-  const audio = new Audio(url);
-  audio.play();
-}
+
 
 $(document).ready(function() {
   var active_background_sound = null;
+  var mediaElementSource = null;
   var active_track_id = -1;
+
+  function playSound(url, track_id) {
+    if (active_background_sound) {
+      active_background_sound.pause();
+      active_background_sound = null;
+    }
+  
+    active_background_sound = new Audio('/assets/' + url);
+    active_background_sound.loop = true;
+    active_track_id = track_id;
+    active_background_sound.play();
+    $('.volume-slider').val(active_background_sound.volume * 100);
+  }
 
   var ws = new WebSocket('ws://' + window.location.host + '/event');
   function keepAlive(timeout = 5000) { 
@@ -67,16 +78,8 @@ $(document).ready(function() {
         break;
       case 'track':
         url = data.message.url;
-        if (active_background_sound) {
-          active_background_sound.pause();
-          active_background_sound = null;
-        }
-
-        active_background_sound = new Audio('/assets/' + url);
-        active_background_sound.loop = true;
-        active_track_id = data.message.id;
-        active_background_sound.play();
-        $('.volume-slider').val(active_background_sound.volume * 100);
+        track_id = data.message.track_id;
+        playSound(url, track_id);
         break;
       case 'stoptrack':
           if (active_background_sound) {
@@ -104,10 +107,29 @@ $(document).ready(function() {
       case 'initiative':
         console.log('initiative ' + data.message);
         refreshTurnOrder();
+        
         $('#start-initiative').hide();
+        $('#start-battle').hide();
+        $('#end-battle').show();
+        break;
+      case 'stop':
+        $('#battle-turn-order').fadeOut()
+        $('#start-battle').show();
+        $('#end-battle').hide();
         break;
     }
   };
+
+  // recover startup state
+  var currentSoundtrack = $('body').data('soundtrack-url')
+
+  $('body').on('click', function(event) {
+    if (currentSoundtrack) {
+      var track_id = $('body').data('soundtrack-id')
+      playSound(currentSoundtrack, track_id);
+      currentSoundtrack = null;
+    }
+  });
 
   // Listen for changes on the volume slider
   $('.modal-content').on('input', '.volume-slider', function() {
@@ -128,6 +150,8 @@ $(document).ready(function() {
   
   // Use event delegation to handle popover menu clicks
   $('.tiles-container').on('click', '.tile', function() {
+
+
     if (moveMode) {
       // retrieve data attributes from the parent .tile element
       var coordsx = $(this).data('coords-x');
@@ -274,6 +298,19 @@ $(document).ready(function() {
       }
     });
   })
+
+  $('#end-battle').click(function() {
+      $.ajax({
+        url: '/stop',
+        type: 'POST',
+        success: function(data) {
+          console.log('Battle stopped successfully');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error('Error stopping battle:', textStatus, errorThrown);
+        }
+      });
+    });
   
     $('.tiles-container').on('click', '.add-to-turn-order', function(event) {
     const $this = $(this);
@@ -324,6 +361,18 @@ $(document).ready(function() {
       $(this).parent().remove();
     });
 
+    $('#turn-order').on('click', '#next-turn', function() {
+      $.ajax({
+        url: '/next_turn',
+        type: 'POST',
+        success: function(data) {
+          console.log('Next turn request successful:', data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error('Error requesting next turn:', textStatus, errorThrown);
+        }
+      });
+    });
     
 
   $('#select-soundtrack').click(function() {

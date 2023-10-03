@@ -14,8 +14,10 @@ module MovementHelper
 
       actual_moves << m
     end
+    last_move = actual_moves.last
 
-    actual_moves.pop unless map.placeable?(entity, *actual_moves.last, battle)
+    return [] if actual_moves.empty?
+    actual_moves.pop unless map.placeable?(entity, last_move[0], last_move[1], battle)
 
     actual_moves
   end
