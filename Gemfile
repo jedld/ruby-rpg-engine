@@ -16,8 +16,6 @@ gem 'mini_magick'
 gem 'sinatra-contrib'
 gem 'faye-websocket'
 
-gem "solargraph", group: :development
-
 group :test do
   gem "rspec"
 end
